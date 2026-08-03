@@ -1,0 +1,39 @@
+WCC4SM V0.5.1
+Date: 2026-07-30
+
+Main updates
+------------
+1. Dark-spectrum subtraction
+   - Imports one-column or two-column CSV dark spectra.
+   - One-column dark data must match the measured sample count.
+   - Two-column dark data are linearly aligned to the measured X coordinates
+     and must cover the complete measured range.
+   - When dark subtraction is active, the manual constant-baseline input is
+     disabled to prevent double subtraction.
+   - Clearing the dark spectrum restores the manual baseline mode.
+   - Any preprocessing change invalidates old detection, confirmed peaks and
+     calibration state.
+
+2. Weak-peak subwindow search
+   - Entry is provided on Data & Display.
+   - The search window defaults to the current full-spectrum visible range.
+   - Local peak height, prominence, distance and width are independent of the
+     full-spectrum parameters.
+   - Optional normalization is calculated inside the selected subwindow.
+   - Local search generates candidates only.
+   - Candidates are highlighted on the full-spectrum plot and require manual
+     addition before entering the formal peak list.
+   - An added candidate is inserted by natural-pixel position. Peak IDs are
+     then reordered, and existing confirmed datasets and matching objects are
+     remapped to the new IDs.
+
+3. Label readability
+   - Full-spectrum peak markers are enlarged.
+   - Peak ID labels use 10-point bold text.
+   - Measured matching labels and reference-wavelength labels use 10-point
+     bold text.
+
+Retained functions
+------------------
+All V0.5 calibration, validation, calibrated-performance, histogram-control,
+model-comparison and OPEN FIG functions are retained.

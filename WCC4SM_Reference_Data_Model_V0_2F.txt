@@ -1,0 +1,32 @@
+WC4SM reference wavelength data model
+=====================================
+
+1. Reference master library
+---------------------------
+The master is the traceable, full reference-line source. A text/CSV/LIT file
+must contain wavelength, relative intensity and optionally diffraction order.
+Examples are the Avantes HgAr file, a NIST-derived file, or a documented user
+composite. Source, version, wavelength medium and modification history should
+be recorded in a companion description.
+
+2. Reference selection mode
+---------------------------
+A mode is a reusable subset of the loaded master. It does not redefine line
+intensities. The V0.2F CSV mode contains LineID, Wavelength_nm, Order and
+MasterSource. Import matches wavelength/order to the current master within
+0.02 nm. Lines may then be enabled or disabled in the Reference Lines tab and
+the edited mode can be exported.
+
+Typical workflow:
+  a. Load the full Avantes/NIST/user master.
+  b. Import HgAr_Basic21_Profile.csv or another model-specific mode.
+  c. Inspect the reference plot and enable/disable lines.
+  d. Export the resulting selection as a reusable instrument mode.
+
+3. Pair pool and calibration models
+-----------------------------------
+Peak-reference pairs are retained independently of final fitting. Each press
+of FIT CALIBRATION MODEL stores a new model snapshot in CalibrationModels.
+The comparison table retains point count, peak-position method, degree, RMS,
+STD and maximum absolute residual. Export Calibration MAT saves the full model
+collection together with pairs, reference state, peak dataset and spectrum.

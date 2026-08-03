@@ -1,0 +1,22 @@
+WCC4SM V0.5.2
+Date: 2026-08-03
+
+Purpose
+-------
+First low-risk modularization release. WCC4SM_V0_5_1.m remains unchanged as
+the operational fallback baseline.
+
+Changes
+-------
+1. Spectrum import calls wc4sm_read_spectrum_file.
+2. Dark-spectrum import and coordinate alignment call wc4sm_read_dark_spectrum.
+3. Subtraction, negative clamping and normalization call
+   wc4sm_preprocess_spectrum.
+4. GUI workflow, state invalidation, peak analysis, calibration, validation,
+   plots and export behavior are otherwise retained from V0.5.1.
+
+Validation status
+-----------------
+The candidate modules passed the 14-test non-GUI regression suite before
+integration. V0.5.2 requires the same test suite and the GUI smoke test on the
+MATLAB-compatible target computer.

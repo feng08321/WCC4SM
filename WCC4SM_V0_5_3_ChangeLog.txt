@@ -1,0 +1,24 @@
+WCC4SM V0.5.3
+Date: 2026-08-03
+
+Purpose
+-------
+Second low-risk modularization release. WCC4SM_V0_5_2.m remains unchanged as
+the operational fallback baseline.
+
+Changes
+-------
+1. Final polynomial calibration and model statistics call
+   wc4sm_fit_calibration.
+2. Imported legacy models without LOO fields are completed by
+   wc4sm_validate_calibration_loo.
+3. Spectrum reading, dark alignment and preprocessing remain modular as in
+   V0.5.2.
+4. Pair selection, UI workflow, model storage, plots and export behavior are
+   retained.
+
+Validation status
+-----------------
+The calibration modules passed the 20-test non-GUI regression suite before
+integration. V0.5.3 requires the same suite and a GUI calibration comparison
+against V0.5.2 on the MATLAB-compatible target computer.

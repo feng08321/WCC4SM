@@ -1,0 +1,22 @@
+# MATLAB generated files
+*.asv
+*.autosave
+*.log
+*.tmp
+*.bak
+slprj/
+codegen/
+MathWorks/
+
+# User/session data may contain operator, instrument, and measurement metadata
+WCC4SM_session.mat
+WCC4SM_session_*.mat
+
+# Editor and operating-system state
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Local test output
+test20*.txt
