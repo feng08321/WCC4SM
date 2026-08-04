@@ -1,8 +1,8 @@
-# WCC4SM V0.6.2 软件使用说明书
+# WCC4SM V0.9 软件使用说明书
 
 文档版本：V1.0
 
-软件版本：WCC4SM V0.6.2
+软件版本：WCC4SM V0.9
 
 编制日期：2026-08-04
 
@@ -27,7 +27,7 @@ WCC4SM 用于线光谱峰参数分析和光谱仪波长重新校准。软件可�
 启动：
 
 ```matlab
-WCC4SM_V0_6_2
+WCC4SM_V0_9
 ```
 
 ### 2.2 建议准备的文件
@@ -358,12 +358,12 @@ figure。原 GUI 中的图不会被移除。
 
 ## 22. 相关文档
 
-- `WCC4SM_V0.6.2_软件架构与功能技术说明书_V1.0.md`
+- `WCC4SM_V0.9_软件架构与功能技术说明书_V1.0.md`
 - `WCC4SM_INPUT_OUTPUT_DATA_FORMATS_V1.md`
 - `docs/WCC4SM_PIXEL_COORDINATE_SPEC_V1.md`
 - `docs/WCC4SM_CALIBRATION_MODEL_FORMAT_V1.md`
 - `docs/WCC4SM_SESSION_FORMAT_V1.md`
-- `docs/V0_6_2_GUI_TEST.md`
+- `docs/V0_9_GUI_TEST.md`
 
 ## 23. PDF 帮助与 About
 
@@ -380,3 +380,10 @@ Windows EXE 不包含 MATLAB Runtime，也不制作安装程序。目标电脑�
 MATLAB，或者安装与构建版本匹配的 MATLAB Runtime。EXE 旁应保留外部 `docs/`
 和 `reference_data/`；用户可自行添加有合法使用权的 PDF 文档。WCC4SM 的
 Apache License 2.0 不改变第三方论文、标准、参考数据或 MATLAB Runtime 的权利状态。
+
+## 25. V0.9 顶栏与参考表显示
+
+顶栏使用统一标题 `WCC4SM (Wavelength Characterization and Calibration for
+Spectrometer) V0.9`，右侧工具栏保留完整按钮文字。工具栏和状态区采用软件主背景，
+状态文字使用深色以保持对比度。参考表中的 Intensity 和 Order 以整数显示；这只控制
+界面格式，不改变主库中的数值，也不改变定标计算。

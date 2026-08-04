@@ -1,14 +1,14 @@
-# WCC4SM V0.6.2 软件架构与功能技术说明书
+# WCC4SM V0.9 软件架构与功能技术说明书
 
 文档版本：V1.0
 
-软件版本：WCC4SM V0.6.2
+软件版本：WCC4SM V0.9
 
 编制日期：2026-08-04
 
 ## 1. 文档目的
 
-本文档说明 WCC4SM V0.6.2 的设计目标、软件结构、核心算法、主要数据
+本文档说明 WCC4SM V0.9 的设计目标、软件结构、核心算法、主要数据
 结构、输入输出、会话与模型兼容规则、测试体系及维护边界，用于软件维护、
 科研复现、技术审查和后续版本开发。
 
@@ -35,7 +35,7 @@ WCC4SM（Wavelength Characterization and Calibration for Spectrometer）是
 启动入口：
 
 ```matlab
-WCC4SM_V0_6_2
+WCC4SM_V0_9
 ```
 
 回归测试入口：
@@ -49,7 +49,7 @@ results = run_wc4sm_tests;
 软件由一个 GUI 协调层、独立数值模块、数据与参考资产、测试和文档组成。
 
 ```text
-WCC4SM_V0_6_2.m             GUI 启动与工作流协调入口
+WCC4SM_V0_9.m               GUI 启动与工作流协调入口
 run_wc4sm_tests.m           自动测试入口
 src/                        独立数值与会话模块
 tests/                      MATLAB 单元测试
@@ -259,12 +259,12 @@ LOO RMS 和删除影响更适合发现过拟合、高影响点及不稳定的局
 
 ## 14. 测试与验收
 
-V0.6.2 基线包含 37 项非 GUI 回归测试，覆盖峰分析、定标、LOO、预处理、会话、
+V0.9 基线包含 37 项非 GUI 回归测试，覆盖峰分析、定标、LOO、预处理、会话、
 校准后性能和参考数据资产。发布前还执行 MATLAB 静态解析、GUI 初始化冒烟和
 操作者完整流程验收。
 
 需求、实现和测试的对应关系见
-`WCC4SM_V0_6_2_REQUIREMENTS_TRACEABILITY_MATRIX.md`。
+`WCC4SM_V0_9_REQUIREMENTS_TRACEABILITY_MATRIX.md`。
 
 ## 15. 已知限制
 
@@ -278,7 +278,7 @@ V0.6.2 基线包含 37 项非 GUI 回归测试，覆盖峰分析、定标、LOO�
 ## 16. 维护和版本策略
 
 - `main` 只保存已验收稳定版本。
-- 稳定发布使用不可变 Git 标签；V0.6.1、V0.6.2 可独立恢复。
+- 稳定发布使用不可变 Git 标签；V0.6.1、V0.6.2 和后续 V0.9 可独立恢复。
 - 新功能和修复在独立分支通过 PR 集成。
 - `result/`、会话 MAT、日志和本机配置不进入版本控制。
 - 修改核心算法前先增加或更新回归测试，禁止仅为通过测试而改期望值。
@@ -291,7 +291,7 @@ V0.6.2 基线包含 37 项非 GUI 回归测试，覆盖峰分析、定标、LOO�
 - `docs/WCC4SM_SESSION_FORMAT_V1.md`
 - `docs/WCC4SM_PIXEL_COORDINATE_SPEC_V1.md`
 - `docs/WCC4SM_CALIBRATION_MODEL_FORMAT_V1.md`
-- `docs/V0_6_2_GUI_TEST.md`
+- `docs/V0_9_GUI_TEST.md`
 - `docs/WCC4SM_V0_6_2_ACCEPTANCE_REPORT.md`
 
 ## 18. 帮助、授权与部署
@@ -308,3 +308,10 @@ NewOptic 个人项目标签、Apache License 2.0 和仓库地址。
 `tools/build_windows_exe.m` 使用 MATLAB Compiler 的 `mcc -e` 生成无控制台的
 Windows EXE，不生成安装器、不捆绑 MATLAB Runtime。构建输出保留外部 `docs/`
 和 `reference_data/`，部署模式通过 EXE 所在目录定位这两类可更新资产。
+
+## 19. V0.9 发布界面收尾
+
+顶栏将缩写、完整名称和版本合并为单个标题，为右侧操作区提供固定760像素宽度；
+工具栏及状态标签背景与应用主背景一致，状态文字使用深蓝色。参考主库的强度和级次
+继续以数值形式保存在模型中，但 `uitable` 数据使用零位小数字符串显示，以规避
+R2022a 混合单元格表格在滚动区域出现整数与四位小数格式不一致的问题。

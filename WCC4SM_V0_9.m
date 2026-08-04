@@ -1,5 +1,5 @@
-function WCC4SM_V0_6_2
-%WCC4SM_V0_6_2 Wavelength Characterization and Calibration for Spectrometer.
+function WCC4SM_V0_9
+%WCC4SM_V0_9 Wavelength Characterization and Calibration for Spectrometer.
 % Peak analysis plus reference-line matching and provisional calibration.
 % MATLAB R2022a or later. Signal Processing Toolbox is required for findpeaks.
 
@@ -50,16 +50,16 @@ function WCC4SM_V0_6_2
     documentationDir = fullfile(distributionRoot,'docs');
     if ~isfolder(documentationDir), documentationDir = fullfile(packageRoot,'docs'); end
 
-    fig=uifigure('Name','WCC4SM V0.6.2 | Peak Analysis','Position',[25 30 1580 900],'Color',C.bg);
+    fig=uifigure('Name','WCC4SM V0.9 | Peak Analysis','Position',[25 30 1580 900],'Color',C.bg);
     root=uigridlayout(fig,[2 3]); root.RowHeight={50,'1x'}; root.ColumnWidth={330,'1x',400};
     root.ColumnWidth={'1x',330,400};
     root.Padding=[10 9 10 10]; root.RowSpacing=8; root.ColumnSpacing=8;
 
-    head=uipanel(root,'BackgroundColor',C.navy,'BorderType','none'); head.Layout.Row=1; head.Layout.Column=[1 3];
-    hg=uigridlayout(head,[1 3]); hg.ColumnWidth={310,'1x',520}; hg.Padding=[14 5 14 5];
-    uilabel(hg,'Text','WCC4SM  V0.6.2','FontSize',20,'FontWeight','bold','FontColor',[.10 .55 .95]);
-    uilabel(hg,'Text','Wavelength Characterization and Calibration for Spectrometer','FontSize',14,'FontWeight','bold','FontColor',[.10 .55 .95],'HorizontalAlignment','center');
-    headerTools=uigridlayout(hg,[1 6]);headerTools.ColumnWidth={125,70,80,80,60,'1x'};headerTools.Padding=[0 0 0 0];headerTools.ColumnSpacing=5;headerTools.BackgroundColor=C.navy;
+    head=uipanel(root,'BackgroundColor',C.bg,'BorderType','none'); head.Layout.Row=1; head.Layout.Column=[1 3];
+    hg=uigridlayout(head,[1 2]); hg.ColumnWidth={'1x',760}; hg.Padding=[14 5 14 5]; hg.BackgroundColor=C.bg;
+    uilabel(hg,'Text','WCC4SM (Wavelength Characterization and Calibration for Spectrometer) V0.9', ...
+        'FontSize',16,'FontWeight','bold','FontColor',C.blue,'HorizontalAlignment','left');
+    headerTools=uigridlayout(hg,[1 6]);headerTools.ColumnWidth={175,85,110,110,75,'1x'};headerTools.Padding=[0 0 0 0];headerTools.ColumnSpacing=5;headerTools.BackgroundColor=C.bg;
     openFigDrop=uidropdown(headerTools,'Items',{'Peak Analysis','Peak Parameter Statistics','Wavelength Matching', ...
         'Calibration Fit & Residuals','Model Validation','Model Comparison','Calibrated Performance'}, ...
         'Value','Peak Analysis','Tooltip','Choose a plot tab whose subplots will be opened as separate editable figures');
@@ -67,7 +67,7 @@ function WCC4SM_V0_6_2
     uibutton(headerTools,'Text','SAVE SESSION','FontWeight','bold','BackgroundColor',C.greenLight,'ButtonPushedFcn',@saveSession);
     uibutton(headerTools,'Text','LOAD SESSION','FontWeight','bold','BackgroundColor',C.yellow,'ButtonPushedFcn',@loadSession);
     uibutton(headerTools,'Text','HELP','FontWeight','bold','BackgroundColor',C.cyan,'ButtonPushedFcn',@openHelpDialog);
-    topStatus=uilabel(headerTools,'Text','Load a spectrum','FontWeight','bold','FontColor',C.yellow,'BackgroundColor',C.navy,'HorizontalAlignment','left','Tooltip','Current workflow status');
+    topStatus=uilabel(headerTools,'Text','Load a spectrum','FontWeight','bold','FontColor',C.navy,'BackgroundColor',C.bg,'HorizontalAlignment','left','Tooltip','Current workflow status');
 
     %% LEFT CONTROL COLUMN
     leftTabs=uitabgroup(root); leftTabs.Layout.Row=2; leftTabs.Layout.Column=2;
@@ -310,7 +310,7 @@ function WCC4SM_V0_6_2
             if ~editSessionMetadata(),return;end
             sessionState=captureSessionState();
             WCC4SMSession=wc4sm_create_session(sessionState,sessionMetadata);
-            WCC4SMSession.SoftwareVersion='0.6.2';
+            WCC4SMSession.SoftwareVersion='0.9';
             defaultName='WCC4SM_session.mat';
             if ~isempty(currentSessionPath),[~,n,e]=fileparts(currentSessionPath);defaultName=[n e];end
             [fn,pn]=uiputfile('*.mat','Save complete WCC4SM session',defaultName);
@@ -679,7 +679,7 @@ function WCC4SM_V0_6_2
         catch
         end
         if diff(viewLimits)<1,viewLimits=limits;end
-        ld=uifigure('Name','WCC4SM V0.6.2 | Weak-peak subwindow search','Position',[180 160 520 520],'Color',C.bg);
+        ld=uifigure('Name','WCC4SM V0.9 | Weak-peak subwindow search','Position',[180 160 520 520],'Color',C.bg);
         lg=uigridlayout(ld,[13 2]);lg.ColumnWidth={180,'1x'};lg.RowHeight={32,30,30,30,30,30,30,30,34,34,30,34,'1x'};lg.Padding=[12 12 12 12];
         note=uilabel(lg,'Text','Local search normalizes within this window, uses separate sensitive parameters, and produces candidates only.','FontColor',C.navy,'FontWeight','bold','WordWrap','on');note.Layout.Column=[1 2];
         uilabel(lg,'Text','Start pixel');lStart=uieditfield(lg,'numeric','Value',viewLimits(1));
@@ -1732,7 +1732,7 @@ function WCC4SM_V0_6_2
 
     function openResidualAnalysis(~,~)
         if ~finalModel.valid,uialert(fig,'Fit a final calibration model first.','No final model');return;end
-        rf=uifigure('Name','WCC4SM V0.6.2 | Calibration Fit & Residual Analysis','Position',[120 90 1160 760],'Color',C.bg);
+        rf=uifigure('Name','WCC4SM V0.9 | Calibration Fit & Residual Analysis','Position',[120 90 1160 760],'Color',C.bg);
         rg=uigridlayout(rf,[2 2]); rg.RowHeight={'1.05x','1x'}; rg.ColumnWidth={'1.25x','1x'}; rg.Padding=[12 10 12 12];
         a1=uiaxes(rg); a1.Layout.Column=[1 2]; styleAxes(a1,C); hold(a1,'on');
         xx=linspace(min(finalModel.Pixel),max(finalModel.Pixel),800); yy=polyval(finalModel.Coefficients,xx,[],finalModel.Mu);
@@ -2064,7 +2064,7 @@ function WCC4SM_V0_6_2
     end
 
     function popOutSpectrumPlots(~,~)
-        pf=figure('Name','WCC4SM V0.6.2 | Current spectrum plots','Color','white','Position',[100 80 1100 760]);
+        pf=figure('Name','WCC4SM V0.9 | Current spectrum plots','Color','white','Position',[100 80 1100 760]);
         t=tiledlayout(pf,2,1,'Padding','compact','TileSpacing','compact');
         if plotTabs.SelectedTab==tabMatchingPlots,s1=axMatchMeasured;s2=axMatchReference;else,s1=axFull;s2=axPeak;end
         a1=nexttile(t);copyAxesState(s1,a1);a2=nexttile(t);copyAxesState(s2,a2);
@@ -2094,7 +2094,7 @@ function WCC4SM_V0_6_2
         for kk=1:numel(sourceAxes)
             plotTitle=axesTitleText(sourceAxes(kk),sprintf('Subplot %d',kk));
             left=80+32*mod(kk-1,5);bottom=80+28*mod(kk-1,5);
-            pf=figure('Name',sprintf('WCC4SM V0.6.2 | %s | %s',tabName,plotTitle), ...
+            pf=figure('Name',sprintf('WCC4SM V0.9 | %s | %s',tabName,plotTitle), ...
                 'NumberTitle','off','Color','white','Position',[left bottom 900 620]);
             targetAxes=axes('Parent',pf,'Position',[.10 .12 .85 .80]);
             copyAxesState(sourceAxes(kk),targetAxes);
@@ -2156,13 +2156,12 @@ function WCC4SM_V0_6_2
     function refreshCalibration
         if L.loaded
             [st,spacing]=referenceStatuses();
-            datRef=cell(numel(L.wavelength),4);
-            for jj=1:numel(L.wavelength),datRef(jj,:)={L.effective(jj),L.intensity(jj),L.order(jj),st{jj}};end
+            datRef=wc4sm_format_reference_table(L.effective,L.intensity,L.order,st);
             refTable.Data=datRef;
             lineInfo.Text=sprintf('%d lines | %s',numel(L.wavelength),shortName(L.source));
             active=find(~strcmp(st,'Out of range') & ~strcmp(st,'Disabled'));
             datActive=cell(numel(active),4);
-            for jj=1:numel(active),q=active(jj);datActive(jj,:)={L.effective(q),L.intensity(q),spacing(q),st{q}};end
+            for jj=1:numel(active),q=active(jj);datActive(jj,:)={L.effective(q),sprintf('%.0f',L.intensity(q)),spacing(q),st{q}};end
             activeRefTable.Data=datActive;
         else
             refTable.Data=zeros(0,4); lineInfo.Text='No reference-line file';
@@ -2536,7 +2535,7 @@ function WCC4SM_V0_6_2
     end
     function showAboutDialog(source,~)
         helpFig=ancestor(source,'figure');
-        message=sprintf(['WCC4SM V0.6.2\n' ...
+        message=sprintf(['WCC4SM V0.9\n' ...
             'Wavelength Characterization and Calibration for Spectrometer\n\n' ...
             'Developed by Zheng Feng\n' ...
             'Copyright (c) 2026 Zheng Feng\n' ...

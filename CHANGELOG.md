@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased — reference asset cleanup
+## V0.9 — release candidate
 
 - Keeps `NIST_ASD_HgAr_20260729.lit` as the only confirmed NIST master and
   `WCC4SM_NIST_ASD_HgAr_20260729_Mode01.csv` as its Mode01 selection.
@@ -19,6 +19,10 @@
   list and opens the selected document with the system PDF reader.
 - Adds a Windows EXE build script that does not bundle MATLAB Runtime or create
   an installer, while preserving external `docs/` and `reference_data/` folders.
+- Consolidates the header title and version to free space for full toolbar
+  labels, and uses the application background with dark status text.
+- Displays reference intensity and diffraction order as integers; the confirmed
+  NIST master already stores integer intensity values and remains unchanged.
 
 ## V0.6.2 — development
 

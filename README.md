@@ -7,15 +7,17 @@ performance analysis, and complete analysis-session restoration.
 
 ## Versions
 
-The current stable baseline is **WCC4SM V0.6.2** (Git tag `v0.6.2`). It makes
-pixel-coordinate metadata visible in the GUI and every model export. V0.6.1
-remains the previous rollback tag. Start V0.6.2 from MATLAB R2022a or later:
+The current release candidate is **WCC4SM V0.9**. It includes the accepted
+V0.6.2 calibration workflow, organized reference assets, Apache License 2.0,
+PDF help, About information, and Windows EXE deployment support. The immutable
+`v0.6.2` and `v0.6.1` tags remain rollback baselines. Start V0.9 from MATLAB
+R2022a or later:
 
 ```matlab
-WCC4SM_V0_6_2
+WCC4SM_V0_9
 ```
 
-V0.6.2 distinguishes two one-based pixel coordinate systems:
+V0.9 distinguishes two one-based pixel coordinate systems:
 
 - **Full detector sequence** for uncalibrated instruments that expose every
   detector pixel.
@@ -34,7 +36,7 @@ results = run_wc4sm_tests;
 ```
 
 The regression suite currently has 37 tests. The current GUI acceptance
-procedure is in `docs/V0_6_2_GUI_TEST.md`.
+procedure is in `docs/V0_9_GUI_TEST.md`.
 
 ## License and contact
 
@@ -53,9 +55,10 @@ addpath('tools');
 build_windows_exe
 ```
 
-The generated `build/windows/` folder includes the executable and external
-`docs/` and `reference_data/` directories. These external directories remain
-replaceable so users can add PDF help documents and reference assets.
+The generated `build/WCC4SM_V0.9_Windows_x64/` folder includes the executable
+and external `docs/` and `reference_data/` directories. These external
+directories remain replaceable so users can add PDF help documents and
+reference assets.
 
 ## Data and privacy
 
@@ -71,7 +74,7 @@ the active development tree.
 
 ## Documentation
 
-Formal V0.6.2 documentation is maintained in `docs/` as reviewable Markdown
+Formal V0.9 documentation is maintained in `docs/` as reviewable Markdown
 sources with generated DOCX copies:
 
 - software architecture and technical design;

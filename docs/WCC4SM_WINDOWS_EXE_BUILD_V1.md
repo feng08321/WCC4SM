@@ -25,12 +25,12 @@ outputFolder = build_windows_exe;
 ```
 
 The script uses `mcc -e` to create a Windows GUI executable without a console
-window. It recreates `build/windows/` on each build and then copies the external
-runtime assets:
+window. It recreates the version-specific build folder on each build and then
+copies the external runtime assets:
 
 ```text
-build/windows/
-├── WCC4SM_V0_6_2.exe
+build/WCC4SM_V0.9_Windows_x64/
+├── WCC4SM_V0_9.exe
 ├── docs/
 ├── reference_data/
 ├── LICENSE
@@ -42,7 +42,7 @@ build/windows/
 
 ## Deployment
 
-Copy the complete `build/windows/` folder to the target computer. Do not copy
+Copy the complete `build/WCC4SM_V0.9_Windows_x64/` folder to the target computer. Do not copy
 only the EXE: Help PDFs and reference assets are intentionally external so they
 can be reviewed and updated without recompiling the application.
 
@@ -56,7 +56,7 @@ cache.
 Before distribution:
 
 1. Run `run_wc4sm_tests` in the source checkout.
-2. Build the EXE from a clean `build/windows/` folder.
+2. Build the EXE from a clean version-specific build folder.
 3. Start the EXE and confirm the main WCC4SM window opens and responds.
 4. Open Help, refresh the PDF list and read a PDF from `docs/`.
 5. Load the confirmed reference master from `reference_data/`.

@@ -68,6 +68,12 @@ classdef TestWcc4smDataAssets < matlab.unittest.TestCase
             testCase.verifySize(dated,[322 2]);
             testCase.verifyEqual(dated(1,1),184.9499,'AbsTol',1e-12);
             testCase.verifyEqual(dated(end,1),2396.652,'AbsTol',1e-12);
+            testCase.verifyEqual(dated(:,2),round(dated(:,2)),'AbsTol',0);
+            displayRows = wc4sm_format_reference_table(dated(1:3,1), ...
+                dated(1:3,2),ones(3,1),{'Recommended';'Disabled';'Marginal'});
+            testCase.verifyEqual(displayRows(:,2),{'1000';'1000';'20'});
+            testCase.verifyEqual(displayRows(:,3),{'1';'1';'1'});
+            testCase.verifyFalse(any(contains(string(displayRows(:,2:3)),'.'),'all'));
             testCase.verifyTrue(isfile(fullfile(testCase.Root, ...
                 'reference_data', ...
                 'NIST_ASD_HgAr_20260729_Metadata.md')));
