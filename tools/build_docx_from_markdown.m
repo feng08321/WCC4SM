@@ -1,10 +1,12 @@
-function outputPaths = build_docx_from_markdown(sourcePaths)
-%BUILD_DOCX_FROM_MARKDOWN Build maintainable DOCX copies of project Markdown.
-% Supports headings, paragraphs, bullet/numbered items, fenced code and simple
-% pipe-table text. Markdown remains the authoritative version-controlled source.
+function outputPaths = build_docx_from_markdown(sourcePaths,outputFormat)
+%BUILD_DOCX_FROM_MARKDOWN Build maintainable DOCX or PDF copies of Markdown.
+% Supports headings, paragraphs, bullet/numbered items, fenced code, images and
+% simple pipe-table text. Markdown remains the authoritative version-controlled
+% source.
 
     arguments
         sourcePaths {mustBeText}
+        outputFormat (1,1) string {mustBeMember(outputFormat,["docx","pdf"])} = "docx"
     end
 
     import mlreportgen.dom.*
@@ -17,8 +19,8 @@ function outputPaths = build_docx_from_markdown(sourcePaths)
                 'Documentation source does not exist: %s',sourcePath);
         end
         [folder,stem] = fileparts(sourcePath);
-        outputPath = fullfile(folder,[stem '.docx']);
-        document = Document(outputPath,'docx');
+        outputPath = fullfile(folder,[stem '.' char(outputFormat)]);
+        document = Document(outputPath,char(outputFormat));
         open(document);
         lines = splitlines(string(fileread(sourcePath)));
         inCode = false;
@@ -35,6 +37,12 @@ function outputPaths = build_docx_from_markdown(sourcePaths)
             end
             if inCode
                 codeLines(end+1,1) = line; %#ok<AGROW>
+                continue;
+            end
+            imageToken = regexp(char(strtrim(line)), ...
+                '^!\[([^\]]*)\]\(([^)]+)\)$','tokens','once');
+            if ~isempty(imageToken)
+                appendImage(document,sourcePath,imageToken{2},imageToken{1});
                 continue;
             end
             heading = regexp(char(line),'^(#{1,6})\s+(.+)$','tokens','once');
@@ -64,6 +72,37 @@ function outputPaths = build_docx_from_markdown(sourcePaths)
         if inCode && ~isempty(codeLines),appendCodeBlock(document,codeLines);end
         close(document);
         outputPaths{fileIndex} = outputPath;
+    end
+end
+
+function appendImage(document,sourcePath,imageReference,caption)
+    import mlreportgen.dom.*
+    [sourceFolder,~,~] = fileparts(sourcePath);
+    imagePath = char(string(imageReference));
+    if ~isfile(imagePath)
+        imagePath = fullfile(sourceFolder,imagePath);
+    end
+    if ~isfile(imagePath)
+        error('WCC4SM:DocumentationImageMissing', ...
+            'Documentation image does not exist: %s',imageReference);
+    end
+    info = imfinfo(imagePath);
+    widthCm = 16;
+    heightCm = widthCm * double(info.Height) / double(info.Width);
+    item = Image(imagePath);
+    item.Width = sprintf('%.2fcm',widthCm);
+    item.Height = sprintf('%.2fcm',heightCm);
+    imageParagraph = Paragraph();
+    imageParagraph.Style = {HAlign('center'), ...
+        OuterMargin('0cm','0cm','0.15cm','0.05cm')};
+    append(imageParagraph,item);
+    append(document,imageParagraph);
+    if ~isempty(strtrim(caption))
+        captionParagraph = Paragraph(cleanInline(caption));
+        captionParagraph.Style = {FontFamily('Microsoft YaHei'), ...
+            FontSize('9pt'),Italic(true),HAlign('center'), ...
+            OuterMargin('0cm','0cm','0cm','0.3cm')};
+        append(document,captionParagraph);
     end
 end
 
