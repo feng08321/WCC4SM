@@ -38,3 +38,11 @@ build_docx_from_markdown(sources);
 
 After changing a Markdown source, regenerate the corresponding DOCX in the same
 commit so both representations describe the same software version.
+
+## User training medium
+
+The formal user manual is the controlled reference for functions, terminology,
+file formats and safety notes. Normal operator onboarding should use a separate
+step-by-step teaching video that demonstrates the complete workflow with real
+screen actions. Video scripts and recordings may evolve independently, but
+must not contradict the accepted software version or this documentation set.
