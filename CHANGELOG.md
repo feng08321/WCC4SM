@@ -1,6 +1,6 @@
 # Changelog
 
-## V0.9 — release candidate
+## V0.9 — 2026-08-04
 
 - Keeps `NIST_ASD_HgAr_20260729.lit` as the only confirmed NIST master and
   `WCC4SM_NIST_ASD_HgAr_20260729_Mode01.csv` as its Mode01 selection.

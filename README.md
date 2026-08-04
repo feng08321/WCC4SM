@@ -7,7 +7,7 @@ performance analysis, and complete analysis-session restoration.
 
 ## Versions
 
-The current release candidate is **WCC4SM V0.9**. It includes the accepted
+The current stable release is **WCC4SM V0.9** (Git tag `v0.9`). It includes the accepted
 V0.6.2 calibration workflow, organized reference assets, Apache License 2.0,
 PDF help, About information, and Windows EXE deployment support. The immutable
 `v0.6.2` and `v0.6.1` tags remain rollback baselines. Start V0.9 from MATLAB

@@ -5,7 +5,7 @@
 | Document | Markdown source | DOCX |
 |---|---|---|
 | 软件架构与功能技术说明书 | `WCC4SM_V0.9_软件架构与功能技术说明书_V1.0.md` | matching `.docx` |
-| 软件使用说明书 | `WCC4SM_V0.9_软件使用说明书_V1.0.md` | matching `.docx` |
+| 软件使用说明书 | `WCC4SM_V0.9_软件使用说明书_V1.0.md` | matching `.docx` and `.pdf` |
 | 输入输出数据格式规范 | `WCC4SM_INPUT_OUTPUT_DATA_FORMATS_V1.md` | matching `.docx` |
 | 需求—设计—测试追踪矩阵 | `WCC4SM_V0_9_REQUIREMENTS_TRACEABILITY_MATRIX.md` | matching `.docx` |
 
@@ -21,6 +21,7 @@ copies are generated delivery artifacts.
 - `TESTING.md`
 - `V0_9_GUI_TEST.md`
 - `WCC4SM_V0_6_2_ACCEPTANCE_REPORT.md`
+- `WCC4SM_V0_9_ACCEPTANCE_REPORT.md`
 - `WCC4SM_WINDOWS_EXE_BUILD_V1.md`
 
 ## Regenerate DOCX
