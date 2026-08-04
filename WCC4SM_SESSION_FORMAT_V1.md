@@ -1,4 +1,4 @@
-# WCC4SM session format 1.0
+# WCC4SM session format 1.x
 
 The MAT file contains one top-level variable named `WCC4SMSession`.
 
@@ -20,6 +20,20 @@ an otherwise useful research session unsavable. Structural inconsistency,
 length mismatch, invalid model fields and unsupported major format versions are
 errors.
 
-The stage-5 implementation is side-by-side only and does not modify
-`WCC4SM_V0_5_4.m`. Seven tests increase the suite from 26 to 33 tests. GUI
-integration should begin only after all 33 pass on the target MATLAB computer.
+V0.6.1 and later sessions may include pixel-coordinate semantics in three
+places:
+
+- `State.UISettings.PixelCoordinateMode` preserves the selected GUI mode;
+- `State.Spectrum.PixelCoordinateMode`, `PixelFirst` and `PixelLast` describe
+  the loaded data sequence;
+- final/applied models preserve `PixelCoordinateMode`, `PixelFirst`,
+  `PixelLast`, `PixelCount`, `CalibrationPixelFirst` and
+  `CalibrationPixelLast`.
+
+Supported explicit modes are `Full detector sequence` and
+`Valid-pixel sequence`. Older V0.6.0 sessions without these fields remain
+loadable and are treated as legacy natural-pixel coordinates. Missing legacy
+fields do not justify silently shifting polynomial coefficients.
+
+The session format major version remains 1 because these fields are backward-
+compatible additions. The current regression suite contains 37 tests.

@@ -1,4 +1,4 @@
-# WCC4SM test baseline
+# WCC4SM regression test baseline
 
 This test suite protects the numerical behavior of WCC4SM before the main
 program is split into modules. It does not open the graphical application and
@@ -17,13 +17,21 @@ The supported baseline is MATLAB R2022a or later. The current tests use base
 MATLAB only; future peak-detection tests will also require Signal Processing
 Toolbox.
 
-## Coverage in the first baseline
+## Current coverage
 
 - Synthetic symmetric Gaussian peak position, centroid, FWHM and ERW.
 - Linear-baseline removal, truncated windows and invalid coordinates.
 - Published 17-point calibration regression case.
 - Alignment and stable file characteristics of the measured and dark spectra.
 - Consistency between the NIST Hg-Ar master and selection mode 01.
+- Polynomial calibration, leave-one-out validation and model identity.
+- Calibrated spectral-performance calculations.
+- Versioned session validation, round-trip restoration and pixel-coordinate
+  metadata preservation.
+
+The current suite contains 37 non-GUI tests. GUI behavior is covered by the
+version-specific acceptance procedure because file dialogs, interactive peak
+review and figure editing require operator interaction.
 
 The real-spectrum assertions are regression characteristics, not certified
 instrument truth. In particular, the dark spectrum contains random noise, so

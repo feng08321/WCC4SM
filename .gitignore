@@ -11,6 +11,7 @@ MathWorks/
 # User/session data may contain operator, instrument, and measurement metadata
 WCC4SM_session.mat
 WCC4SM_session_*.mat
+result/
 
 # Editor and operating-system state
 .vscode/

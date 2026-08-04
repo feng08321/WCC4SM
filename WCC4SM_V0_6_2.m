@@ -1,5 +1,5 @@
-function WCC4SM_V0_5_2
-%WCC4SM_V0_5_2 Wavelength Characterization and Calibration for Spectrometer.
+function WCC4SM_V0_6_2
+%WCC4SM_V0_6_2 Wavelength Characterization and Calibration for Spectrometer.
 % Peak analysis plus reference-line matching and provisional calibration.
 % MATLAB R2022a or later. Signal Processing Toolbox is required for findpeaks.
 
@@ -28,24 +28,29 @@ function WCC4SM_V0_5_2
     selectedModelRow = 0;
     localCandidates = emptyLocalCandidates();
     selectedLocalCandidate = 0;
+    localSearchWindow = [NaN NaN];
     referenceResolutionNm = 3;
+    sessionMetadata = struct();
+    currentSessionPath = '';
     C = colors();
 
-    fig=uifigure('Name','WCC4SM V0.5.2 | Peak Analysis','Position',[25 30 1580 900],'Color',C.bg);
+    fig=uifigure('Name','WCC4SM V0.6.2 | Peak Analysis','Position',[25 30 1580 900],'Color',C.bg);
     root=uigridlayout(fig,[2 3]); root.RowHeight={50,'1x'}; root.ColumnWidth={330,'1x',400};
     root.ColumnWidth={'1x',330,400};
     root.Padding=[10 9 10 10]; root.RowSpacing=8; root.ColumnSpacing=8;
 
     head=uipanel(root,'BackgroundColor',C.navy,'BorderType','none'); head.Layout.Row=1; head.Layout.Column=[1 3];
     hg=uigridlayout(head,[1 3]); hg.ColumnWidth={310,'1x',520}; hg.Padding=[14 5 14 5];
-    uilabel(hg,'Text','WCC4SM  V0.5.2','FontSize',20,'FontWeight','bold','FontColor',[.10 .55 .95]);
+    uilabel(hg,'Text','WCC4SM  V0.6.2','FontSize',20,'FontWeight','bold','FontColor',[.10 .55 .95]);
     uilabel(hg,'Text','Wavelength Characterization and Calibration for Spectrometer','FontSize',14,'FontWeight','bold','FontColor',[.10 .55 .95],'HorizontalAlignment','center');
-    headerTools=uigridlayout(hg,[1 3]);headerTools.ColumnWidth={185,90,'1x'};headerTools.Padding=[0 0 0 0];headerTools.ColumnSpacing=6;
+    headerTools=uigridlayout(hg,[1 5]);headerTools.ColumnWidth={145,78,88,88,'1x'};headerTools.Padding=[0 0 0 0];headerTools.ColumnSpacing=5;headerTools.BackgroundColor=C.navy;
     openFigDrop=uidropdown(headerTools,'Items',{'Peak Analysis','Peak Parameter Statistics','Wavelength Matching', ...
         'Calibration Fit & Residuals','Model Validation','Model Comparison','Calibrated Performance'}, ...
         'Value','Peak Analysis','Tooltip','Choose a plot tab whose subplots will be opened as separate editable figures');
     uibutton(headerTools,'Text','OPEN FIG','FontWeight','bold','BackgroundColor',C.cyan,'ButtonPushedFcn',@openSelectedTabFigures);
-    topStatus=uilabel(headerTools,'Text','Load a spectrum','FontWeight','bold','FontColor',[1 1 1],'HorizontalAlignment','right');
+    uibutton(headerTools,'Text','SAVE SESSION','FontWeight','bold','BackgroundColor',C.greenLight,'ButtonPushedFcn',@saveSession);
+    uibutton(headerTools,'Text','LOAD SESSION','FontWeight','bold','BackgroundColor',C.yellow,'ButtonPushedFcn',@loadSession);
+    topStatus=uilabel(headerTools,'Text','Load a spectrum','FontWeight','bold','FontColor',C.yellow,'BackgroundColor',C.navy,'HorizontalAlignment','left','Tooltip','Current workflow status');
 
     %% LEFT CONTROL COLUMN
     leftTabs=uitabgroup(root); leftTabs.Layout.Row=2; leftTabs.Layout.Column=2;
@@ -57,7 +62,11 @@ function WCC4SM_V0_5_2
     bRef=uibutton(dg,'Text','Pop out current spectrum plots','ButtonPushedFcn',@popOutSpectrumPlots); bRef.Layout.Column=[1 2];
     sectionAuto(dg,'Input interpretation');
     uilabel(dg,'Text','Two-column X'); inputType=uidropdown(dg,'Items',{'Wavelength (nm)','Pixel index'},'Value','Wavelength (nm)');
-    uilabel(dg,'Text','Natural pixel start'); pixelStart=uispinner(dg,'Limits',[0 1],'Step',1,'Value',0);
+    uilabel(dg,'Text','Pixel sequence'); pixelMode=uidropdown(dg, ...
+        'Items',{'Full detector sequence','Valid-pixel sequence'}, ...
+        'Value','Full detector sequence', ...
+        'ValueChangedFcn',@pixelModeChanged, ...
+        'Tooltip','Full detector: uncalibrated instrument exposes every detector pixel. Valid-pixel: calibrated instrument outputs only its usable cropped sequence. Both sequences start at 1.');
     sourceLabel=uilabel(dg,'Text','No spectrum','FontColor',C.muted); sourceLabel.Layout.Column=[1 2];
     sectionAuto(dg,'Preprocessing & display');
     uilabel(dg,'Text','Manual baseline'); baselineField=uieditfield(dg,'numeric','Value',0,'ValueChangedFcn',@preprocessChanged);
@@ -68,7 +77,7 @@ function WCC4SM_V0_5_2
     clampCheck=uicheckbox(dg,'Text','Set negative values to zero','Value',true,'ValueChangedFcn',@preprocessChanged); clampCheck.Layout.Column=[1 2];
     uilabel(dg,'Text','Display signal'); displayDrop=uidropdown(dg,'Items',{'Corrected AD counts','Normalized','Raw AD counts'},'Value','Corrected AD counts','ValueChangedFcn',@displayChanged);
     uilabel(dg,'Text','Y scale'); scaleDrop=uidropdown(dg,'Items',{'Linear','Log'},'Value','Linear','ValueChangedFcn',@displayChanged);
-    uilabel(dg,'Text','X axis'); axisButton=uibutton(dg,'Text','X Axis: Pixel  ⇄','ButtonPushedFcn',@toggleMainAxis);
+    uilabel(dg,'Text','X axis'); axisButton=uibutton(dg,'Text','X Axis: Pixel  <->','ButtonPushedFcn',@toggleMainAxis);
     refCheck=uicheckbox(dg,'Text','Show detected peak markers','Value',true,'ValueChangedFcn',@displayChanged); refCheck.Layout.Column=[1 2];
     sectionAuto(dg,'Weak-peak subwindow search');
     localSearchBtn=uibutton(dg,'Text','OPEN SUBWINDOW SEARCH','FontWeight','bold','BackgroundColor',C.cyan,'ButtonPushedFcn',@openLocalSearchDialog);localSearchBtn.Layout.Column=[1 2];
@@ -257,12 +266,12 @@ function WCC4SM_V0_5_2
     uibutton(compareTools,'Text','Clear applied model','ButtonPushedFcn',@clearAppliedModel);
     appliedStatus=uilabel(compareTools,'Text','Applied model: none | spectrum axis remains Pixel','FontWeight','bold','FontColor',C.navy);appliedStatus.Layout.Column=[1 4];
     axModelCompare=uiaxes(gc);styleAxes(axModelCompare,C);title(axModelCompare,'Stored-model residual comparison');
-    modelComparisonTable=uitable(gc,'ColumnName',{'Model','N','Peak position','Degree','Fit RMS','LOO RMS','LOO max','Influence','STD','Max','Equation'}, ...
-        'ColumnWidth',{58,38,100,50,65,68,68,68,60,60,320},'RowName',[],'CellSelectionCallback',@selectModelRow);
+    modelComparisonTable=uitable(gc,'ColumnName',{'Model','N','Peak position','Degree','Pixel mode','Pixel domain','Fit RMS','LOO RMS','LOO max','Influence','STD','Max','Equation'}, ...
+        'ColumnWidth',{58,38,100,50,135,90,65,68,68,68,60,60,320},'RowName',[],'CellSelectionCallback',@selectModelRow);
 
     %% REFERENCE OVERVIEW AND FINAL FIT TAB
-    gf=uigridlayout(tabFit,[12 2]); gf.ColumnWidth={145,'1x'};
-    gf.RowHeight={24,'1x',24,26,26,32,32,32,34,105,55,40};
+    gf=uigridlayout(tabFit,[11 2]); gf.ColumnWidth={145,'1x'};
+    gf.RowHeight={24,'1x',24,26,26,32,32,34,105,55,40};
     gf.Padding=[7 7 7 7]; gf.RowSpacing=3;
     sectionAuto(gf,'Active reference set');
     activeRefTable=uitable(gf,'ColumnName',{'nm','Intensity','Spacing','Status'},'ColumnWidth',{72,70,65,95},'RowName',[]); activeRefTable.Layout.Column=[1 2];
@@ -270,7 +279,6 @@ function WCC4SM_V0_5_2
     uilabel(gf,'Text','Peak position'); positionDrop=uidropdown(gf,'Items',{'Direct peak','Interpolated peak','FWHM center','Centroid','Gaussian fit'},'Value','FWHM center');
     uilabel(gf,'Text','Polynomial degree'); degreeSpin=uispinner(gf,'Limits',[1 6],'Step',1,'Value',3);
     fitBtn=uibutton(gf,'Text','FIT CALIBRATION MODEL','FontWeight','bold','BackgroundColor',C.greenLight,'ButtonPushedFcn',@fitFinalCalibration); fitBtn.Layout.Column=[1 2];
-    residualBtn=uibutton(gf,'Text','Open fit & residual analysis','FontWeight','bold','ButtonPushedFcn',@openResidualAnalysis); residualBtn.Layout.Column=[1 2];
     saveModelBtn=uibutton(gf,'Text','SAVE / EXPORT CURRENT MODEL','FontWeight','bold','ButtonPushedFcn',@exportCurrentModel);saveModelBtn.Layout.Column=[1 2];
     calibratedStatsBtn=uibutton(gf,'Text','PLOT CALIBRATED PERFORMANCE','FontWeight','bold','BackgroundColor',C.cyan,'ButtonPushedFcn',@plotCalibratedPerformance);calibratedStatsBtn.Layout.Column=[1 2];
     equationDisplay=uitextarea(gf,'Value',{'No calibration equation.'},'Editable','off','FontName','Courier New');equationDisplay.Layout.Column=[1 2];
@@ -278,6 +286,196 @@ function WCC4SM_V0_5_2
         'WordWrap','on','FontColor',C.navy,'FontWeight','bold'); fitResultLabel.Layout.Column=[1 2];
     fitHelp=uilabel(gf,'Text','Create about six manual anchor pairs, update the initial model, then use Auto extend. Every final fit is retained as a model snapshot for residual comparison.', ...
         'WordWrap','on','FontColor',C.muted); fitHelp.Layout.Column=[1 2];
+
+    %% SESSION MANAGEMENT
+    function saveSession(~,~)
+        try
+            if ~editSessionMetadata(),return;end
+            sessionState=captureSessionState();
+            WCC4SMSession=wc4sm_create_session(sessionState,sessionMetadata);
+            WCC4SMSession.SoftwareVersion='0.6.2';
+            defaultName='WCC4SM_session.mat';
+            if ~isempty(currentSessionPath),[~,n,e]=fileparts(currentSessionPath);defaultName=[n e];end
+            [fn,pn]=uiputfile('*.mat','Save complete WCC4SM session',defaultName);
+            if isequal(fn,0),return;end
+            target=fullfile(pn,fn);
+            wc4sm_save_session(target,WCC4SMSession);
+            currentSessionPath=target;
+            topStatus.Text=['Session saved: ' shortName(target)];
+        catch ME
+            uialert(fig,ME.message,'Session save failed');
+        end
+    end
+
+    function loadSession(~,~)
+        [fn,pn]=uigetfile('*.mat','Load complete WCC4SM session');if isequal(fn,0),return;end
+        oldState=captureSessionState();oldMetadata=sessionMetadata;oldPath=currentSessionPath;
+        try
+            target=fullfile(pn,fn);
+            [loaded,report]=wc4sm_load_session(target);
+            applySessionState(loaded.State);
+            sessionMetadata=loaded.Metadata;currentSessionPath=target;
+            refreshSessionViews();
+            if report.WarningCount>0
+                topStatus.Text=sprintf('Session loaded with %d provenance warning(s): %s', ...
+                    report.WarningCount,shortName(target));
+            else
+                topStatus.Text=['Session loaded: ' shortName(target)];
+            end
+        catch ME
+            try
+                applySessionState(oldState);sessionMetadata=oldMetadata;currentSessionPath=oldPath;
+                refreshSessionViews();
+            catch
+            end
+            uialert(fig,ME.message,'Session load failed; previous state retained');
+        end
+    end
+
+    function tf=editSessionMetadata
+        provenance=defaultProvenance();
+        defaults={metadataText('Operator',getenv('USERNAME')),metadataText('InstrumentID',''), ...
+            metadataText('InstrumentModel',''),metadataText('Notes',''), ...
+            char(string(provenance.MasterLibrary)),char(string(provenance.MasterVersion)), ...
+            char(string(provenance.Authority)),char(string(provenance.WavelengthMedium)), ...
+            char(string(provenance.SelectionMode)),char(string(provenance.SelectionModeVersion)), ...
+            char(string(provenance.Notes))};
+        prompt={'Operator','Instrument ID','Instrument model','Session notes', ...
+            'Reference master library','Reference master version','Reference authority/source', ...
+            'Wavelength medium (Air/Vacuum/Unspecified)','Reference selection mode', ...
+            'Selection mode version','Reference traceability notes'};
+        answer=inputdlg(prompt,'WCC4SM session metadata and traceability',[1 62],defaults);
+        if isempty(answer),tf=false;return;end
+        provenance=struct('MasterLibrary',answer{5},'MasterVersion',answer{6}, ...
+            'Authority',answer{7},'WavelengthMedium',answer{8}, ...
+            'SelectionMode',answer{9},'SelectionModeVersion',answer{10},'Notes',answer{11});
+        measurementTime=NaT;if isfield(sessionMetadata,'MeasurementTime'),measurementTime=sessionMetadata.MeasurementTime;end
+        sessionMetadata=struct('Operator',answer{1},'InstrumentID',answer{2}, ...
+            'InstrumentModel',answer{3},'MeasurementTime',measurementTime, ...
+            'MeasurementFile',D.source,'DarkFile',D.darkSource,'Notes',answer{4}, ...
+            'ReferenceProvenance',provenance);
+        tf=true;
+    end
+
+    function textValue=metadataText(name,fallback)
+        textValue=fallback;
+        if isfield(sessionMetadata,name)
+            value=sessionMetadata.(name);
+            if ~(isdatetime(value)&&isnat(value)),textValue=char(string(value));end
+        end
+    end
+
+    function provenance=defaultProvenance
+        provenance=struct('MasterLibrary',shortName(L.source),'MasterVersion','', ...
+            'Authority',inferReferenceAuthority(L.source),'WavelengthMedium','Unspecified', ...
+            'SelectionMode',referenceSetDrop.Value,'SelectionModeVersion','','Notes','');
+        if isfield(sessionMetadata,'ReferenceProvenance')&&isstruct(sessionMetadata.ReferenceProvenance)
+            old=sessionMetadata.ReferenceProvenance;names=fieldnames(old);
+            for kk=1:numel(names),provenance.(names{kk})=old.(names{kk});end
+        end
+    end
+
+    function authority=inferReferenceAuthority(source)
+        name=lower(string(source));
+        if contains(name,'nist'),authority='NIST';elseif contains(name,'avantes'),authority='Avantes';else,authority='';end
+    end
+
+    function state=captureSessionState
+        state=struct('Spectrum',D,'Peaks',peaks,'PeakDataset',peakDataset, ...
+            'ReferenceLines',L,'CalibrationPairs',calPairs, ...
+            'InitialCalibration',provisional,'FinalCalibration',finalModel, ...
+            'CalibrationModels',calibrationModels,'AppliedModel',appliedModel, ...
+            'AppliedModelName',appliedModelName,'UISettings',captureUISettings());
+    end
+
+    function settings=captureUISettings
+        settings=struct('InputType',inputType.Value,'PixelCoordinateMode',pixelMode.Value, ...
+            'ManualBaseline',baselineField.Value,'ClampNegative',clampCheck.Value, ...
+            'DisplaySignal',displayDrop.Value,'YScale',scaleDrop.Value, ...
+            'MainAxisMode',mainAxisMode,'MatchingAxisMode',matchingAxisMode, ...
+            'NormalizedSearch',normalizedSearch.Value,'MinHeight',minHeight.Value, ...
+            'MinProminence',minProm.Value,'MinDistance',minDist.Value, ...
+            'MinWidth',minWidth.Value,'MaxWidth',maxWidth.Value, ...
+            'LeftPixels',leftSpin.Value,'RightPixels',rightSpin.Value, ...
+            'InterpolationMethod',methodDrop.Value,'InterpolationFactor',factorSpin.Value, ...
+            'PositionMethod',positionDrop.Value,'PolynomialDegree',degreeSpin.Value, ...
+            'ConfidenceThreshold',confidenceThreshold.Value,'ResidualBins',histBinCount.Value, ...
+            'FWHMBins',fwhmHistBinCount.Value,'FWHMRangeMode',fwhmHistRangeMode.Value, ...
+            'FWHMXMin',fwhmHistXMin.Value,'FWHMXMax',fwhmHistXMax.Value, ...
+            'ReferenceResolutionNm',referenceResolutionNm);
+    end
+
+    function applySessionState(state)
+        if isempty(fieldnames(state.Spectrum)),D=emptyData();else,D=state.Spectrum;end
+        if ~isfield(D,'PixelCoordinateMode')||isempty(D.PixelCoordinateMode)
+            D.PixelCoordinateMode='Legacy natural pixel sequence';
+        end
+        if ~isfield(D,'PixelFirst')||isempty(D.PixelFirst),D.PixelFirst=minOrNaN(D.pixel);end
+        if ~isfield(D,'PixelLast')||isempty(D.PixelLast),D.PixelLast=maxOrNaN(D.pixel);end
+        peaks=state.Peaks;peakDataset=state.PeakDataset;
+        if isempty(fieldnames(state.ReferenceLines)),L=emptyLineLibrary();else,L=state.ReferenceLines;end
+        Lexternal=L;calPairs=state.CalibrationPairs;
+        if isempty(fieldnames(state.InitialCalibration)),provisional=emptyInitialModel();else,provisional=state.InitialCalibration;end
+        if isempty(fieldnames(state.FinalCalibration)),finalModel=emptyFinalModel();else,finalModel=state.FinalCalibration;end
+        calibrationModels=state.CalibrationModels;
+        if isempty(fieldnames(state.AppliedModel)),appliedModel=emptyFinalModel();else,appliedModel=state.AppliedModel;end
+        appliedModelName=char(string(state.AppliedModelName));
+        localCandidates=emptyLocalCandidates();selectedLocalCandidate=0;
+        selectedRow=0;selectedDatasetRow=0;selectedRefRow=0;selectedPairRow=0;
+        selectedValidationRow=0;selectedModelRow=0;R=emptyReference();
+        restoreUISettings(state.UISettings);
+    end
+
+    function restoreUISettings(s)
+        restoreControl(inputType,s,'InputType');restoreControl(pixelMode,s,'PixelCoordinateMode');
+        restoreControl(baselineField,s,'ManualBaseline');restoreControl(clampCheck,s,'ClampNegative');
+        restoreControl(displayDrop,s,'DisplaySignal');restoreControl(scaleDrop,s,'YScale');
+        restoreControl(normalizedSearch,s,'NormalizedSearch');restoreControl(minHeight,s,'MinHeight');
+        restoreControl(minProm,s,'MinProminence');restoreControl(minDist,s,'MinDistance');
+        restoreControl(minWidth,s,'MinWidth');restoreControl(maxWidth,s,'MaxWidth');
+        restoreControl(leftSpin,s,'LeftPixels');restoreControl(rightSpin,s,'RightPixels');
+        restoreControl(methodDrop,s,'InterpolationMethod');restoreControl(factorSpin,s,'InterpolationFactor');
+        restoreControl(positionDrop,s,'PositionMethod');restoreControl(degreeSpin,s,'PolynomialDegree');
+        restoreControl(confidenceThreshold,s,'ConfidenceThreshold');restoreControl(histBinCount,s,'ResidualBins');
+        restoreControl(fwhmHistBinCount,s,'FWHMBins');restoreControl(fwhmHistRangeMode,s,'FWHMRangeMode');
+        restoreControl(fwhmHistXMin,s,'FWHMXMin');restoreControl(fwhmHistXMax,s,'FWHMXMax');
+        if isfield(s,'ReferenceResolutionNm'),referenceResolutionNm=s.ReferenceResolutionNm;end
+        if isfield(s,'MainAxisMode'),mainAxisMode=char(string(s.MainAxisMode));else,mainAxisMode='Pixel';end
+        if isfield(s,'MatchingAxisMode'),matchingAxisMode=char(string(s.MatchingAxisMode));else,matchingAxisMode='Pixel';end
+    end
+
+    function restoreControl(control,settings,name)
+        if isfield(settings,name),control.Value=settings.(name);end
+    end
+
+    function refreshSessionViews
+        sourceLabel.Text=shortName(D.source);
+        if isempty(D.dark)
+            baselineField.Enable='on';clearDarkBtn.Enable='off';darkStatus.Text='Dark: none (manual constant baseline is active)';
+        else
+            baselineField.Enable='off';clearDarkBtn.Enable='on';darkStatus.Text=['Dark active: ' shortName(D.darkSource) ' | manual baseline disabled'];
+        end
+        if ~isempty(D.pixel),pixelViewStart.Value=min(D.pixel);pixelViewEnd.Value=max(D.pixel);end
+        if L.loaded,referenceSetDrop.Value='External / User';end
+        if isfield(appliedModel,'valid')&&appliedModel.valid&&~isempty(D.pixel)
+            wl=evaluateWavelengthModel(appliedModel,D.pixel);
+            if all(isfinite(wl))&&all(diff(wl)>0)
+                D.calibratedWavelength=wl(:);
+                [coordinateMode,coordinateDomain]=modelCoordinateLabels(appliedModel);
+                appliedStatus.Text=sprintf('Applied: %s | %s | pixels %s | degree %d | %.4g to %.4g nm', ...
+                    appliedModelName,coordinateMode,coordinateDomain,appliedModel.Degree,min(wl),max(wl));
+            else
+                appliedModel=emptyFinalModel();appliedModelName='';D.calibratedWavelength=[];mainAxisMode='Pixel';
+            end
+        else
+            D.calibratedWavelength=[];mainAxisMode='Pixel';
+            appliedStatus.Text='Applied model: none | spectrum axis remains Pixel';
+        end
+        if strcmp(mainAxisMode,'Wavelength')&&isempty(D.calibratedWavelength),mainAxisMode='Pixel';end
+        axisButton.Text=['X Axis: ' mainAxisMode '  <->'];
+        refreshAll();refreshModelComparison();drawModelComparison([],[]);refreshValidationView([],[]);
+        if finalModel.valid,drawEmbeddedResults();end
+    end
 
     %% CALLBACKS
     function loadSpectrum(~,~)
@@ -288,9 +486,11 @@ function WCC4SM_V0_5_2
             else
                 inputKind='Pixel';
             end
-            D=wc4sm_read_spectrum_file(fullfile(pn,fn),inputKind,pixelStart.Value);
+            D=wc4sm_read_spectrum_file(fullfile(pn,fn),inputKind,1);
+            D.PixelCoordinateMode=pixelMode.Value;
+            D.PixelFirst=min(D.pixel);D.PixelLast=max(D.pixel);
             y=D.raw;
-            sourceLabel.Text=fn; mainAxisMode='Pixel'; matchingAxisMode='Pixel'; axisButton.Text='X Axis: Pixel  ⇄'; selectedRow=0; peaks=emptyPeaks(); peakDataset=emptyDataset();
+            sourceLabel.Text=fn; mainAxisMode='Pixel'; matchingAxisMode='Pixel'; axisButton.Text='X Axis: Pixel  <->'; selectedRow=0; peaks=emptyPeaks(); peakDataset=emptyDataset();
             localCandidates=emptyLocalCandidates();selectedLocalCandidate=0;
             baselineField.Enable='on';clearDarkBtn.Enable='off';darkStatus.Text='Dark: none (manual constant baseline is active)';
             pixelViewStart.Value=min(D.pixel); pixelViewEnd.Value=max(D.pixel);
@@ -300,6 +500,17 @@ function WCC4SM_V0_5_2
         catch ME
             uialert(fig,ME.message,'Import failed');
         end
+    end
+
+    function pixelModeChanged(~,~)
+        if isempty(D.raw),return;end
+        D.PixelCoordinateMode=pixelMode.Value;
+        calPairs=emptyCalPairs();provisional=emptyInitialModel();finalModel=emptyFinalModel();
+        appliedModel=emptyFinalModel();appliedModelName='';D.calibratedWavelength=[];
+        calibrationModels=emptyCalibrationModels();mainAxisMode='Pixel';matchingAxisMode='Pixel';
+        axisButton.Text='X Axis: Pixel  ⇄';appliedStatus.Text='Applied model: none | spectrum axis remains Pixel';
+        refreshCalibration();refreshModelComparison();drawFull();
+        topStatus.Text=['Pixel sequence changed to ' pixelMode.Value '; calibration models were cleared'];
     end
 
     function loadDarkSpectrum(~,~)
@@ -331,7 +542,7 @@ function WCC4SM_V0_5_2
         preprocess();peaks=emptyPeaks();localCandidates=emptyLocalCandidates();selectedLocalCandidate=0;
         selectedRow=0;peakDataset=emptyDataset();calPairs=emptyCalPairs();provisional=emptyInitialModel();
         finalModel=emptyFinalModel();appliedModel=emptyFinalModel();appliedModelName='';
-        D.calibratedWavelength=[];mainAxisMode='Pixel';matchingAxisMode='Pixel';axisButton.Text='X Axis: Pixel  ⇄';
+        D.calibratedWavelength=[];mainAxisMode='Pixel';matchingAxisMode='Pixel';axisButton.Text='X Axis: Pixel  <->';
         appliedStatus.Text='Applied model: none | spectrum axis remains Pixel';
         calibrationModels=emptyCalibrationModels();refreshModelComparison();
         refreshAll();refreshCalibration();topStatus.Text=message;
@@ -365,7 +576,11 @@ function WCC4SM_V0_5_2
             else,uialert(fig,'No calibration model is currently applied. Select a validated model in Model Comparison and click Apply.','Wavelength unavailable');return;end
         else,mainAxisMode='Pixel';end
         matchingAxisMode=mainAxisMode;
-        axisButton.Text=['X Axis: ' mainAxisMode '  ⇄'];
+        axisButton.Text=['X Axis: ' mainAxisMode '  <->'];
+        % Pixel and wavelength coordinates have different numerical domains.
+        % A previous zoom or guide line can leave XLimMode manual, so force a
+        % fresh fit whenever the coordinate system changes.
+        xlim(axFull,'auto');ylim(axFull,'auto');
         drawFull();if selectedRow>0&&selectedRow<=numel(peaks)&&~isempty(peaks(selectedRow).Result),drawPeak(peaks(selectedRow).Result);showParameters(peaks(selectedRow).Result);end
         if tabs.SelectedTab==tabCal,showCalibrationView([],[]);end
     end
@@ -447,11 +662,15 @@ function WCC4SM_V0_5_2
         catch
         end
         if diff(viewLimits)<1,viewLimits=limits;end
-        ld=uifigure('Name','WCC4SM V0.5.2 | Weak-peak subwindow search','Position',[180 160 520 520],'Color',C.bg);
+        ld=uifigure('Name','WCC4SM V0.6.2 | Weak-peak subwindow search','Position',[180 160 520 520],'Color',C.bg);
         lg=uigridlayout(ld,[13 2]);lg.ColumnWidth={180,'1x'};lg.RowHeight={32,30,30,30,30,30,30,30,34,34,30,34,'1x'};lg.Padding=[12 12 12 12];
         note=uilabel(lg,'Text','Local search normalizes within this window, uses separate sensitive parameters, and produces candidates only.','FontColor',C.navy,'FontWeight','bold','WordWrap','on');note.Layout.Column=[1 2];
         uilabel(lg,'Text','Start pixel');lStart=uieditfield(lg,'numeric','Value',viewLimits(1));
         uilabel(lg,'Text','End pixel');lEnd=uieditfield(lg,'numeric','Value',viewLimits(2));
+        localSearchWindow=sort(viewLimits);drawFull();
+        lStart.ValueChangedFcn=@(~,~)updateLocalSearchWindow(lStart,lEnd);
+        lEnd.ValueChangedFcn=@(~,~)updateLocalSearchWindow(lStart,lEnd);
+        ld.CloseRequestFcn=@(~,~)closeLocalSearchDialog(ld);
         lNorm=uicheckbox(lg,'Text','Search normalized signal','Value',true);lNorm.Layout.Column=[1 2];
         uilabel(lg,'Text','Min peak height');lHeight=uieditfield(lg,'numeric','Value',max(eps,minHeight.Value/5),'Limits',[0 Inf]);
         uilabel(lg,'Text','Min prominence');lProm=uieditfield(lg,'numeric','Value',max(eps,minProm.Value/5),'Limits',[0 Inf]);
@@ -466,6 +685,19 @@ function WCC4SM_V0_5_2
         candidateDrop.ValueChangedFcn=@(~,~)selectLocalCandidate(candidateDrop,candidateInfo);
         addLocalBtn.ButtonPushedFcn=@(~,~)addLocalCandidate(candidateDrop,candidateInfo,addLocalBtn,clearLocalBtn);
         clearLocalBtn.ButtonPushedFcn=@(~,~)clearLocalCandidates(candidateDrop,candidateInfo,addLocalBtn,clearLocalBtn);
+    end
+
+    function updateLocalSearchWindow(lStart,lEnd)
+        if isempty(D.pixel),return;end
+        lo=max(min(D.pixel),min(lStart.Value,lEnd.Value));
+        hi=min(max(D.pixel),max(lStart.Value,lEnd.Value));
+        if hi<lo,lo=min(D.pixel);hi=max(D.pixel);end
+        lStart.Value=lo;lEnd.Value=hi;localSearchWindow=[lo hi];drawFull();
+        topStatus.Text=sprintf('Subwindow preview: pixel %.6g to %.6g',lo,hi);
+    end
+
+    function closeLocalSearchDialog(dialogFigure)
+        localSearchWindow=[NaN NaN];drawFull();delete(dialogFigure);
     end
 
     function detectLocalCandidates(lStart,lEnd,lNorm,lHeight,lProm,lDist,lWidth,candidateDrop,candidateInfo,addLocalBtn,clearLocalBtn)
@@ -1023,6 +1255,52 @@ function WCC4SM_V0_5_2
         if isempty(model.Coefficients),wl=nan(size(pixel));else,wl=polyval(model.Coefficients,pixel,[],model.Mu);end
     end
 
+    function model=attachPixelCoordinateMetadata(model)
+        model.PixelCoordinateMode=currentPixelCoordinateMode();
+        model.PixelFirst=minOrNaN(D.pixel);
+        model.PixelLast=maxOrNaN(D.pixel);
+        model.PixelCount=numel(D.pixel);
+        model.CalibrationPixelFirst=minOrNaN(model.Pixel);
+        model.CalibrationPixelLast=maxOrNaN(model.Pixel);
+    end
+
+    function [mode,domain,calibrationDomain]=modelCoordinateLabels(model)
+        mode='Legacy / unspecified';domain='unspecified';calibrationDomain='unspecified';
+        if isfield(model,'PixelCoordinateMode')&&~isempty(model.PixelCoordinateMode)
+            mode=char(string(model.PixelCoordinateMode));
+        end
+        if isfield(model,'PixelFirst')&&isfield(model,'PixelLast')&& ...
+                isfinite(model.PixelFirst)&&isfinite(model.PixelLast)
+            domain=sprintf('%.12g..%.12g',model.PixelFirst,model.PixelLast);
+        end
+        if isfield(model,'CalibrationPixelFirst')&&isfield(model,'CalibrationPixelLast')&& ...
+                isfinite(model.CalibrationPixelFirst)&&isfinite(model.CalibrationPixelLast)
+            calibrationDomain=sprintf('%.12g..%.12g',model.CalibrationPixelFirst,model.CalibrationPixelLast);
+        elseif isfield(model,'Pixel')&&~isempty(model.Pixel)
+            calibrationDomain=sprintf('%.12g..%.12g',min(model.Pixel),max(model.Pixel));
+        end
+    end
+
+    function mode=currentPixelCoordinateMode
+        mode=pixelMode.Value;
+        if isfield(D,'PixelCoordinateMode')&&~isempty(D.PixelCoordinateMode)
+            mode=char(string(D.PixelCoordinateMode));
+        end
+    end
+
+    function [compatible,message]=modelPixelCoordinatesCompatible(model)
+        compatible=true;message='';
+        if ~isfield(model,'PixelCoordinateMode')||isempty(model.PixelCoordinateMode)
+            return; % V0.6.0 and earlier models remain loadable as legacy models.
+        end
+        modelMode=char(string(model.PixelCoordinateMode));dataMode=currentPixelCoordinateMode();
+        if ~strcmp(modelMode,dataMode)
+            compatible=false;
+            message=sprintf(['Model pixel sequence is "%s", but the loaded spectrum uses "%s". ' ...
+                'Select or load data in the matching sequence; coefficients cannot be silently shifted.'],modelMode,dataMode);
+        end
+    end
+
     function pixel=invertWavelengthModel(model,wavelength)
         pixel=nan(size(wavelength)); if isempty(D.pixel)||isempty(model.Coefficients),return;end
         pg=linspace(min(D.pixel),max(D.pixel),max(4000,4*numel(D.pixel))); wg=evaluateWavelengthModel(model,pg);
@@ -1176,26 +1454,22 @@ function WCC4SM_V0_5_2
         if numel(xpos)<deg+2
             uialert(fig,sprintf('Degree %d fitting requires at least %d valid points in this program. Current valid points: %d.',deg,deg+2,numel(xpos)),'Insufficient calibration points');return;
         end
-        [xpos,ord]=sort(xpos); wl=wl(ord); ids=ids(ord);
-        [coef,S,mu]=polyfit(xpos,wl,deg); fitted=polyval(coef,xpos,[],mu); residual=wl-fitted;
-        finalModel=emptyFinalModel(); finalModel.valid=true; finalModel.PositionMethod=positionDrop.Value; finalModel.Degree=deg;
-        finalModel.Coefficients=coef; finalModel.Mu=mu; finalModel.S= S; finalModel.PeakID=ids; finalModel.Pixel=xpos;
-        finalModel.NaturalCoefficients=normalizedToNaturalPolynomial(coef,mu);finalModel.Equation=formatCalibrationEquation(finalModel.NaturalCoefficients);
-        finalModel.ReferenceWavelength=wl; finalModel.FittedWavelength=fitted; finalModel.Residual=residual;
-        finalModel.MeanResidual=mean(residual); finalModel.STD=std(residual); finalModel.RMS=sqrt(mean(residual.^2));
-        finalModel.MaxAbsResidual=max(abs(residual));
-        [finalModel.LOOResidual,finalModel.DeletionMaxCurveChange]=leaveOneOutDiagnostics(xpos,wl,deg,coef,mu,D.pixel);
-        finalModel.LOORMS=sqrt(mean(finalModel.LOOResidual.^2));finalModel.LOOMaxAbs=max(abs(finalModel.LOOResidual));
-        finalModel.MaxDeletionInfluence=max(finalModel.DeletionMaxCurveChange);
+        finalModel=wc4sm_fit_calibration(xpos(:),wl(:),deg,D.pixel, ...
+            positionDrop.Value,ids(:));
+        finalModel=attachPixelCoordinateMetadata(finalModel);
+        xpos=finalModel.Pixel;wl=finalModel.ReferenceWavelength;ids=finalModel.PeakID;
         modelItem=struct('ModelID',sprintf('M%03d',numel(calibrationModels)+1),'CreatedAt',datetime('now'), ...
             'PairCount',numel(xpos),'PositionMethod',positionDrop.Value,'Degree',deg,'PairIDs',{ids},'Model',finalModel);
         calibrationModels(end+1)=modelItem;selectedModelRow=numel(calibrationModels);refreshModelComparison();
         try,modelComparisonTable.Selection=[selectedModelRow 1];catch,end
         drawModelComparison([],[]);refreshValidationView([],[]);
-        fitResultLabel.Text=sprintf('%s | degree %d | N=%d | mean %.5g nm | STD %.5g nm | 2STD %.5g nm | RMS %.5g nm | max|r| %.5g nm', ...
-            positionDrop.Value,deg,numel(xpos),finalModel.MeanResidual,finalModel.STD,2*finalModel.STD,finalModel.RMS,finalModel.MaxAbsResidual);
+        [coordinateMode,coordinateDomain,calibrationDomain]=modelCoordinateLabels(finalModel);
+        fitResultLabel.Text=sprintf('%s | %s | pixels %s | fit domain %s | degree %d | N=%d | RMS %.5g nm | max|r| %.5g nm', ...
+            positionDrop.Value,coordinateMode,coordinateDomain,calibrationDomain,deg,numel(xpos),finalModel.RMS,finalModel.MaxAbsResidual);
         equationDisplay.Value={sprintf('%s | %s',modelItem.ModelID,finalModel.Equation), ...
-            sprintf('MATLAB normalized form: z=(pixel-%.12g)/%.12g',mu(1),mu(2)),sprintf('Coefficients(z): %s',mat2str(coef,12))};
+            sprintf('Pixel mode: %s | data domain: %s | calibration domain: %s',coordinateMode,coordinateDomain,calibrationDomain), ...
+            sprintf('MATLAB normalized form: z=(pixel-%.12g)/%.12g',finalModel.Mu(1),finalModel.Mu(2)), ...
+            sprintf('Coefficients(z): %s',mat2str(finalModel.Coefficients,12))};
         if isempty(unavailableIDs)
             topStatus.Text='Final calibration model fitted and leave-one-out validation completed';
         else
@@ -1300,14 +1574,17 @@ function WCC4SM_V0_5_2
         CalibrationModel=finalModel;CalibrationPairs=calPairs;ReferenceLines=L; %#ok<NASGU>
         save(fullfile(pn,fn),'CalibrationModel','CalibrationPairs','ReferenceLines');
         [~,stem]=fileparts(fn);
-        T=table(string(finalModel.PeakID(:)),finalModel.Pixel(:),finalModel.ReferenceWavelength(:), ...
+        [coordinateMode,coordinateDomain,calibrationDomain]=modelCoordinateLabels(finalModel);
+        rowCount=numel(finalModel.Pixel);
+        T=table(repmat(string(coordinateMode),rowCount,1),repmat(string(coordinateDomain),rowCount,1), ...
+            repmat(string(calibrationDomain),rowCount,1),string(finalModel.PeakID(:)),finalModel.Pixel(:),finalModel.ReferenceWavelength(:), ...
             finalModel.FittedWavelength(:),finalModel.Residual(:),finalModel.LOOResidual(:),finalModel.DeletionMaxCurveChange(:), ...
-            'VariableNames',{'PeakID','Pixel','Reference_nm','Fitted_nm','Residual_nm','LOO_residual_nm','Deletion_max_curve_change_nm'});
+            'VariableNames',{'PixelMode','DataPixelDomain','CalibrationPixelDomain','PeakID','Pixel','Reference_nm','Fitted_nm','Residual_nm','LOO_residual_nm','Deletion_max_curve_change_nm'});
         writetable(T,fullfile(pn,[stem '_residuals.csv']));
         fid=fopen(fullfile(pn,[stem '_equation.txt']),'w');
         if fid>=0
-            fprintf(fid,'WCC4SM wavelength calibration model\n%s\nPeak position: %s\nDegree: %d\nN: %d\nFit RMS: %.12g nm\nLOO RMS: %.12g nm\nLOO max abs: %.12g nm\nMax deletion influence: %.12g nm\nSTD: %.12g nm\nMax abs residual: %.12g nm\n', ...
-                finalModel.Equation,finalModel.PositionMethod,finalModel.Degree,numel(finalModel.Pixel),finalModel.RMS,finalModel.LOORMS,finalModel.LOOMaxAbs,finalModel.MaxDeletionInfluence,finalModel.STD,finalModel.MaxAbsResidual);
+            fprintf(fid,'WCC4SM wavelength calibration model\nPixel coordinate mode: %s\nData pixel domain: %s\nCalibration pixel domain: %s\n%s\nPeak position: %s\nDegree: %d\nN: %d\nFit RMS: %.12g nm\nLOO RMS: %.12g nm\nLOO max abs: %.12g nm\nMax deletion influence: %.12g nm\nSTD: %.12g nm\nMax abs residual: %.12g nm\n', ...
+                coordinateMode,coordinateDomain,calibrationDomain,finalModel.Equation,finalModel.PositionMethod,finalModel.Degree,numel(finalModel.Pixel),finalModel.RMS,finalModel.LOORMS,finalModel.LOOMaxAbs,finalModel.MaxDeletionInfluence,finalModel.STD,finalModel.MaxAbsResidual);
             fprintf(fid,'Normalized coefficients: %s\nmu: %s\nNatural pixel coefficients: %s\n',mat2str(finalModel.Coefficients,16),mat2str(finalModel.Mu,16),mat2str(finalModel.NaturalCoefficients,16));fclose(fid);
         end
         topStatus.Text='Current calibration model saved (MAT + CSV + TXT)';
@@ -1327,8 +1604,12 @@ function WCC4SM_V0_5_2
                 if ~isfield(m,'NaturalCoefficients')||isempty(m.NaturalCoefficients),m.NaturalCoefficients=normalizedToNaturalPolynomial(m.Coefficients,m.Mu);end
                 if ~isfield(m,'Equation')||isempty(m.Equation),m.Equation=formatCalibrationEquation(m.NaturalCoefficients);end
                 if ~isfield(m,'LOOResidual')||isempty(m.LOOResidual)
-                    [m.LOOResidual,m.DeletionMaxCurveChange]=leaveOneOutDiagnostics(m.Pixel,m.ReferenceWavelength,m.Degree,m.Coefficients,m.Mu,m.Pixel);
-                    m.LOORMS=sqrt(mean(m.LOOResidual.^2));m.LOOMaxAbs=max(abs(m.LOOResidual));m.MaxDeletionInfluence=max(m.DeletionMaxCurveChange);
+                    validation=wc4sm_validate_calibration_loo(m.Pixel(:), ...
+                        m.ReferenceWavelength(:),m.Degree,m.Coefficients,m.Mu,m.Pixel(:));
+                    m.LOOResidual=validation.LOOResidual;
+                    m.DeletionMaxCurveChange=validation.DeletionMaxCurveChange;
+                    m.LOORMS=validation.LOORMS;m.LOOMaxAbs=validation.LOOMaxAbs;
+                    m.MaxDeletionInfluence=validation.MaxDeletionInfluence;
                 end
                 id=sprintf('M%03d',numel(calibrationModels)+1);item=struct('ModelID',id,'CreatedAt',datetime('now'), ...
                     'PairCount',numel(m.Pixel),'PositionMethod',m.PositionMethod,'Degree',m.Degree,'PairIDs',{m.PeakID},'Model',m);
@@ -1387,6 +1668,10 @@ function WCC4SM_V0_5_2
         end
         if ~isfield(m,'PositionMethod')||isempty(m.PositionMethod),m.PositionMethod='Imported model';end
         if ~isfield(m,'Degree')||~isfinite(m.Degree),m.Degree=numel(m.Coefficients)-1;end
+        [coordinateCompatible,coordinateMessage]=modelPixelCoordinatesCompatible(m);
+        if ~coordinateCompatible
+            uialert(fig,coordinateMessage,'Pixel sequence mismatch');return;
+        end
         wl=evaluateWavelengthModel(m,D.pixel);
         if any(~isfinite(wl))||any(diff(wl)<=0)
             uialert(fig,'The model does not produce a finite, strictly increasing wavelength axis for this spectrum.','Model rejected');return;
@@ -1399,14 +1684,15 @@ function WCC4SM_V0_5_2
                 'Extrapolation warning','Options',{'Apply anyway','Cancel'},'DefaultOption',2,'CancelOption',2);
             if strcmp(choice,'Cancel'),return;end
         end
-        appliedModel=m;appliedModelName=char(name);D.calibratedWavelength=wl(:);mainAxisMode='Wavelength';axisButton.Text='X Axis: Wavelength  ⇄';
-        appliedStatus.Text=sprintf('Applied model: %s | %s | degree %d | %.4g to %.4g nm',appliedModelName,m.PositionMethod,m.Degree,min(wl),max(wl));
+        appliedModel=m;appliedModelName=char(name);D.calibratedWavelength=wl(:);mainAxisMode='Wavelength';axisButton.Text='X Axis: Wavelength  <->';
+        [coordinateMode,coordinateDomain]=modelCoordinateLabels(m);
+        appliedStatus.Text=sprintf('Applied: %s | %s | pixels %s | degree %d | %.4g to %.4g nm',appliedModelName,coordinateMode,coordinateDomain,m.Degree,min(wl),max(wl));
         drawFull();if selectedRow>0&&selectedRow<=numel(peaks)&&~isempty(peaks(selectedRow).Result),drawPeak(peaks(selectedRow).Result);showParameters(peaks(selectedRow).Result);end
         plotTabs.SelectedTab=tabPlots;topStatus.Text=sprintf('%s applied to spectrum wavelength axis',appliedModelName);
     end
 
     function clearAppliedModel(~,~)
-        appliedModel=emptyFinalModel();appliedModelName='';D.calibratedWavelength=[];mainAxisMode='Pixel';axisButton.Text='X Axis: Pixel  ⇄';
+        appliedModel=emptyFinalModel();appliedModelName='';D.calibratedWavelength=[];mainAxisMode='Pixel';axisButton.Text='X Axis: Pixel  <->';
         appliedStatus.Text='Applied model: none | spectrum axis remains Pixel';drawFull();
         if selectedRow>0&&selectedRow<=numel(peaks)&&~isempty(peaks(selectedRow).Result),drawPeak(peaks(selectedRow).Result);showParameters(peaks(selectedRow).Result);end
         topStatus.Text='Applied calibration cleared; pixel coordinates restored';
@@ -1428,7 +1714,7 @@ function WCC4SM_V0_5_2
 
     function openResidualAnalysis(~,~)
         if ~finalModel.valid,uialert(fig,'Fit a final calibration model first.','No final model');return;end
-        rf=uifigure('Name','WCC4SM V0.5.2 | Calibration Fit & Residual Analysis','Position',[120 90 1160 760],'Color',C.bg);
+        rf=uifigure('Name','WCC4SM V0.6.2 | Calibration Fit & Residual Analysis','Position',[120 90 1160 760],'Color',C.bg);
         rg=uigridlayout(rf,[2 2]); rg.RowHeight={'1.05x','1x'}; rg.ColumnWidth={'1.25x','1x'}; rg.Padding=[12 10 12 12];
         a1=uiaxes(rg); a1.Layout.Column=[1 2]; styleAxes(a1,C); hold(a1,'on');
         xx=linspace(min(finalModel.Pixel),max(finalModel.Pixel),800); yy=polyval(finalModel.Coefficients,xx,[],finalModel.Mu);
@@ -1505,11 +1791,12 @@ function WCC4SM_V0_5_2
     end
 
     function refreshModelComparison
-        dat=cell(numel(calibrationModels),11);
+        dat=cell(numel(calibrationModels),13);
         for kk=1:numel(calibrationModels)
             mm=calibrationModels(kk);ff=mm.Model;
             if isfield(ff,'Equation'),eq=ff.Equation;else,eq='';end
-            dat(kk,:)={mm.ModelID,mm.PairCount,mm.PositionMethod,mm.Degree,ff.RMS,ff.LOORMS,ff.LOOMaxAbs,ff.MaxDeletionInfluence,ff.STD,ff.MaxAbsResidual,eq};
+            [coordinateMode,coordinateDomain]=modelCoordinateLabels(ff);
+            dat(kk,:)={mm.ModelID,mm.PairCount,mm.PositionMethod,mm.Degree,coordinateMode,coordinateDomain,ff.RMS,ff.LOORMS,ff.LOOMaxAbs,ff.MaxDeletionInfluence,ff.STD,ff.MaxAbsResidual,eq};
         end
         modelComparisonTable.Data=dat;
     end
@@ -1628,23 +1915,15 @@ function WCC4SM_V0_5_2
             return;
         end
 
-        n=numel(rows);centerNm=nan(n,1);fwhmNm=nan(n,1);erwNm=nan(n,1);
+        n=numel(rows);confirmedResults=cell(n,1);
         for jj=1:n
-            rr=peakDataset(rows(jj)).AnalysisResult;
-            if isfinite(rr.CenterX)
-                centerLambda=evaluateWavelengthModel(finalModel,rr.CenterX);
-                centerLambda=centerLambda(1);
-                if isfinite(rr.LeftHalfX)&&isfinite(rr.RightHalfX)
-                    fwhmNm(jj)=evaluateWavelengthModel(finalModel,rr.RightHalfX)-evaluateWavelengthModel(finalModel,rr.LeftHalfX);
-                end
-                centerNm(jj)=centerLambda;
-            end
-            if ~isempty(rr.InterpX)&&~isempty(rr.InterpNetY)&&isfinite(rr.InterpolatedPeakY)&&rr.InterpolatedPeakY>0
-                lambdaDense=evaluateWavelengthModel(finalModel,rr.InterpX);
-                erwNm(jj)=trapz(lambdaDense,max(rr.InterpNetY,0))/rr.InterpolatedPeakY;
-            end
+            confirmedResults{jj}=peakDataset(rows(jj)).AnalysisResult;
         end
-        [centerNm,order]=sort(centerNm);fwhmNm=fwhmNm(order);erwNm=erwNm(order);
+        calibratedPerformance=wc4sm_calculate_calibrated_performance( ...
+            finalModel,confirmedResults,D.pixel(:));
+        centerNm=calibratedPerformance.CenterWavelength_nm;
+        fwhmNm=calibratedPerformance.FWHM_nm;
+        erwNm=calibratedPerformance.ERW_nm;
 
         cla(axCalWidthTrend,'reset');styleAxes(axCalWidthTrend,C);hold(axCalWidthTrend,'on');
         goodF=isfinite(centerNm)&isfinite(fwhmNm);goodE=isfinite(centerNm)&isfinite(erwNm);
@@ -1659,10 +1938,10 @@ function WCC4SM_V0_5_2
         if any(good)
             plot(axCalWidthRelation,fwhmNm(good),erwNm(good),'o','LineStyle','none','Color',C.purple,'MarkerFaceColor',C.cyan,'DisplayName','Confirmed peaks');
             hold(axCalWidthRelation,'on');
-            if sum(good)>=2&&(max(fwhmNm(good))-min(fwhmNm(good)))>eps
-                fitCoef=polyfit(fwhmNm(good),erwNm(good),1);fitX=linspace(min(fwhmNm(good)),max(fwhmNm(good)),100);
-                yHat=polyval(fitCoef,fwhmNm(good));ssTot=sum((erwNm(good)-mean(erwNm(good))).^2);
-                if ssTot>eps,rSquared=1-sum((erwNm(good)-yHat).^2)/ssTot;else,rSquared=NaN;end
+            if all(isfinite(calibratedPerformance.WidthRelation.Coefficients))
+                fitCoef=calibratedPerformance.WidthRelation.Coefficients;
+                rSquared=calibratedPerformance.WidthRelation.RSquared;
+                fitX=linspace(min(fwhmNm(good)),max(fwhmNm(good)),100);
                 plot(axCalWidthRelation,fitX,polyval(fitCoef,fitX),'-','Color',C.red,'LineWidth',1.8,'DisplayName','Linear fit');
                 text(axCalWidthRelation,.04,.96,sprintf('ERW = %.4f FWHM %+.4f nm\nR^2 = %.4f',fitCoef(1),fitCoef(2),rSquared), ...
                     'Units','normalized','VerticalAlignment','top','Color',C.red,'FontWeight','bold','BackgroundColor','white','Margin',4);
@@ -1681,8 +1960,9 @@ function WCC4SM_V0_5_2
             [fwhmLo,fwhmHi,nBins]=fwhmHistogramSettings(validFwhm);
             h=histogram(axCalPositionDelta,validFwhm,'NumBins',nBins,'BinLimits',[fwhmLo fwhmHi], ...
                 'FaceColor',C.blue,'FaceAlpha',0.72,'EdgeColor','white');
-            meanFwhm=mean(validFwhm);medianFwhm=median(validFwhm);stdFwhm=std(validFwhm);
-            minFwhm=min(validFwhm);maxFwhm=max(validFwhm);
+            fwhmSummary=calibratedPerformance.FWHMStatistics;
+            meanFwhm=fwhmSummary.Mean;medianFwhm=fwhmSummary.Median;stdFwhm=fwhmSummary.STD;
+            minFwhm=fwhmSummary.Minimum;maxFwhm=fwhmSummary.Maximum;
             shownCount=sum(validFwhm>=fwhmLo&validFwhm<=fwhmHi);
             if shownCount>0
                 [~,modalIndex]=max(h.Values);
@@ -1708,12 +1988,13 @@ function WCC4SM_V0_5_2
         end
 
         cla(axPixelInterval,'reset');styleAxes(axPixelInterval,C);
-        pixelAxis=D.pixel(:);lambdaAxis=evaluateWavelengthModel(finalModel,pixelAxis);
-        intervalNm=diff(lambdaAxis);intervalWavelength=0.5*(lambdaAxis(1:end-1)+lambdaAxis(2:end));
-        goodInterval=isfinite(intervalNm)&isfinite(intervalWavelength)&intervalNm>0;
+        intervalNm=calibratedPerformance.PixelInterval_nm;
+        intervalWavelength=calibratedPerformance.IntervalWavelength_nm;
+        goodInterval=calibratedPerformance.ValidPixelInterval;
         if any(goodInterval)
             plot(axPixelInterval,intervalWavelength(goodInterval),intervalNm(goodInterval),'-','Color',C.purple,'LineWidth',1.6);
-            meanInterval=mean(intervalNm(goodInterval));minInterval=min(intervalNm(goodInterval));maxInterval=max(intervalNm(goodInterval));
+            intervalSummary=calibratedPerformance.PixelIntervalStatistics;
+            meanInterval=intervalSummary.Mean;minInterval=intervalSummary.Minimum;maxInterval=intervalSummary.Maximum;
             yline(axPixelInterval,meanInterval,'--',sprintf('Mean %.6g nm/pixel',meanInterval),'Color',C.red);
             xlabel(axPixelInterval,'Calibrated wavelength (nm)');ylabel(axPixelInterval,'Pixel wavelength interval (nm/pixel)');
             title(axPixelInterval,sprintf('Pixel wavelength interval | mean %.6g | min %.6g | max %.6g nm/pixel',meanInterval,minInterval,maxInterval));
@@ -1765,7 +2046,7 @@ function WCC4SM_V0_5_2
     end
 
     function popOutSpectrumPlots(~,~)
-        pf=figure('Name','WCC4SM V0.5.2 | Current spectrum plots','Color','white','Position',[100 80 1100 760]);
+        pf=figure('Name','WCC4SM V0.6.2 | Current spectrum plots','Color','white','Position',[100 80 1100 760]);
         t=tiledlayout(pf,2,1,'Padding','compact','TileSpacing','compact');
         if plotTabs.SelectedTab==tabMatchingPlots,s1=axMatchMeasured;s2=axMatchReference;else,s1=axFull;s2=axPeak;end
         a1=nexttile(t);copyAxesState(s1,a1);a2=nexttile(t);copyAxesState(s2,a2);
@@ -1795,7 +2076,7 @@ function WCC4SM_V0_5_2
         for kk=1:numel(sourceAxes)
             plotTitle=axesTitleText(sourceAxes(kk),sprintf('Subplot %d',kk));
             left=80+32*mod(kk-1,5);bottom=80+28*mod(kk-1,5);
-            pf=figure('Name',sprintf('WCC4SM V0.5.2 | %s | %s',tabName,plotTitle), ...
+            pf=figure('Name',sprintf('WCC4SM V0.6.2 | %s | %s',tabName,plotTitle), ...
                 'NumberTitle','off','Color','white','Position',[left bottom 900 620]);
             targetAxes=axes('Parent',pf,'Position',[.10 .12 .85 .80]);
             copyAxesState(sourceAxes(kk),targetAxes);
@@ -1910,6 +2191,10 @@ function WCC4SM_V0_5_2
         [st,~]=referenceStatuses(); ids=find(strcmp(st,'Recommended')|strcmp(st,'Marginal'));
     end
     function drawFull
+        % Guide lines use hidden handles to stay out of legends. CLA does not
+        % reliably remove hidden ConstantLine objects in R2022a, so remove the
+        % tagged guides explicitly before every redraw.
+        delete(findall(axFull,'Tag','WCC4SMSubwindowGuide'));
         cla(axFull); if isempty(D.raw), return; end
         [x,xlab]=displayX(); [y,ylab]=displayY();
         if strcmp(scaleDrop.Value,'Log'), yplot=y; yplot(yplot<=0)=NaN; axFull.YScale='log'; else, yplot=y; axFull.YScale='linear'; end
@@ -1930,6 +2215,16 @@ function WCC4SM_V0_5_2
                 text(axFull,x(k),yplot(k),sprintf(' C%02d',jj),'FontSize',10,'FontWeight','bold','Color',col, ...
                     'VerticalAlignment','top','HorizontalAlignment','left','HitTest','off');
             end
+        end
+        if all(isfinite(localSearchWindow))
+            markerX=localSearchWindow;
+            if strcmp(mainAxisMode,'Wavelength')&&appliedModel.valid
+                markerX=evaluateWavelengthModel(appliedModel,markerX);
+            end
+            xline(axFull,markerX(1),'--','Subwindow start','Color',C.purple,'LineWidth',1.5, ...
+                'LabelVerticalAlignment','bottom','HandleVisibility','off','Tag','WCC4SMSubwindowGuide');
+            xline(axFull,markerX(2),'--','Subwindow end','Color',C.orange,'LineWidth',1.5, ...
+                'LabelVerticalAlignment','bottom','HandleVisibility','off','Tag','WCC4SMSubwindowGuide');
         end
         if selectedRow>0 && selectedRow<=numel(peaks)
             k=peaks(selectedRow).Index; plot(axFull,x(k),yplot(k),'o','Color',C.red,'LineWidth',1.8,'MarkerSize',9,'HitTest','off');
@@ -2160,7 +2455,7 @@ function M=cleanMatrix(M)
     if isempty(M),error('CSV contains no numeric data.');end
     if size(M,2)>2,M=M(:,1:2);end
 end
-function D=emptyData, D=struct('raw',[],'dark',[],'darkSource','','corrected',[],'normalized',[],'pixel',[],'inputX',[],'inputWavelength',[],'calibratedWavelength',[],'xKind','Pixel','source',''); end
+function D=emptyData, D=struct('raw',[],'dark',[],'darkSource','','corrected',[],'normalized',[],'pixel',[],'inputX',[],'inputWavelength',[],'calibratedWavelength',[],'xKind','Pixel','source','','PixelCoordinateMode','','PixelFirst',NaN,'PixelLast',NaN); end
 function R=emptyReference, R=struct('x',[],'y',[],'source','','loaded',false); end
 function L=emptyLineLibrary, L=struct('wavelength',[],'intensity',[],'order',[],'effective',[],'enabled',[],'source','','loaded',false); end
 function L=basicHgArLibrary
@@ -2252,6 +2547,12 @@ function q=makeCalPair(id,idx,pixel,refIdx,refWavelength,ord,mode,locked,status,
     q=struct('PeakID',id,'PeakIndex',idx,'DetectionPixel',pixel,'ReferenceIndex',refIdx,'ReferenceWavelength',refWavelength, ...
         'Order',ord,'Mode',mode,'Confidence',confidence,'Locked',locked,'Status',status);
 end
+function value=minOrNaN(values)
+    if isempty(values),value=NaN;else,value=min(values);end
+end
+function value=maxOrNaN(values)
+    if isempty(values),value=NaN;else,value=max(values);end
+end
 function matchedRef=orderedSequenceMatch(predicted,referenceWavelengths,referenceIndices,tolerance)
     % Dynamic-programming sequence alignment. Matches must remain monotonic;
     % either measured or reference lines may be skipped.
@@ -2298,3 +2599,4 @@ function C=colors
     C.orange=[.95 .49 .16];C.red=[.82 .18 .20];C.green=[.12 .55 .34];C.greenLight=[.72 .90 .79];C.purple=[.47 .28 .65];C.gray=[.55 .58 .61];C.muted=[.34 .40 .46];
     C.sky=[.16 .78 .88];C.yellow=[1.00 .88 .05];C.blueStrong=[.05 .18 .95];C.greenBright=[.15 .90 .08];
 end
+
