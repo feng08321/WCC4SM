@@ -21,6 +21,7 @@ copies are generated delivery artifacts.
 - `TESTING.md`
 - `V0_6_2_GUI_TEST.md`
 - `WCC4SM_V0_6_2_ACCEPTANCE_REPORT.md`
+- `WCC4SM_WINDOWS_EXE_BUILD_V1.md`
 
 ## Regenerate DOCX
 
@@ -47,3 +48,8 @@ file formats and safety notes. Normal operator onboarding should use a separate
 step-by-step teaching video that demonstrates the complete workflow with real
 screen actions. Video scripts and recordings may evolve independently, but
 must not contradict the accepted software version or this documentation set.
+
+PDF manuals, standards and papers placed anywhere below this folder are listed
+by the application's Help window. Only redistribute third-party PDFs when their
+license or permission allows it; the WCC4SM Apache License 2.0 does not relicense
+those documents.

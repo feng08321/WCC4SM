@@ -364,3 +364,19 @@ figure。原 GUI 中的图不会被移除。
 - `docs/WCC4SM_CALIBRATION_MODEL_FORMAT_V1.md`
 - `docs/WCC4SM_SESSION_FORMAT_V1.md`
 - `docs/V0_6_2_GUI_TEST.md`
+
+## 23. PDF 帮助与 About
+
+点击顶部 `HELP` 打开帮助窗口。软件递归扫描外部 `docs/` 目录及其子目录中的
+PDF 文件，并在下拉框中显示相对文件名。点击 `REFRESH` 可在不重启软件的情况下
+识别新加入的 PDF；选择文件后点击 `READ PDF`，由操作系统默认 PDF 阅读器打开。
+
+`ABOUT` 显示软件版本、作者 Zheng Feng、联系邮箱 `feng1214@126.com`、个人项目
+标签 NewOptic、Apache License 2.0 及 GitHub 项目地址。NewOptic 不是注册商标。
+
+## 24. EXE 运行方式
+
+Windows EXE 不包含 MATLAB Runtime，也不制作安装程序。目标电脑必须预先安装
+MATLAB，或者安装与构建版本匹配的 MATLAB Runtime。EXE 旁应保留外部 `docs/`
+和 `reference_data/`；用户可自行添加有合法使用权的 PDF 文档。WCC4SM 的
+Apache License 2.0 不改变第三方论文、标准、参考数据或 MATLAB Runtime 的权利状态。

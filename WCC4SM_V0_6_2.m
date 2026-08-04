@@ -4,6 +4,15 @@ function WCC4SM_V0_6_2
 % MATLAB R2022a or later. Signal Processing Toolbox is required for findpeaks.
 
     packageRoot = fileparts(mfilename('fullpath'));
+    distributionRoot = packageRoot;
+    if isdeployed && ispc
+        try
+            process = System.Diagnostics.Process.GetCurrentProcess();
+            distributionRoot = fileparts(char(process.MainModule.FileName));
+        catch
+            distributionRoot = pwd;
+        end
+    end
     addpath(fullfile(packageRoot,'src'));
 
     D = emptyData();
@@ -36,8 +45,10 @@ function WCC4SM_V0_6_2
     sessionMetadata = struct();
     currentSessionPath = '';
     C = colors();
-    referenceDataDir = fullfile(packageRoot,'reference_data');
-    if ~isfolder(referenceDataDir), referenceDataDir = pwd; end
+    referenceDataDir = fullfile(distributionRoot,'reference_data');
+    if ~isfolder(referenceDataDir), referenceDataDir = fullfile(packageRoot,'reference_data'); end
+    documentationDir = fullfile(distributionRoot,'docs');
+    if ~isfolder(documentationDir), documentationDir = fullfile(packageRoot,'docs'); end
 
     fig=uifigure('Name','WCC4SM V0.6.2 | Peak Analysis','Position',[25 30 1580 900],'Color',C.bg);
     root=uigridlayout(fig,[2 3]); root.RowHeight={50,'1x'}; root.ColumnWidth={330,'1x',400};
@@ -48,13 +59,14 @@ function WCC4SM_V0_6_2
     hg=uigridlayout(head,[1 3]); hg.ColumnWidth={310,'1x',520}; hg.Padding=[14 5 14 5];
     uilabel(hg,'Text','WCC4SM  V0.6.2','FontSize',20,'FontWeight','bold','FontColor',[.10 .55 .95]);
     uilabel(hg,'Text','Wavelength Characterization and Calibration for Spectrometer','FontSize',14,'FontWeight','bold','FontColor',[.10 .55 .95],'HorizontalAlignment','center');
-    headerTools=uigridlayout(hg,[1 5]);headerTools.ColumnWidth={145,78,88,88,'1x'};headerTools.Padding=[0 0 0 0];headerTools.ColumnSpacing=5;headerTools.BackgroundColor=C.navy;
+    headerTools=uigridlayout(hg,[1 6]);headerTools.ColumnWidth={125,70,80,80,60,'1x'};headerTools.Padding=[0 0 0 0];headerTools.ColumnSpacing=5;headerTools.BackgroundColor=C.navy;
     openFigDrop=uidropdown(headerTools,'Items',{'Peak Analysis','Peak Parameter Statistics','Wavelength Matching', ...
         'Calibration Fit & Residuals','Model Validation','Model Comparison','Calibrated Performance'}, ...
         'Value','Peak Analysis','Tooltip','Choose a plot tab whose subplots will be opened as separate editable figures');
     uibutton(headerTools,'Text','OPEN FIG','FontWeight','bold','BackgroundColor',C.cyan,'ButtonPushedFcn',@openSelectedTabFigures);
     uibutton(headerTools,'Text','SAVE SESSION','FontWeight','bold','BackgroundColor',C.greenLight,'ButtonPushedFcn',@saveSession);
     uibutton(headerTools,'Text','LOAD SESSION','FontWeight','bold','BackgroundColor',C.yellow,'ButtonPushedFcn',@loadSession);
+    uibutton(headerTools,'Text','HELP','FontWeight','bold','BackgroundColor',C.cyan,'ButtonPushedFcn',@openHelpDialog);
     topStatus=uilabel(headerTools,'Text','Load a spectrum','FontWeight','bold','FontColor',C.yellow,'BackgroundColor',C.navy,'HorizontalAlignment','left','Tooltip','Current workflow status');
 
     %% LEFT CONTROL COLUMN
@@ -2453,6 +2465,86 @@ function WCC4SM_V0_6_2
             end
         end
         T=table(PeakID,DetectionPixel,ReferenceWavelength_nm,PeakOrder,Mode,Confidence,Locked,Status,InitialResidual_nm);
+    end
+    function openHelpDialog(~,~)
+        helpFig=uifigure('Name','WCC4SM Help & About','Position',[420 260 700 310], ...
+            'Color',C.bg,'WindowStyle','modal','Resize','off');
+        helpGrid=uigridlayout(helpFig,[6 3]);
+        helpGrid.ColumnWidth={110,'1x',105};
+        helpGrid.RowHeight={34,34,34,70,34,'1x'};
+        helpGrid.Padding=[16 14 16 14]; helpGrid.RowSpacing=8;
+        titleLabel=uilabel(helpGrid,'Text','Help documents and references', ...
+            'FontSize',17,'FontWeight','bold','FontColor',C.blue);
+        titleLabel.Layout.Column=[1 3];
+        uilabel(helpGrid,'Text','PDF document');
+        documentDrop=uidropdown(helpGrid,'Items',{'Scanning docs ...'},'Enable','off');
+        documentDrop.Layout.Column=2;
+        readButton=uibutton(helpGrid,'Text','READ PDF','FontWeight','bold', ...
+            'BackgroundColor',C.cyan,'Enable','off','ButtonPushedFcn',@readHelpDocument);
+        readButton.Layout.Column=3;
+        docsLocation=uilabel(helpGrid,'Text',['Folder: ' documentationDir], ...
+            'FontColor',C.muted,'Tooltip',documentationDir);
+        docsLocation.Layout.Column=[1 3];
+        helpText=uilabel(helpGrid,'Text', ...
+            ['Place manuals, standards and papers in the docs folder or its subfolders. ' ...
+             'Refresh the list, select a PDF, then open it with the system PDF reader.'], ...
+            'WordWrap','on','FontColor',C.muted);
+        helpText.Layout.Column=[1 3];
+        refreshButton=uibutton(helpGrid,'Text','REFRESH','ButtonPushedFcn',@refreshHelpDocuments);
+        refreshButton.Layout.Column=2;
+        aboutButton=uibutton(helpGrid,'Text','ABOUT','FontWeight','bold', ...
+            'BackgroundColor',C.greenLight,'ButtonPushedFcn',@showAboutDialog);
+        aboutButton.Layout.Column=3;
+        setappdata(helpFig,'DocumentDrop',documentDrop);
+        setappdata(helpFig,'ReadButton',readButton);
+        refreshHelpDocuments(refreshButton,[]);
+    end
+    function refreshHelpDocuments(source,~)
+        helpFig=ancestor(source,'figure');
+        documentDrop=getappdata(helpFig,'DocumentDrop');
+        readButton=getappdata(helpFig,'ReadButton');
+        documents=wc4sm_list_pdf_documents(documentationDir);
+        if isempty(documents)
+            documentDrop.Items={'No PDF documents found'};
+            documentDrop.ItemsData={''};
+            documentDrop.Value='';
+            documentDrop.Enable='off'; readButton.Enable='off';
+        else
+            documentDrop.Items={documents.Label};
+            documentDrop.ItemsData={documents.Path};
+            documentDrop.Value=documents(1).Path;
+            documentDrop.Enable='on'; readButton.Enable='on';
+        end
+    end
+    function readHelpDocument(source,~)
+        helpFig=ancestor(source,'figure');
+        documentDrop=getappdata(helpFig,'DocumentDrop');
+        pdfPath=char(documentDrop.Value);
+        if isempty(pdfPath) || ~isfile(pdfPath)
+            uialert(helpFig,'The selected PDF file is no longer available. Refresh the document list.','PDF unavailable');
+            return;
+        end
+        try
+            if ispc
+                winopen(pdfPath);
+            else
+                web(['file:///' strrep(pdfPath,'\','/')],'-browser');
+            end
+        catch ME
+            uialert(helpFig,ME.message,'Unable to open PDF');
+        end
+    end
+    function showAboutDialog(source,~)
+        helpFig=ancestor(source,'figure');
+        message=sprintf(['WCC4SM V0.6.2\n' ...
+            'Wavelength Characterization and Calibration for Spectrometer\n\n' ...
+            'Developed by Zheng Feng\n' ...
+            'Copyright (c) 2026 Zheng Feng\n' ...
+            'NewOptic - unregistered personal project label\n\n' ...
+            'Contact: feng1214@126.com\n' ...
+            'License: Apache License 2.0\n' ...
+            'Repository: github.com/feng08321/WCC4SM']);
+        uialert(helpFig,message,'About WCC4SM','Icon','info');
     end
 end
 

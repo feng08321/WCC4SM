@@ -12,6 +12,7 @@ MathWorks/
 WCC4SM_session.mat
 WCC4SM_session_*.mat
 result/
+build/
 
 # Editor and operating-system state
 .vscode/

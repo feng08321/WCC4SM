@@ -36,6 +36,27 @@ results = run_wc4sm_tests;
 The regression suite currently has 37 tests. The current GUI acceptance
 procedure is in `docs/V0_6_2_GUI_TEST.md`.
 
+## License and contact
+
+WCC4SM is licensed under the Apache License 2.0. Copyright 2026 Zheng Feng.
+Project contact: `feng1214@126.com`. NewOptic is an unregistered personal
+project label of Zheng Feng. See `LICENSE` and `NOTICE` for details.
+
+## Windows executable
+
+The optional Windows executable is built without an installer and without an
+embedded MATLAB Runtime. The target computer must have MATLAB or the matching
+MATLAB Runtime installed. From the package root, run:
+
+```matlab
+addpath('tools');
+build_windows_exe
+```
+
+The generated `build/windows/` folder includes the executable and external
+`docs/` and `reference_data/` directories. These external directories remain
+replaceable so users can add PDF help documents and reference assets.
+
 ## Data and privacy
 
 The repository contains measurement and reference assets required by regression

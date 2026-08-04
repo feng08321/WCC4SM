@@ -14,6 +14,11 @@
 - Keeps only the application and regression-test MATLAB entries at repository
   root; moves implementation modules to `src/`, test spectra to `test_data/`,
   and supporting specifications and acceptance records to `docs/`.
+- Adds Apache License 2.0 licensing, project attribution and an About dialog.
+- Adds a Help window that recursively lists PDFs under `docs/`, refreshes the
+  list and opens the selected document with the system PDF reader.
+- Adds a Windows EXE build script that does not bundle MATLAB Runtime or create
+  an installer, while preserving external `docs/` and `reference_data/` folders.
 
 ## V0.6.2 — development
 

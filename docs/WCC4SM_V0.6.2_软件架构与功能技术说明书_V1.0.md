@@ -287,9 +287,24 @@ V0.6.2 基线包含 37 项非 GUI 回归测试，覆盖峰分析、定标、LOO�
 
 - `README.md`
 - `CHANGELOG.md`
-- `TESTING.md`
+- `docs/TESTING.md`
 - `docs/WCC4SM_SESSION_FORMAT_V1.md`
 - `docs/WCC4SM_PIXEL_COORDINATE_SPEC_V1.md`
 - `docs/WCC4SM_CALIBRATION_MODEL_FORMAT_V1.md`
 - `docs/V0_6_2_GUI_TEST.md`
 - `docs/WCC4SM_V0_6_2_ACCEPTANCE_REPORT.md`
+
+## 18. 帮助、授权与部署
+
+主界面 `HELP` 按钮打开独立帮助窗口。`wc4sm_list_pdf_documents` 对外部 `docs/`
+执行递归、扩展名不区分大小写的 PDF 扫描，返回排序后的相对标签和规范化绝对路径；
+读取操作交给操作系统默认 PDF 阅读器。About 信息包含版本、作者、联系邮箱、
+NewOptic 个人项目标签、Apache License 2.0 和仓库地址。
+
+源码与项目文档依据根目录 `LICENSE` 采用 Apache License 2.0，并通过 `NOTICE`
+记录版权和归属信息。第三方参考数据、论文、标准、MATLAB 和 MATLAB Runtime
+不因被软件引用或随用户本地目录存在而自动变更许可证。
+
+`tools/build_windows_exe.m` 使用 MATLAB Compiler 的 `mcc -e` 生成无控制台的
+Windows EXE，不生成安装器、不捆绑 MATLAB Runtime。构建输出保留外部 `docs/`
+和 `reference_data/`，部署模式通过 EXE 所在目录定位这两类可更新资产。

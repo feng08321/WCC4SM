@@ -71,6 +71,17 @@ classdef TestWcc4smDataAssets < matlab.unittest.TestCase
             testCase.verifyTrue(isfile(fullfile(testCase.Root, ...
                 'reference_data', ...
                 'NIST_ASD_HgAr_20260729_Metadata.md')));
+
+            temporaryDocs = tempname;
+            mkdir(fullfile(temporaryDocs,'papers'));
+            cleanup = onCleanup(@() rmdir(temporaryDocs,'s')); %#ok<NASGU>
+            fileID = fopen(fullfile(temporaryDocs,'papers','Example.PDF'),'w');
+            testCase.assertGreaterThan(fileID,0);
+            fclose(fileID);
+            documents = wc4sm_list_pdf_documents(temporaryDocs);
+            testCase.verifyEqual(numel(documents),1);
+            testCase.verifyEqual(documents(1).Label,'papers / Example.PDF');
+            testCase.verifyTrue(isfile(documents(1).Path));
         end
 
         function nistMode01MatchesAllMasterWavelengthsExactly(testCase)
