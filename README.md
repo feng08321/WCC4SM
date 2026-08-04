@@ -5,13 +5,15 @@ MATLAB application for spectrum preprocessing, peak characterization,
 reference-line matching, wavelength calibration, model validation, calibrated
 performance analysis, and complete analysis-session restoration.
 
-## Stable baseline
+## Versions
 
-The current stable baseline is **WCC4SM V0.6.1**. Start it from MATLAB R2022a
-or later with:
+The published stable baseline is **WCC4SM V0.6.1** (Git tag `v0.6.1`). The
+current development line is **V0.6.2**, which makes pixel-coordinate metadata
+visible in the GUI and every model export. Start the development version from
+MATLAB R2022a or later with:
 
 ```matlab
-WCC4SM_V0_6_1
+WCC4SM_V0_6_2
 ```
 
 V0.6.1 distinguishes two one-based pixel coordinate systems:
@@ -32,8 +34,8 @@ Run the non-GUI regression suite from the package root:
 results = run_wc4sm_tests;
 ```
 
-The V0.6.1 baseline has 37 regression tests. GUI acceptance procedures are in
-`V0_6_0_SESSION_GUI_TEST.md` and `V0_6_1_GUI_TEST.md`.
+The regression suite currently has 37 tests. The current GUI acceptance
+procedure is in `V0_6_2_GUI_TEST.md`.
 
 ## Data and privacy
 
@@ -43,5 +45,6 @@ instrument, path, and experiment metadata.
 
 ## Baseline policy
 
-`WCC4SM_V0_6_1.m` is the frozen stable baseline. Subsequent development should
-use a new version file or a dedicated development branch.
+The `v0.6.1` Git tag is the immutable rollback baseline. Source snapshots from
+older releases are retrieved from Git rather than kept as duplicate programs in
+the active development tree.
