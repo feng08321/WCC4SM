@@ -18,6 +18,7 @@ result/
 .idea/
 .DS_Store
 Thumbs.db
+~$*.docx
 
 # Local test output
 test20*.txt
