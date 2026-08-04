@@ -92,6 +92,10 @@ wavelength_nm [, intensity [, order]]
 
 ## 5. 参考线选择模式 CSV
 
+随软件发布的参考主库、选择模式和对应元数据位于 `reference_data/`，示例参考库
+位于 `reference_data/examples/`。选择模式中的 `MasterSource` 使用主库文件名，
+不保存机器相关的绝对路径。
+
 导出列：
 
 ```text

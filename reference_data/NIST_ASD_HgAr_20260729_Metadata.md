@@ -2,7 +2,7 @@
 
 ## Identity
 
-- Dataset file: `NIST_ASD_HgAr_20260729.lit`
+- Dataset file: `reference_data/NIST_ASD_HgAr_20260729.lit`
 - Project data version: `20260729`
 - Version basis: project download/curation date, not an official NIST ASD release number
 - Authority: NIST Atomic Spectra Database (ASD)
@@ -47,7 +47,7 @@ Selection modes are instrument-family profiles. They choose usable lines from
 this master according to wavelength range, sensitivity and resolution, but do
 not define independent wavelength truth. Each mode must use exact wavelength
 values present in this dated master and identify this master by relative
-filename. Mode01 is `WCC4SM_NIST_ASD_HgAr_20260729_Mode01.csv`.
+filename. Mode01 is `reference_data/WCC4SM_NIST_ASD_HgAr_20260729_Mode01.csv`.
 
 ## Modification policy
 

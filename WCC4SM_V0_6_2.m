@@ -33,6 +33,8 @@ function WCC4SM_V0_6_2
     sessionMetadata = struct();
     currentSessionPath = '';
     C = colors();
+    referenceDataDir = fullfile(fileparts(mfilename('fullpath')),'reference_data');
+    if ~isfolder(referenceDataDir), referenceDataDir = pwd; end
 
     fig=uifigure('Name','WCC4SM V0.6.2 | Peak Analysis','Position',[25 30 1580 900],'Color',C.bg);
     root=uigridlayout(fig,[2 3]); root.RowHeight={50,'1x'}; root.ColumnWidth={330,'1x',400};
@@ -1057,7 +1059,8 @@ function WCC4SM_V0_6_2
 
     %% REFERENCE LINE MATCHING AND INITIAL CALIBRATION
     function loadLineLibrary(~,~)
-        [fn,pn]=uigetfile({'*.lit;*.txt;*.csv','Reference lines (*.lit,*.txt,*.csv)';'*.*','All files'},'Load reference-line list');
+        [fn,pn]=uigetfile({'*.lit;*.txt;*.csv','Reference lines (*.lit,*.txt,*.csv)';'*.*','All files'}, ...
+            'Load reference-line list',fullfile(referenceDataDir,'*.lit'));
         if isequal(fn,0), return; end
         try
             M=readmatrix(fullfile(pn,fn),'FileType','text');

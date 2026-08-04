@@ -8,6 +8,9 @@
   CSV files from the active package.
 - Updates tests and documentation so all 29 Mode01 wavelengths match the dated
   NIST master exactly.
+- Organizes the confirmed master, Mode01 and metadata under `reference_data/`,
+  with the Avantes example under `reference_data/examples/`.
+- Opens the reference-master file chooser in `reference_data/` by default.
 
 ## V0.6.2 — development
 

@@ -42,8 +42,8 @@ locking every corrected sample.
 
 - `Data/Spectrum_1_8ms_avg50.csv`
 - `Data/Spectrum_1_dark_8ms_avg50.csv`
-- `NIST_ASD_HgAr_20260729.lit`
-- `WCC4SM_NIST_ASD_HgAr_20260729_Mode01.csv`
+- `reference_data/NIST_ASD_HgAr_20260729.lit`
+- `reference_data/WCC4SM_NIST_ASD_HgAr_20260729_Mode01.csv`
 
 The confirmed selection mode retains 29 useful lines from the dated NIST master.
 Every mode wavelength is an exact value in that master, including 772.4207 nm,

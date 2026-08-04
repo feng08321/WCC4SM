@@ -41,8 +41,10 @@ classdef TestWcc4smDataAssets < matlab.unittest.TestCase
         end
 
         function nistLibraryAndSelectionModeAreConsistent(testCase)
-            nistPath = fullfile(testCase.Root,'NIST_ASD_HgAr_20260729.lit');
+            nistPath = fullfile(testCase.Root,'reference_data', ...
+                'NIST_ASD_HgAr_20260729.lit');
             modePath = fullfile(testCase.Root, ...
+                'reference_data', ...
                 'WCC4SM_NIST_ASD_HgAr_20260729_Mode01.csv');
             nist = testCase.readTwoNumericColumns(nistPath);
             mode = readtable(modePath,'TextType','string');
@@ -61,17 +63,21 @@ classdef TestWcc4smDataAssets < matlab.unittest.TestCase
 
         function datedNistMasterPreservesOriginalData(testCase)
             dated = testCase.readTwoNumericColumns(fullfile(testCase.Root, ...
+                'reference_data', ...
                 'NIST_ASD_HgAr_20260729.lit'));
             testCase.verifySize(dated,[322 2]);
             testCase.verifyEqual(dated(1,1),184.9499,'AbsTol',1e-12);
             testCase.verifyEqual(dated(end,1),2396.652,'AbsTol',1e-12);
             testCase.verifyTrue(isfile(fullfile(testCase.Root, ...
+                'reference_data', ...
                 'NIST_ASD_HgAr_20260729_Metadata.md')));
         end
 
         function nistMode01MatchesAllMasterWavelengthsExactly(testCase)
-            masterPath = fullfile(testCase.Root,'NIST_ASD_HgAr_20260729.lit');
+            masterPath = fullfile(testCase.Root,'reference_data', ...
+                'NIST_ASD_HgAr_20260729.lit');
             modePath = fullfile(testCase.Root, ...
+                'reference_data', ...
                 'WCC4SM_NIST_ASD_HgAr_20260729_Mode01.csv');
             master = testCase.readTwoNumericColumns(masterPath);
             mode = readtable(modePath,'TextType','string');

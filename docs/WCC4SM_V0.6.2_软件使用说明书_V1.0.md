@@ -188,8 +188,9 @@ WCC4SM_Results/
 - NIM Certificate 34
 - External / User
 
-点击 `Load reference master file` 可载入 `.lit`、`.txt` 或 `.csv`。外部参考数据
-至少需要波长列，可包含强度和级次。
+点击 `Load reference master file` 可载入 `.lit`、`.txt` 或 `.csv`。文件选择窗口
+默认打开软件目录下的 `reference_data`；正式主库、选择模式和元数据保存在该目录，
+示例库保存在 `reference_data/examples`。外部参考数据至少需要波长列，可包含强度和级次。
 
 参考线可启用或禁用。选择模式只控制主库中哪些线参与当前分析，不应复制或
 替代主参考库的溯源信息。
