@@ -1,4 +1,4 @@
-# WCC4SM V0.6.2 需求—设计—测试追踪矩阵
+# WCC4SM V0.9 需求—设计—测试追踪矩阵
 
 文档版本：V1.0
 
@@ -8,7 +8,7 @@
 
 | ID | 需求 | 主要实现 | 自动验证 | 人工验收 |
 |---|---|---|---|---|
-| R-001 | 读取单列/两列测量光谱 | `wc4sm_read_spectrum_file` | `TestSpectrumPreprocessingModules` | V0.6.2 数据加载 |
+| R-001 | 读取单列/两列测量光谱 | `wc4sm_read_spectrum_file` | `TestSpectrumPreprocessingModules` | V0.9 数据加载 |
 | R-002 | 校验坐标单调、有限和最少样本 | `wc4sm_read_spectrum_file` | 预处理模块测试 | 错误文件提示 |
 | R-003 | 读取并对齐暗光谱 | `wc4sm_read_dark_spectrum` | 暗光谱对齐/长度测试 | GUI 暗光谱加载 |
 | R-004 | 支持暗扣除、人工基线和负值钳位 | `wc4sm_preprocess_spectrum` | 基线、钳位和归一化测试 | Data & Display |
@@ -29,12 +29,15 @@
 | R-019 | 对外推范围给出确认提示 | GUI model application | 边界逻辑检查 | 外推人工测试 |
 | R-020 | 区分全探测器和有效像素序列 | Pixel sequence UI/state | Session metadata tests | 两模式人工测试 |
 | R-021 | 拒绝显式模式不匹配模型 | `modelPixelCoordinatesCompatible` | 无效模式验证 | 跨模式拒绝 |
-| R-022 | 在 GUI 显示模型模式和域 | fit/model/applied status | GUI 初始化 | V0.6.2 验收 |
+| R-022 | 在 GUI 显示模型模式和域 | fit/model/applied status | GUI 初始化 | V0.9 验收 |
 | R-023 | 在 MAT/TXT/CSV 导出模式和域 | `exportCurrentModel` | Session round-trip | 导出文件检查 |
 | R-024 | 计算校准后性能 | `wc4sm_calculate_calibrated_performance` | `TestCalibratedPerformanceModule` | Calibrated Performance |
 | R-025 | 保存完整版本化会话 | `wc4sm_create/save_session` | `TestSessionModules` | SAVE SESSION |
 | R-026 | 加载前验证会话结构 | `wc4sm_load/validate_session` | 无关 MAT/无效结构测试 | LOAD SESSION |
 | R-027 | 加载失败保留当前状态 | GUI transactional restore | 模块错误测试 | 失败回滚人工测试 |
+| R-028 | 顶栏标题、按钮和状态文字完整清晰 | GUI header layout | GUI 初始化冒烟 | V0.9 顶栏检查 |
+| R-029 | 参考强度和级次统一显示为整数 | `refreshCalibration` display formatting | NIST强度整数断言 | 参考表滚动检查 |
+| R-030 | PDF帮助和About | Help callbacks / `wc4sm_list_pdf_documents` | PDF扫描测试 | PDF读取与About检查 |
 | R-028 | 保存参考来源和仪器元数据 | session metadata/provenance | provenance round-trip | 保存对话框 |
 | R-029 | 将中央图复制为可编辑 figure | `openSelectedTabFigures` | GUI 初始化 | OPEN FIG |
 | R-030 | 保持稳定基线可恢复 | Git tags/releases | GitHub commit/tag 核验 | 发布验收 |

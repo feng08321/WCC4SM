@@ -3,9 +3,10 @@ function results = run_wc4sm_tests
 % Run this file from the WCC4SM package root in MATLAB R2022a or later.
 
     packageRoot = fileparts(mfilename('fullpath'));
+    sourceFolder = fullfile(packageRoot,'src');
     testsFolder = fullfile(packageRoot,'tests');
-    addpath(packageRoot,testsFolder);
-    cleanup = onCleanup(@() rmpath(testsFolder)); %#ok<NASGU>
+    addpath(packageRoot,sourceFolder,testsFolder);
+    cleanup = onCleanup(@() rmpath(sourceFolder,testsFolder)); %#ok<NASGU>
 
     suite = testsuite(testsFolder,'IncludeSubfolders',true);
     results = run(suite);

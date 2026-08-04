@@ -1,7 +1,19 @@
-function WCC4SM_V0_6_2
-%WCC4SM_V0_6_2 Wavelength Characterization and Calibration for Spectrometer.
+function WCC4SM_V0_9
+%WCC4SM_V0_9 Wavelength Characterization and Calibration for Spectrometer.
 % Peak analysis plus reference-line matching and provisional calibration.
 % MATLAB R2022a or later. Signal Processing Toolbox is required for findpeaks.
+
+    packageRoot = fileparts(mfilename('fullpath'));
+    distributionRoot = packageRoot;
+    if isdeployed && ispc
+        try
+            process = System.Diagnostics.Process.GetCurrentProcess();
+            distributionRoot = fileparts(char(process.MainModule.FileName));
+        catch
+            distributionRoot = pwd;
+        end
+    end
+    addpath(fullfile(packageRoot,'src'));
 
     D = emptyData();
     R = emptyReference();
@@ -33,24 +45,29 @@ function WCC4SM_V0_6_2
     sessionMetadata = struct();
     currentSessionPath = '';
     C = colors();
+    referenceDataDir = fullfile(distributionRoot,'reference_data');
+    if ~isfolder(referenceDataDir), referenceDataDir = fullfile(packageRoot,'reference_data'); end
+    documentationDir = fullfile(distributionRoot,'docs');
+    if ~isfolder(documentationDir), documentationDir = fullfile(packageRoot,'docs'); end
 
-    fig=uifigure('Name','WCC4SM V0.6.2 | Peak Analysis','Position',[25 30 1580 900],'Color',C.bg);
+    fig=uifigure('Name','WCC4SM V0.9 | Peak Analysis','Position',[25 30 1580 900],'Color',C.bg);
     root=uigridlayout(fig,[2 3]); root.RowHeight={50,'1x'}; root.ColumnWidth={330,'1x',400};
     root.ColumnWidth={'1x',330,400};
     root.Padding=[10 9 10 10]; root.RowSpacing=8; root.ColumnSpacing=8;
 
-    head=uipanel(root,'BackgroundColor',C.navy,'BorderType','none'); head.Layout.Row=1; head.Layout.Column=[1 3];
-    hg=uigridlayout(head,[1 3]); hg.ColumnWidth={310,'1x',520}; hg.Padding=[14 5 14 5];
-    uilabel(hg,'Text','WCC4SM  V0.6.2','FontSize',20,'FontWeight','bold','FontColor',[.10 .55 .95]);
-    uilabel(hg,'Text','Wavelength Characterization and Calibration for Spectrometer','FontSize',14,'FontWeight','bold','FontColor',[.10 .55 .95],'HorizontalAlignment','center');
-    headerTools=uigridlayout(hg,[1 5]);headerTools.ColumnWidth={145,78,88,88,'1x'};headerTools.Padding=[0 0 0 0];headerTools.ColumnSpacing=5;headerTools.BackgroundColor=C.navy;
+    head=uipanel(root,'BackgroundColor',C.bg,'BorderType','none'); head.Layout.Row=1; head.Layout.Column=[1 3];
+    hg=uigridlayout(head,[1 2]); hg.ColumnWidth={'1x',760}; hg.Padding=[14 5 14 5]; hg.BackgroundColor=C.bg;
+    uilabel(hg,'Text','WCC4SM (Wavelength Characterization and Calibration for Spectrometer) V0.9', ...
+        'FontSize',16,'FontWeight','bold','FontColor',C.blue,'HorizontalAlignment','left');
+    headerTools=uigridlayout(hg,[1 6]);headerTools.ColumnWidth={175,85,110,110,75,'1x'};headerTools.Padding=[0 0 0 0];headerTools.ColumnSpacing=5;headerTools.BackgroundColor=C.bg;
     openFigDrop=uidropdown(headerTools,'Items',{'Peak Analysis','Peak Parameter Statistics','Wavelength Matching', ...
         'Calibration Fit & Residuals','Model Validation','Model Comparison','Calibrated Performance'}, ...
         'Value','Peak Analysis','Tooltip','Choose a plot tab whose subplots will be opened as separate editable figures');
     uibutton(headerTools,'Text','OPEN FIG','FontWeight','bold','BackgroundColor',C.cyan,'ButtonPushedFcn',@openSelectedTabFigures);
     uibutton(headerTools,'Text','SAVE SESSION','FontWeight','bold','BackgroundColor',C.greenLight,'ButtonPushedFcn',@saveSession);
     uibutton(headerTools,'Text','LOAD SESSION','FontWeight','bold','BackgroundColor',C.yellow,'ButtonPushedFcn',@loadSession);
-    topStatus=uilabel(headerTools,'Text','Load a spectrum','FontWeight','bold','FontColor',C.yellow,'BackgroundColor',C.navy,'HorizontalAlignment','left','Tooltip','Current workflow status');
+    uibutton(headerTools,'Text','HELP','FontWeight','bold','BackgroundColor',C.cyan,'ButtonPushedFcn',@openHelpDialog);
+    topStatus=uilabel(headerTools,'Text','Load a spectrum','FontWeight','bold','FontColor',C.navy,'BackgroundColor',C.bg,'HorizontalAlignment','left','Tooltip','Current workflow status');
 
     %% LEFT CONTROL COLUMN
     leftTabs=uitabgroup(root); leftTabs.Layout.Row=2; leftTabs.Layout.Column=2;
@@ -293,7 +310,7 @@ function WCC4SM_V0_6_2
             if ~editSessionMetadata(),return;end
             sessionState=captureSessionState();
             WCC4SMSession=wc4sm_create_session(sessionState,sessionMetadata);
-            WCC4SMSession.SoftwareVersion='0.6.2';
+            WCC4SMSession.SoftwareVersion='0.9';
             defaultName='WCC4SM_session.mat';
             if ~isempty(currentSessionPath),[~,n,e]=fileparts(currentSessionPath);defaultName=[n e];end
             [fn,pn]=uiputfile('*.mat','Save complete WCC4SM session',defaultName);
@@ -662,7 +679,7 @@ function WCC4SM_V0_6_2
         catch
         end
         if diff(viewLimits)<1,viewLimits=limits;end
-        ld=uifigure('Name','WCC4SM V0.6.2 | Weak-peak subwindow search','Position',[180 160 520 520],'Color',C.bg);
+        ld=uifigure('Name','WCC4SM V0.9 | Weak-peak subwindow search','Position',[180 160 520 520],'Color',C.bg);
         lg=uigridlayout(ld,[13 2]);lg.ColumnWidth={180,'1x'};lg.RowHeight={32,30,30,30,30,30,30,30,34,34,30,34,'1x'};lg.Padding=[12 12 12 12];
         note=uilabel(lg,'Text','Local search normalizes within this window, uses separate sensitive parameters, and produces candidates only.','FontColor',C.navy,'FontWeight','bold','WordWrap','on');note.Layout.Column=[1 2];
         uilabel(lg,'Text','Start pixel');lStart=uieditfield(lg,'numeric','Value',viewLimits(1));
@@ -1057,7 +1074,8 @@ function WCC4SM_V0_6_2
 
     %% REFERENCE LINE MATCHING AND INITIAL CALIBRATION
     function loadLineLibrary(~,~)
-        [fn,pn]=uigetfile({'*.lit;*.txt;*.csv','Reference lines (*.lit,*.txt,*.csv)';'*.*','All files'},'Load reference-line list');
+        [fn,pn]=uigetfile({'*.lit;*.txt;*.csv','Reference lines (*.lit,*.txt,*.csv)';'*.*','All files'}, ...
+            'Load reference-line list',fullfile(referenceDataDir,'*.lit'));
         if isequal(fn,0), return; end
         try
             M=readmatrix(fullfile(pn,fn),'FileType','text');
@@ -1714,7 +1732,7 @@ function WCC4SM_V0_6_2
 
     function openResidualAnalysis(~,~)
         if ~finalModel.valid,uialert(fig,'Fit a final calibration model first.','No final model');return;end
-        rf=uifigure('Name','WCC4SM V0.6.2 | Calibration Fit & Residual Analysis','Position',[120 90 1160 760],'Color',C.bg);
+        rf=uifigure('Name','WCC4SM V0.9 | Calibration Fit & Residual Analysis','Position',[120 90 1160 760],'Color',C.bg);
         rg=uigridlayout(rf,[2 2]); rg.RowHeight={'1.05x','1x'}; rg.ColumnWidth={'1.25x','1x'}; rg.Padding=[12 10 12 12];
         a1=uiaxes(rg); a1.Layout.Column=[1 2]; styleAxes(a1,C); hold(a1,'on');
         xx=linspace(min(finalModel.Pixel),max(finalModel.Pixel),800); yy=polyval(finalModel.Coefficients,xx,[],finalModel.Mu);
@@ -2046,7 +2064,7 @@ function WCC4SM_V0_6_2
     end
 
     function popOutSpectrumPlots(~,~)
-        pf=figure('Name','WCC4SM V0.6.2 | Current spectrum plots','Color','white','Position',[100 80 1100 760]);
+        pf=figure('Name','WCC4SM V0.9 | Current spectrum plots','Color','white','Position',[100 80 1100 760]);
         t=tiledlayout(pf,2,1,'Padding','compact','TileSpacing','compact');
         if plotTabs.SelectedTab==tabMatchingPlots,s1=axMatchMeasured;s2=axMatchReference;else,s1=axFull;s2=axPeak;end
         a1=nexttile(t);copyAxesState(s1,a1);a2=nexttile(t);copyAxesState(s2,a2);
@@ -2076,7 +2094,7 @@ function WCC4SM_V0_6_2
         for kk=1:numel(sourceAxes)
             plotTitle=axesTitleText(sourceAxes(kk),sprintf('Subplot %d',kk));
             left=80+32*mod(kk-1,5);bottom=80+28*mod(kk-1,5);
-            pf=figure('Name',sprintf('WCC4SM V0.6.2 | %s | %s',tabName,plotTitle), ...
+            pf=figure('Name',sprintf('WCC4SM V0.9 | %s | %s',tabName,plotTitle), ...
                 'NumberTitle','off','Color','white','Position',[left bottom 900 620]);
             targetAxes=axes('Parent',pf,'Position',[.10 .12 .85 .80]);
             copyAxesState(sourceAxes(kk),targetAxes);
@@ -2138,13 +2156,12 @@ function WCC4SM_V0_6_2
     function refreshCalibration
         if L.loaded
             [st,spacing]=referenceStatuses();
-            datRef=cell(numel(L.wavelength),4);
-            for jj=1:numel(L.wavelength),datRef(jj,:)={L.effective(jj),L.intensity(jj),L.order(jj),st{jj}};end
+            datRef=wc4sm_format_reference_table(L.effective,L.intensity,L.order,st);
             refTable.Data=datRef;
             lineInfo.Text=sprintf('%d lines | %s',numel(L.wavelength),shortName(L.source));
             active=find(~strcmp(st,'Out of range') & ~strcmp(st,'Disabled'));
             datActive=cell(numel(active),4);
-            for jj=1:numel(active),q=active(jj);datActive(jj,:)={L.effective(q),L.intensity(q),spacing(q),st{q}};end
+            for jj=1:numel(active),q=active(jj);datActive(jj,:)={L.effective(q),sprintf('%.0f',L.intensity(q)),spacing(q),st{q}};end
             activeRefTable.Data=datActive;
         else
             refTable.Data=zeros(0,4); lineInfo.Text='No reference-line file';
@@ -2447,6 +2464,86 @@ function WCC4SM_V0_6_2
             end
         end
         T=table(PeakID,DetectionPixel,ReferenceWavelength_nm,PeakOrder,Mode,Confidence,Locked,Status,InitialResidual_nm);
+    end
+    function openHelpDialog(~,~)
+        helpFig=uifigure('Name','WCC4SM Help & About','Position',[420 260 700 310], ...
+            'Color',C.bg,'WindowStyle','modal','Resize','off');
+        helpGrid=uigridlayout(helpFig,[6 3]);
+        helpGrid.ColumnWidth={110,'1x',105};
+        helpGrid.RowHeight={34,34,34,70,34,'1x'};
+        helpGrid.Padding=[16 14 16 14]; helpGrid.RowSpacing=8;
+        titleLabel=uilabel(helpGrid,'Text','Help documents and references', ...
+            'FontSize',17,'FontWeight','bold','FontColor',C.blue);
+        titleLabel.Layout.Column=[1 3];
+        uilabel(helpGrid,'Text','PDF document');
+        documentDrop=uidropdown(helpGrid,'Items',{'Scanning docs ...'},'Enable','off');
+        documentDrop.Layout.Column=2;
+        readButton=uibutton(helpGrid,'Text','READ PDF','FontWeight','bold', ...
+            'BackgroundColor',C.cyan,'Enable','off','ButtonPushedFcn',@readHelpDocument);
+        readButton.Layout.Column=3;
+        docsLocation=uilabel(helpGrid,'Text',['Folder: ' documentationDir], ...
+            'FontColor',C.muted,'Tooltip',documentationDir);
+        docsLocation.Layout.Column=[1 3];
+        helpText=uilabel(helpGrid,'Text', ...
+            ['Place manuals, standards and papers in the docs folder or its subfolders. ' ...
+             'Refresh the list, select a PDF, then open it with the system PDF reader.'], ...
+            'WordWrap','on','FontColor',C.muted);
+        helpText.Layout.Column=[1 3];
+        refreshButton=uibutton(helpGrid,'Text','REFRESH','ButtonPushedFcn',@refreshHelpDocuments);
+        refreshButton.Layout.Column=2;
+        aboutButton=uibutton(helpGrid,'Text','ABOUT','FontWeight','bold', ...
+            'BackgroundColor',C.greenLight,'ButtonPushedFcn',@showAboutDialog);
+        aboutButton.Layout.Column=3;
+        setappdata(helpFig,'DocumentDrop',documentDrop);
+        setappdata(helpFig,'ReadButton',readButton);
+        refreshHelpDocuments(refreshButton,[]);
+    end
+    function refreshHelpDocuments(source,~)
+        helpFig=ancestor(source,'figure');
+        documentDrop=getappdata(helpFig,'DocumentDrop');
+        readButton=getappdata(helpFig,'ReadButton');
+        documents=wc4sm_list_pdf_documents(documentationDir);
+        if isempty(documents)
+            documentDrop.Items={'No PDF documents found'};
+            documentDrop.ItemsData={''};
+            documentDrop.Value='';
+            documentDrop.Enable='off'; readButton.Enable='off';
+        else
+            documentDrop.Items={documents.Label};
+            documentDrop.ItemsData={documents.Path};
+            documentDrop.Value=documents(1).Path;
+            documentDrop.Enable='on'; readButton.Enable='on';
+        end
+    end
+    function readHelpDocument(source,~)
+        helpFig=ancestor(source,'figure');
+        documentDrop=getappdata(helpFig,'DocumentDrop');
+        pdfPath=char(documentDrop.Value);
+        if isempty(pdfPath) || ~isfile(pdfPath)
+            uialert(helpFig,'The selected PDF file is no longer available. Refresh the document list.','PDF unavailable');
+            return;
+        end
+        try
+            if ispc
+                winopen(pdfPath);
+            else
+                web(['file:///' strrep(pdfPath,'\','/')],'-browser');
+            end
+        catch ME
+            uialert(helpFig,ME.message,'Unable to open PDF');
+        end
+    end
+    function showAboutDialog(source,~)
+        helpFig=ancestor(source,'figure');
+        message=sprintf(['WCC4SM V0.9\n' ...
+            'Wavelength Characterization and Calibration for Spectrometer\n\n' ...
+            'Developed by Zheng Feng\n' ...
+            'Copyright (c) 2026 Zheng Feng\n' ...
+            'NewOptic - unregistered personal project label\n\n' ...
+            'Contact: feng1214@126.com\n' ...
+            'License: Apache License 2.0\n' ...
+            'Repository: github.com/feng08321/WCC4SM']);
+        uialert(helpFig,message,'About WCC4SM','Icon','info');
     end
 end
 

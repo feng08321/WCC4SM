@@ -1,8 +1,8 @@
 # WCC4SM regression test baseline
 
-This test suite protects the numerical behavior of WCC4SM before the main
-program is split into modules. It does not open the graphical application and
-does not change any measurement or reference data.
+This test suite protects the numerical behavior of the modules under `src/`.
+It does not open the graphical application and does not change any measurement
+or reference data.
 
 ## Run
 
@@ -40,22 +40,14 @@ locking every corrected sample.
 
 ## Files used by the real-data baseline
 
-- `Data/Spectrum_1_8ms_avg50.csv`
-- `Data/Spectrum_1_dark_8ms_avg50.csv`
-- `NIST_HgAr_comparison_c..lit`
-- `WC4SM_reference_selection_mode01.csv`
+- `test_data/Spectrum_1_8ms_avg50.csv`
+- `test_data/Spectrum_1_dark_8ms_avg50.csv`
+- `reference_data/NIST_ASD_HgAr_20260729.lit`
+- `reference_data/WCC4SM_NIST_ASD_HgAr_20260729_Mode01.csv`
 
-The selection mode is expected to retain 29 useful lines from the much larger
-NIST library. Its `MasterSource` column contains an old absolute path and is
-treated as provenance text only; tests and future code must not use it to find
-the master library.
-
-One known reference-data boundary is deliberately recorded by the tests:
-selection wavelength 772.4000 nm is 0.0207 nm from the nearest NIST wavelength
-772.4207 nm. It is just outside the application's documented 0.02 nm matching
-tolerance, so the present application may match only 28 of the 29 mode rows.
-This should be resolved as a reference-data decision, not hidden by a loose
-test tolerance.
+The confirmed selection mode retains 29 useful lines from the dated NIST master.
+Every mode wavelength is an exact value in that master, including 772.4207 nm,
+and `MasterSource` identifies the master by relative filename.
 
 ## Interpreting results
 

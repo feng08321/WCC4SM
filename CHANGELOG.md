@@ -1,5 +1,29 @@
 # Changelog
 
+## V0.9 — 2026-08-04
+
+- Keeps `NIST_ASD_HgAr_20260729.lit` as the only confirmed NIST master and
+  `WCC4SM_NIST_ASD_HgAr_20260729_Mode01.csv` as its Mode01 selection.
+- Removes the unconfirmed master filename and two obsolete/intermediate mode
+  CSV files from the active package.
+- Updates tests and documentation so all 29 Mode01 wavelengths match the dated
+  NIST master exactly.
+- Organizes the confirmed master, Mode01 and metadata under `reference_data/`,
+  with the Avantes example under `reference_data/examples/`.
+- Opens the reference-master file chooser in `reference_data/` by default.
+- Keeps only the application and regression-test MATLAB entries at repository
+  root; moves implementation modules to `src/`, test spectra to `test_data/`,
+  and supporting specifications and acceptance records to `docs/`.
+- Adds Apache License 2.0 licensing, project attribution and an About dialog.
+- Adds a Help window that recursively lists PDFs under `docs/`, refreshes the
+  list and opens the selected document with the system PDF reader.
+- Adds a Windows EXE build script that does not bundle MATLAB Runtime or create
+  an installer, while preserving external `docs/` and `reference_data/` folders.
+- Consolidates the header title and version to free space for full toolbar
+  labels, and uses the application background with dark status text.
+- Displays reference intensity and diffraction order as integers; the confirmed
+  NIST master already stores integer intensity values and remains unchanged.
+
 ## V0.6.2 — development
 
 - Makes pixel-coordinate mode, data domain, and calibration domain visible in

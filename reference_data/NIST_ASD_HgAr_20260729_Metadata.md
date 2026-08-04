@@ -2,7 +2,7 @@
 
 ## Identity
 
-- Dataset file: `NIST_ASD_HgAr_20260729.lit`
+- Dataset file: `reference_data/NIST_ASD_HgAr_20260729.lit`
 - Project data version: `20260729`
 - Version basis: project download/curation date, not an official NIST ASD release number
 - Authority: NIST Atomic Spectra Database (ASD)
@@ -16,8 +16,10 @@
 
 The project master was assembled from strong Hg/Ar line data downloaded from
 NIST ASD and supplemented with several weaker lines found by additional NIST ASD
-queries. The dated file is a byte-for-byte preservation of the previous project
-file `NIST_HgAr_comparison_c..lit`; the old file is retained for audit history.
+queries. The dated file is the confirmed project master. The earlier
+unconfirmed filename and intermediate comparison artifacts were removed from
+the active package; their history remains recoverable from Git tag `v0.6.2`
+and earlier commits.
 
 The project currently does not retain enough information to prove whether every
 row was exported as an observed wavelength or a Ritz wavelength. Values are
@@ -45,7 +47,7 @@ Selection modes are instrument-family profiles. They choose usable lines from
 this master according to wavelength range, sensitivity and resolution, but do
 not define independent wavelength truth. Each mode must use exact wavelength
 values present in this dated master and identify this master by relative
-filename. Mode01 is `WCC4SM_NIST_ASD_HgAr_20260729_Mode01.csv`.
+filename. Mode01 is `reference_data/WCC4SM_NIST_ASD_HgAr_20260729_Mode01.csv`.
 
 ## Modification policy
 

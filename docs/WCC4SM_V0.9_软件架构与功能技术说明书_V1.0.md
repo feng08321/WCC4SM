@@ -1,14 +1,14 @@
-# WCC4SM V0.6.2 软件架构与功能技术说明书
+# WCC4SM V0.9 软件架构与功能技术说明书
 
 文档版本：V1.0
 
-软件版本：WCC4SM V0.6.2
+软件版本：WCC4SM V0.9
 
 编制日期：2026-08-04
 
 ## 1. 文档目的
 
-本文档说明 WCC4SM V0.6.2 的设计目标、软件结构、核心算法、主要数据
+本文档说明 WCC4SM V0.9 的设计目标、软件结构、核心算法、主要数据
 结构、输入输出、会话与模型兼容规则、测试体系及维护边界，用于软件维护、
 科研复现、技术审查和后续版本开发。
 
@@ -35,7 +35,7 @@ WCC4SM（Wavelength Characterization and Calibration for Spectrometer）是
 启动入口：
 
 ```matlab
-WCC4SM_V0_6_2
+WCC4SM_V0_9
 ```
 
 回归测试入口：
@@ -49,18 +49,14 @@ results = run_wc4sm_tests;
 软件由一个 GUI 协调层、独立数值模块、数据与参考资产、测试和文档组成。
 
 ```text
-WCC4SM_V0_6_2.m
-├─ GUI 布局与交互状态
-├─ 数据加载、峰确认和参考线配对工作流
-├─ 模型管理、图形刷新和导出协调
-├─ wc4sm_read_spectrum_file
-├─ wc4sm_read_dark_spectrum
-├─ wc4sm_preprocess_spectrum
-├─ wc4sm_analyze_peak
-├─ wc4sm_fit_calibration
-├─ wc4sm_validate_calibration_loo
-├─ wc4sm_calculate_calibrated_performance
-└─ wc4sm_create/save/load/validate_session
+WCC4SM_V0_9.m               GUI 启动与工作流协调入口
+run_wc4sm_tests.m           自动测试入口
+src/                        独立数值与会话模块
+tests/                      MATLAB 单元测试
+test_data/                  回归测试光谱
+reference_data/             参考主库、选择模式与元数据
+docs/                       技术文档、规范与验收记录
+tools/                      文档构建工具
 ```
 
 GUI 主程序持有当前会话状态。独立模块不直接修改 GUI，输入通过参数传递，
@@ -218,6 +214,10 @@ MATLAB 数组下标与定标方程的像素自变量必须区分。数组下标�
 参考线状态依据相邻有效波长间距和参考分辨率分为 Recommended、Marginal 和
 Unresolved。
 
+随软件提供的正式参考主库、选择模式及溯源元数据统一存放在 `reference_data/`，
+示例库位于 `reference_data/examples/`。外部主库加载对话框默认从该目录打开；
+会话溯源字段仍记录主库和选择模式的文件名，以避免安装目录变化影响可移植性。
+
 操作者先建立少量人工锚点，初始多项式用于预测其他候选。自动扩展保持像素与
 参考波长的单调顺序，并根据容差和置信度生成匹配。自动结果仍应人工审查。
 
@@ -249,36 +249,36 @@ LOO RMS 和删除影响更适合发现过拟合、高影响点及不稳定的局
 
 ## 13. 输入输出
 
-主要输入：测量光谱 CSV、暗光谱 CSV、参考线 `.lit/.txt/.csv`、选择模式 CSV、
-模型 MAT 和会话 MAT。
+主要输入：测量光谱 CSV、暗光谱 CSV、`reference_data/` 中的参考线
+`.lit/.txt/.csv`、选择模式 CSV、模型 MAT 和会话 MAT。
 
 主要输出：峰数据 MAT/CSV、初始定标 MAT/CSV、最终模型 MAT/TXT/CSV、参考
 选择模式 CSV、完整会话 MAT。详细定义见
 `WCC4SM_INPUT_OUTPUT_DATA_FORMATS_V1.md` 和
-`WCC4SM_CALIBRATION_MODEL_FORMAT_V1.md`。
+`docs/WCC4SM_CALIBRATION_MODEL_FORMAT_V1.md`。
 
 ## 14. 测试与验收
 
-V0.6.2 基线包含 37 项非 GUI 回归测试，覆盖峰分析、定标、LOO、预处理、会话、
+V0.9 基线包含 37 项非 GUI 回归测试，覆盖峰分析、定标、LOO、预处理、会话、
 校准后性能和参考数据资产。发布前还执行 MATLAB 静态解析、GUI 初始化冒烟和
 操作者完整流程验收。
 
 需求、实现和测试的对应关系见
-`WCC4SM_V0_6_2_REQUIREMENTS_TRACEABILITY_MATRIX.md`。
+`WCC4SM_V0_9_REQUIREMENTS_TRACEABILITY_MATRIX.md`。
 
 ## 15. 已知限制
 
 - GUI 主程序仍较大，部分界面协调逻辑尚未模块化。
 - 文件对话框、人工峰审核和可编辑图形主要依赖人工验收。
 - Legacy 模型缺少像素模式元数据，追溯能力弱于 V0.6.1 以后模型。
-- 参考选择值 772.4000 nm 与 NIST 772.4207 nm 存在 0.0207 nm 边界差异，
-  应作为参考数据决策处理，不应仅放宽匹配容差。
+- 当前 Mode01 的 29 条波长均与已确认的日期化 NIST 主库精确一致；更换主库
+  或模式时必须新建版本并重新运行数据资产测试。
 - 模型不应在未确认设备、像素序列和适用域时跨仪器复用。
 
 ## 16. 维护和版本策略
 
 - `main` 只保存已验收稳定版本。
-- 稳定发布使用不可变 Git 标签；V0.6.1、V0.6.2 可独立恢复。
+- 稳定发布使用不可变 Git 标签；V0.6.1、V0.6.2 和后续 V0.9 可独立恢复。
 - 新功能和修复在独立分支通过 PR 集成。
 - `result/`、会话 MAT、日志和本机配置不进入版本控制。
 - 修改核心算法前先增加或更新回归测试，禁止仅为通过测试而改期望值。
@@ -287,9 +287,31 @@ V0.6.2 基线包含 37 项非 GUI 回归测试，覆盖峰分析、定标、LOO�
 
 - `README.md`
 - `CHANGELOG.md`
-- `TESTING.md`
-- `WCC4SM_SESSION_FORMAT_V1.md`
-- `WCC4SM_PIXEL_COORDINATE_SPEC_V1.md`
-- `WCC4SM_CALIBRATION_MODEL_FORMAT_V1.md`
-- `V0_6_2_GUI_TEST.md`
-- `WCC4SM_V0_6_2_ACCEPTANCE_REPORT.md`
+- `docs/TESTING.md`
+- `docs/WCC4SM_SESSION_FORMAT_V1.md`
+- `docs/WCC4SM_PIXEL_COORDINATE_SPEC_V1.md`
+- `docs/WCC4SM_CALIBRATION_MODEL_FORMAT_V1.md`
+- `docs/V0_9_GUI_TEST.md`
+- `docs/WCC4SM_V0_6_2_ACCEPTANCE_REPORT.md`
+
+## 18. 帮助、授权与部署
+
+主界面 `HELP` 按钮打开独立帮助窗口。`wc4sm_list_pdf_documents` 对外部 `docs/`
+执行递归、扩展名不区分大小写的 PDF 扫描，返回排序后的相对标签和规范化绝对路径；
+读取操作交给操作系统默认 PDF 阅读器。About 信息包含版本、作者、联系邮箱、
+NewOptic 个人项目标签、Apache License 2.0 和仓库地址。
+
+源码与项目文档依据根目录 `LICENSE` 采用 Apache License 2.0，并通过 `NOTICE`
+记录版权和归属信息。第三方参考数据、论文、标准、MATLAB 和 MATLAB Runtime
+不因被软件引用或随用户本地目录存在而自动变更许可证。
+
+`tools/build_windows_exe.m` 使用 MATLAB Compiler 的 `mcc -e` 生成无控制台的
+Windows EXE，不生成安装器、不捆绑 MATLAB Runtime。构建输出保留外部 `docs/`
+和 `reference_data/`，部署模式通过 EXE 所在目录定位这两类可更新资产。
+
+## 19. V0.9 发布界面收尾
+
+顶栏将缩写、完整名称和版本合并为单个标题，为右侧操作区提供固定760像素宽度；
+工具栏及状态标签背景与应用主背景一致，状态文字使用深蓝色。参考主库的强度和级次
+继续以数值形式保存在模型中，但 `uitable` 数据使用零位小数字符串显示，以规避
+R2022a 混合单元格表格在滚动区域出现整数与四位小数格式不一致的问题。

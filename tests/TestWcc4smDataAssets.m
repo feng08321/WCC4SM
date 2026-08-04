@@ -12,9 +12,9 @@ classdef TestWcc4smDataAssets < matlab.unittest.TestCase
     methods (Test)
         function measuredAndDarkSpectraAreAligned(testCase)
             measured = testCase.readTwoNumericColumns(fullfile(testCase.Root, ...
-                'Data','Spectrum_1_8ms_avg50.csv'));
+                'test_data','Spectrum_1_8ms_avg50.csv'));
             dark = testCase.readTwoNumericColumns(fullfile(testCase.Root, ...
-                'Data','Spectrum_1_dark_8ms_avg50.csv'));
+                'test_data','Spectrum_1_dark_8ms_avg50.csv'));
 
             testCase.verifySize(measured,[1943 2]);
             testCase.verifySize(dark,[1943 2]);
@@ -26,9 +26,9 @@ classdef TestWcc4smDataAssets < matlab.unittest.TestCase
 
         function darkSubtractedSpectrumHasStableCharacteristics(testCase)
             measured = testCase.readTwoNumericColumns(fullfile(testCase.Root, ...
-                'Data','Spectrum_1_8ms_avg50.csv'));
+                'test_data','Spectrum_1_8ms_avg50.csv'));
             dark = testCase.readTwoNumericColumns(fullfile(testCase.Root, ...
-                'Data','Spectrum_1_dark_8ms_avg50.csv'));
+                'test_data','Spectrum_1_dark_8ms_avg50.csv'));
             corrected = measured(:,2)-dark(:,2);
             [peakValue,index] = max(corrected);
 
@@ -41,8 +41,11 @@ classdef TestWcc4smDataAssets < matlab.unittest.TestCase
         end
 
         function nistLibraryAndSelectionModeAreConsistent(testCase)
-            nistPath = fullfile(testCase.Root,'NIST_HgAr_comparison_c..lit');
-            modePath = fullfile(testCase.Root,'WC4SM_reference_selection_mode01.csv');
+            nistPath = fullfile(testCase.Root,'reference_data', ...
+                'NIST_ASD_HgAr_20260729.lit');
+            modePath = fullfile(testCase.Root, ...
+                'reference_data', ...
+                'WCC4SM_NIST_ASD_HgAr_20260729_Mode01.csv');
             nist = testCase.readTwoNumericColumns(nistPath);
             mode = readtable(modePath,'TextType','string');
 
@@ -53,26 +56,45 @@ classdef TestWcc4smDataAssets < matlab.unittest.TestCase
 
             nearestDistance = arrayfun(@(w) min(abs(nist(:,1)-w)), ...
                 mode.Wavelength_nm);
-            % The mode was derived from a different master version. Currently
-            % 28 lines meet the application's 0.02 nm tolerance; 772.4000 nm
-            % is 0.0207 nm from the NIST 772.4207 nm line. Record that known
-            % boundary mismatch explicitly until the reference data are revised.
-            testCase.verifyEqual(sum(nearestDistance <= 0.02),28);
-            testCase.verifyEqual(max(nearestDistance),0.0207,'AbsTol',1e-6);
+            testCase.verifyEqual(nearestDistance,zeros(29,1),'AbsTol',1e-12);
+            testCase.verifyTrue(all(mode.MasterSource == ...
+                "NIST_ASD_HgAr_20260729.lit"));
         end
 
         function datedNistMasterPreservesOriginalData(testCase)
-            original = testCase.readTwoNumericColumns(fullfile(testCase.Root, ...
-                'NIST_HgAr_comparison_c..lit'));
             dated = testCase.readTwoNumericColumns(fullfile(testCase.Root, ...
+                'reference_data', ...
                 'NIST_ASD_HgAr_20260729.lit'));
-            testCase.verifyEqual(dated,original,'AbsTol',0);
             testCase.verifySize(dated,[322 2]);
+            testCase.verifyEqual(dated(1,1),184.9499,'AbsTol',1e-12);
+            testCase.verifyEqual(dated(end,1),2396.652,'AbsTol',1e-12);
+            testCase.verifyEqual(dated(:,2),round(dated(:,2)),'AbsTol',0);
+            displayRows = wc4sm_format_reference_table(dated(1:3,1), ...
+                dated(1:3,2),ones(3,1),{'Recommended';'Disabled';'Marginal'});
+            testCase.verifyEqual(displayRows(:,2),{'1000';'1000';'20'});
+            testCase.verifyEqual(displayRows(:,3),{'1';'1';'1'});
+            testCase.verifyFalse(any(contains(string(displayRows(:,2:3)),'.'),'all'));
+            testCase.verifyTrue(isfile(fullfile(testCase.Root, ...
+                'reference_data', ...
+                'NIST_ASD_HgAr_20260729_Metadata.md')));
+
+            temporaryDocs = tempname;
+            mkdir(fullfile(temporaryDocs,'papers'));
+            cleanup = onCleanup(@() rmdir(temporaryDocs,'s')); %#ok<NASGU>
+            fileID = fopen(fullfile(temporaryDocs,'papers','Example.PDF'),'w');
+            testCase.assertGreaterThan(fileID,0);
+            fclose(fileID);
+            documents = wc4sm_list_pdf_documents(temporaryDocs);
+            testCase.verifyEqual(numel(documents),1);
+            testCase.verifyEqual(documents(1).Label,'papers / Example.PDF');
+            testCase.verifyTrue(isfile(documents(1).Path));
         end
 
         function nistMode01MatchesAllMasterWavelengthsExactly(testCase)
-            masterPath = fullfile(testCase.Root,'NIST_ASD_HgAr_20260729.lit');
+            masterPath = fullfile(testCase.Root,'reference_data', ...
+                'NIST_ASD_HgAr_20260729.lit');
             modePath = fullfile(testCase.Root, ...
+                'reference_data', ...
                 'WCC4SM_NIST_ASD_HgAr_20260729_Mode01.csv');
             master = testCase.readTwoNumericColumns(masterPath);
             mode = readtable(modePath,'TextType','string');
