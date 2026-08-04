@@ -41,8 +41,9 @@ classdef TestWcc4smDataAssets < matlab.unittest.TestCase
         end
 
         function nistLibraryAndSelectionModeAreConsistent(testCase)
-            nistPath = fullfile(testCase.Root,'NIST_HgAr_comparison_c..lit');
-            modePath = fullfile(testCase.Root,'WC4SM_reference_selection_mode01.csv');
+            nistPath = fullfile(testCase.Root,'NIST_ASD_HgAr_20260729.lit');
+            modePath = fullfile(testCase.Root, ...
+                'WCC4SM_NIST_ASD_HgAr_20260729_Mode01.csv');
             nist = testCase.readTwoNumericColumns(nistPath);
             mode = readtable(modePath,'TextType','string');
 
@@ -53,21 +54,19 @@ classdef TestWcc4smDataAssets < matlab.unittest.TestCase
 
             nearestDistance = arrayfun(@(w) min(abs(nist(:,1)-w)), ...
                 mode.Wavelength_nm);
-            % The mode was derived from a different master version. Currently
-            % 28 lines meet the application's 0.02 nm tolerance; 772.4000 nm
-            % is 0.0207 nm from the NIST 772.4207 nm line. Record that known
-            % boundary mismatch explicitly until the reference data are revised.
-            testCase.verifyEqual(sum(nearestDistance <= 0.02),28);
-            testCase.verifyEqual(max(nearestDistance),0.0207,'AbsTol',1e-6);
+            testCase.verifyEqual(nearestDistance,zeros(29,1),'AbsTol',1e-12);
+            testCase.verifyTrue(all(mode.MasterSource == ...
+                "NIST_ASD_HgAr_20260729.lit"));
         end
 
         function datedNistMasterPreservesOriginalData(testCase)
-            original = testCase.readTwoNumericColumns(fullfile(testCase.Root, ...
-                'NIST_HgAr_comparison_c..lit'));
             dated = testCase.readTwoNumericColumns(fullfile(testCase.Root, ...
                 'NIST_ASD_HgAr_20260729.lit'));
-            testCase.verifyEqual(dated,original,'AbsTol',0);
             testCase.verifySize(dated,[322 2]);
+            testCase.verifyEqual(dated(1,1),184.9499,'AbsTol',1e-12);
+            testCase.verifyEqual(dated(end,1),2396.652,'AbsTol',1e-12);
+            testCase.verifyTrue(isfile(fullfile(testCase.Root, ...
+                'NIST_ASD_HgAr_20260729_Metadata.md')));
         end
 
         function nistMode01MatchesAllMasterWavelengthsExactly(testCase)

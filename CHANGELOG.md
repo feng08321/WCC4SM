@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased — reference asset cleanup
+
+- Keeps `NIST_ASD_HgAr_20260729.lit` as the only confirmed NIST master and
+  `WCC4SM_NIST_ASD_HgAr_20260729_Mode01.csv` as its Mode01 selection.
+- Removes the unconfirmed master filename and two obsolete/intermediate mode
+  CSV files from the active package.
+- Updates tests and documentation so all 29 Mode01 wavelengths match the dated
+  NIST master exactly.
+
 ## V0.6.2 — development
 
 - Makes pixel-coordinate mode, data domain, and calibration domain visible in

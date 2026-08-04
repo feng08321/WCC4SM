@@ -16,8 +16,10 @@
 
 The project master was assembled from strong Hg/Ar line data downloaded from
 NIST ASD and supplemented with several weaker lines found by additional NIST ASD
-queries. The dated file is a byte-for-byte preservation of the previous project
-file `NIST_HgAr_comparison_c..lit`; the old file is retained for audit history.
+queries. The dated file is the confirmed project master. The earlier
+unconfirmed filename and intermediate comparison artifacts were removed from
+the active package; their history remains recoverable from Git tag `v0.6.2`
+and earlier commits.
 
 The project currently does not retain enough information to prove whether every
 row was exported as an observed wavelength or a Ritz wavelength. Values are
