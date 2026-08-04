@@ -7,16 +7,15 @@ performance analysis, and complete analysis-session restoration.
 
 ## Versions
 
-The published stable baseline is **WCC4SM V0.6.1** (Git tag `v0.6.1`). The
-current development line is **V0.6.2**, which makes pixel-coordinate metadata
-visible in the GUI and every model export. Start the development version from
-MATLAB R2022a or later with:
+The current stable baseline is **WCC4SM V0.6.2** (Git tag `v0.6.2`). It makes
+pixel-coordinate metadata visible in the GUI and every model export. V0.6.1
+remains the previous rollback tag. Start V0.6.2 from MATLAB R2022a or later:
 
 ```matlab
 WCC4SM_V0_6_2
 ```
 
-V0.6.1 distinguishes two one-based pixel coordinate systems:
+V0.6.2 distinguishes two one-based pixel coordinate systems:
 
 - **Full detector sequence** for uncalibrated instruments that expose every
   detector pixel.
@@ -48,3 +47,17 @@ instrument, path, and experiment metadata.
 The `v0.6.1` Git tag is the immutable rollback baseline. Source snapshots from
 older releases are retrieved from Git rather than kept as duplicate programs in
 the active development tree.
+
+## Documentation
+
+Formal V0.6.2 documentation is maintained in `docs/` as reviewable Markdown
+sources with generated DOCX copies:
+
+- software architecture and technical design;
+- operator user manual;
+- input/output data-format specification;
+- requirements–design–test traceability matrix.
+
+Format-specific supporting specifications remain in the repository root for
+pixel coordinates, calibration models and session files. See `docs/README.md`
+for the complete documentation map and regeneration instructions.
