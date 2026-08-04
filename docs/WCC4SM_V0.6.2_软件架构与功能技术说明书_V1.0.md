@@ -49,18 +49,14 @@ results = run_wc4sm_tests;
 软件由一个 GUI 协调层、独立数值模块、数据与参考资产、测试和文档组成。
 
 ```text
-WCC4SM_V0_6_2.m
-├─ GUI 布局与交互状态
-├─ 数据加载、峰确认和参考线配对工作流
-├─ 模型管理、图形刷新和导出协调
-├─ wc4sm_read_spectrum_file
-├─ wc4sm_read_dark_spectrum
-├─ wc4sm_preprocess_spectrum
-├─ wc4sm_analyze_peak
-├─ wc4sm_fit_calibration
-├─ wc4sm_validate_calibration_loo
-├─ wc4sm_calculate_calibrated_performance
-└─ wc4sm_create/save/load/validate_session
+WCC4SM_V0_6_2.m             GUI 启动与工作流协调入口
+run_wc4sm_tests.m           自动测试入口
+src/                        独立数值与会话模块
+tests/                      MATLAB 单元测试
+test_data/                  回归测试光谱
+reference_data/             参考主库、选择模式与元数据
+docs/                       技术文档、规范与验收记录
+tools/                      文档构建工具
 ```
 
 GUI 主程序持有当前会话状态。独立模块不直接修改 GUI，输入通过参数传递，
@@ -259,7 +255,7 @@ LOO RMS 和删除影响更适合发现过拟合、高影响点及不稳定的局
 主要输出：峰数据 MAT/CSV、初始定标 MAT/CSV、最终模型 MAT/TXT/CSV、参考
 选择模式 CSV、完整会话 MAT。详细定义见
 `WCC4SM_INPUT_OUTPUT_DATA_FORMATS_V1.md` 和
-`WCC4SM_CALIBRATION_MODEL_FORMAT_V1.md`。
+`docs/WCC4SM_CALIBRATION_MODEL_FORMAT_V1.md`。
 
 ## 14. 测试与验收
 
@@ -292,8 +288,8 @@ V0.6.2 基线包含 37 项非 GUI 回归测试，覆盖峰分析、定标、LOO�
 - `README.md`
 - `CHANGELOG.md`
 - `TESTING.md`
-- `WCC4SM_SESSION_FORMAT_V1.md`
-- `WCC4SM_PIXEL_COORDINATE_SPEC_V1.md`
-- `WCC4SM_CALIBRATION_MODEL_FORMAT_V1.md`
-- `V0_6_2_GUI_TEST.md`
-- `WCC4SM_V0_6_2_ACCEPTANCE_REPORT.md`
+- `docs/WCC4SM_SESSION_FORMAT_V1.md`
+- `docs/WCC4SM_PIXEL_COORDINATE_SPEC_V1.md`
+- `docs/WCC4SM_CALIBRATION_MODEL_FORMAT_V1.md`
+- `docs/V0_6_2_GUI_TEST.md`
+- `docs/WCC4SM_V0_6_2_ACCEPTANCE_REPORT.md`

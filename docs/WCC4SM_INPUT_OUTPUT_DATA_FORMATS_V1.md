@@ -202,7 +202,7 @@ WCC4SMSession
 
 顶层包含应用标识、格式/软件版本、时间戳、Metadata 和 State。State 包括光谱、
 峰、参考线、配对、模型和 UI 设置。详细结构和兼容规则见
-`WCC4SM_SESSION_FORMAT_V1.md`。
+`docs/WCC4SM_SESSION_FORMAT_V1.md`。
 
 ## 10. 隐私和版本控制
 

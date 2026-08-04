@@ -34,7 +34,7 @@ results = run_wc4sm_tests;
 ```
 
 The regression suite currently has 37 tests. The current GUI acceptance
-procedure is in `V0_6_2_GUI_TEST.md`.
+procedure is in `docs/V0_6_2_GUI_TEST.md`.
 
 ## Data and privacy
 
@@ -58,6 +58,7 @@ sources with generated DOCX copies:
 - input/output data-format specification;
 - requirements–design–test traceability matrix.
 
-Format-specific supporting specifications remain in the repository root for
-pixel coordinates, calibration models and session files. See `docs/README.md`
-for the complete documentation map and regeneration instructions.
+Format-specific supporting specifications are also maintained in `docs/`.
+See `docs/README.md` for the complete documentation map and regeneration
+instructions. Numerical implementation modules are organized under `src/`,
+while the two root-level MATLAB files remain the application and test entries.

@@ -14,12 +14,13 @@ copies are generated delivery artifacts.
 
 ## Supporting specifications
 
-- `../WCC4SM_PIXEL_COORDINATE_SPEC_V1.md`
-- `../WCC4SM_CALIBRATION_MODEL_FORMAT_V1.md`
-- `../WCC4SM_SESSION_FORMAT_V1.md`
-- `../TESTING.md`
-- `../V0_6_2_GUI_TEST.md`
-- `../WCC4SM_V0_6_2_ACCEPTANCE_REPORT.md`
+- `WCC4SM_PIXEL_COORDINATE_SPEC_V1.md`
+- `WCC4SM_CALIBRATION_MODEL_FORMAT_V1.md`
+- `WCC4SM_SESSION_FORMAT_V1.md`
+- `WCC4SM_Reference_Data_Model_V0_2F.txt`
+- `TESTING.md`
+- `V0_6_2_GUI_TEST.md`
+- `WCC4SM_V0_6_2_ACCEPTANCE_REPORT.md`
 
 ## Regenerate DOCX
 

@@ -12,9 +12,9 @@ classdef TestWcc4smDataAssets < matlab.unittest.TestCase
     methods (Test)
         function measuredAndDarkSpectraAreAligned(testCase)
             measured = testCase.readTwoNumericColumns(fullfile(testCase.Root, ...
-                'Data','Spectrum_1_8ms_avg50.csv'));
+                'test_data','Spectrum_1_8ms_avg50.csv'));
             dark = testCase.readTwoNumericColumns(fullfile(testCase.Root, ...
-                'Data','Spectrum_1_dark_8ms_avg50.csv'));
+                'test_data','Spectrum_1_dark_8ms_avg50.csv'));
 
             testCase.verifySize(measured,[1943 2]);
             testCase.verifySize(dark,[1943 2]);
@@ -26,9 +26,9 @@ classdef TestWcc4smDataAssets < matlab.unittest.TestCase
 
         function darkSubtractedSpectrumHasStableCharacteristics(testCase)
             measured = testCase.readTwoNumericColumns(fullfile(testCase.Root, ...
-                'Data','Spectrum_1_8ms_avg50.csv'));
+                'test_data','Spectrum_1_8ms_avg50.csv'));
             dark = testCase.readTwoNumericColumns(fullfile(testCase.Root, ...
-                'Data','Spectrum_1_dark_8ms_avg50.csv'));
+                'test_data','Spectrum_1_dark_8ms_avg50.csv'));
             corrected = measured(:,2)-dark(:,2);
             [peakValue,index] = max(corrected);
 

@@ -3,6 +3,9 @@ function WCC4SM_V0_6_2
 % Peak analysis plus reference-line matching and provisional calibration.
 % MATLAB R2022a or later. Signal Processing Toolbox is required for findpeaks.
 
+    packageRoot = fileparts(mfilename('fullpath'));
+    addpath(fullfile(packageRoot,'src'));
+
     D = emptyData();
     R = emptyReference();
     peaks = emptyPeaks();
@@ -33,7 +36,7 @@ function WCC4SM_V0_6_2
     sessionMetadata = struct();
     currentSessionPath = '';
     C = colors();
-    referenceDataDir = fullfile(fileparts(mfilename('fullpath')),'reference_data');
+    referenceDataDir = fullfile(packageRoot,'reference_data');
     if ~isfolder(referenceDataDir), referenceDataDir = pwd; end
 
     fig=uifigure('Name','WCC4SM V0.6.2 | Peak Analysis','Position',[25 30 1580 900],'Color',C.bg);

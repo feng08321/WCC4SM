@@ -11,6 +11,9 @@
 - Organizes the confirmed master, Mode01 and metadata under `reference_data/`,
   with the Avantes example under `reference_data/examples/`.
 - Opens the reference-master file chooser in `reference_data/` by default.
+- Keeps only the application and regression-test MATLAB entries at repository
+  root; moves implementation modules to `src/`, test spectra to `test_data/`,
+  and supporting specifications and acceptance records to `docs/`.
 
 ## V0.6.2 — development
 

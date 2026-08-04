@@ -1,8 +1,8 @@
 # WCC4SM regression test baseline
 
-This test suite protects the numerical behavior of WCC4SM before the main
-program is split into modules. It does not open the graphical application and
-does not change any measurement or reference data.
+This test suite protects the numerical behavior of the modules under `src/`.
+It does not open the graphical application and does not change any measurement
+or reference data.
 
 ## Run
 
@@ -40,8 +40,8 @@ locking every corrected sample.
 
 ## Files used by the real-data baseline
 
-- `Data/Spectrum_1_8ms_avg50.csv`
-- `Data/Spectrum_1_dark_8ms_avg50.csv`
+- `test_data/Spectrum_1_8ms_avg50.csv`
+- `test_data/Spectrum_1_dark_8ms_avg50.csv`
 - `reference_data/NIST_ASD_HgAr_20260729.lit`
 - `reference_data/WCC4SM_NIST_ASD_HgAr_20260729_Mode01.csv`
 
