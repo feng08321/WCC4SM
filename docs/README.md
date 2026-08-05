@@ -5,7 +5,8 @@
 | Document | Markdown source | DOCX |
 |---|---|---|
 | 软件架构与功能技术说明书 | `WCC4SM_V0.9_软件架构与功能技术说明书_V1.0.md` | matching `.docx` |
-| 软件使用说明书 | `WCC4SM_V0.9_软件使用说明书_V1.0.md` | matching `.docx` and `.pdf` |
+| 软件使用说明书 | `WCC4SM_V0.9_软件使用说明书_V1.1.md` | matching `.docx` and `.pdf` |
+| 公开发布审计 | `V0_9_PUBLIC_RELEASE_AUDIT.md` | Markdown |
 | 输入输出数据格式规范 | `WCC4SM_INPUT_OUTPUT_DATA_FORMATS_V1.md` | matching `.docx` |
 | 需求—设计—测试追踪矩阵 | `WCC4SM_V0_9_REQUIREMENTS_TRACEABILITY_MATRIX.md` | matching `.docx` |
 
@@ -32,7 +33,7 @@ MATLAB Report Generator is required. From the package root:
 addpath('tools');
 sources = {
     fullfile('docs','WCC4SM_V0.9_软件架构与功能技术说明书_V1.0.md')
-    fullfile('docs','WCC4SM_V0.9_软件使用说明书_V1.0.md')
+    fullfile('docs','WCC4SM_V0.9_软件使用说明书_V1.1.md')
     fullfile('docs','WCC4SM_INPUT_OUTPUT_DATA_FORMATS_V1.md')
     fullfile('docs','WCC4SM_V0_9_REQUIREMENTS_TRACEABILITY_MATRIX.md')
 };

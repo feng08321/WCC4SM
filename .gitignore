@@ -23,3 +23,6 @@ Thumbs.db
 
 # Local test output
 test20*.txt
+
+# Local publisher PDF; cite by DOI unless redistribution permission is confirmed
+docs/refer-paper-2026-multi-parameter-wavelength-characterization-of-array-spectrometers-under-near-limit-sampling-conditions.pdf

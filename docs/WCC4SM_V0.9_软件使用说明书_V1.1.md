@@ -1,6 +1,6 @@
 # WCC4SM V0.9 软件使用说明书
 
-文档版本：V1.0
+文档版本：V1.1
 
 软件版本：WCC4SM V0.9
 
@@ -67,6 +67,8 @@ WCC4SM_Results/
 中央页签显示峰分析、配对、拟合残差、LOO、模型比较和校准后性能图。
 
 右侧页签提供峰列表、已确认数据集、峰线配对和最终模型操作。
+
+![图 1 WCC4SM V0.9 主界面与光谱数据加载状态](image/01loaddata.png)
 
 ## 4. 选择输入解释
 
@@ -148,6 +150,8 @@ WCC4SM_Results/
 检测结果显示在 Peak List 和主光谱图。检测到的峰默认尚未确认，不能直接视为
 最终校准点。
 
+![图 2 全谱峰检测、Peak List 与单峰局部分析](image/02peakfind.png)
+
 ## 9. 弱峰子窗口搜索
 
 当全谱归一化掩盖弱峰时：
@@ -179,6 +183,8 @@ WCC4SM_Results/
 
 `BATCH PRE-ANALYSIS` 仅用于预览，不替代逐峰人工确认。
 
+![图 3 峰位、半高宽、等效矩形宽度和采样比等参数统计](image/03peakparameter.png)
+
 ## 11. 管理参考谱线
 
 在 Reference Lines 可选择：
@@ -196,6 +202,8 @@ WCC4SM_Results/
 替代主参考库的溯源信息。
 
 使用 `Import selection mode` 和 `Export selection mode` 保存选择状态。
+
+![图 4 外部参考波长库、选择模式与峰—参考线配对](image/04referimport2peakmatch.png)
 
 ## 12. 建立峰—参考线配对
 
@@ -230,6 +238,8 @@ WCC4SM_Results/
 - 方程和归一化系数
 - RMS 和最大绝对残差
 
+![图 5 初始锚点建立后的定标拟合与残差分析](image/05firstcalfit.png)
+
 ## 14. 审查残差、LOO 和模型比较
 
 Calibration Fit & Residuals 显示拟合曲线、残差趋势和直方图。
@@ -247,6 +257,10 @@ Model Comparison 可比较每次拟合快照，包括像素模式、像素域、
 - LOO 是否明显大于拟合残差。
 - 个别点是否具有异常高的删除影响。
 - 模型阶数是否与点数和物理平滑性相称。
+
+![图 6 扩展定标点后的 LOO、删除影响和模型验证](image/06extendcalfit2LOO.png)
+
+![图 7 多个候选定标模型的残差比较与模型选择](image/07calmodelsel.png)
 
 ## 15. 应用模型
 
@@ -275,6 +289,8 @@ Model Comparison 可比较每次拟合快照，包括像素模式、像素域、
 非线性模型下，FWHM 使用左右半高点分别换算，不应把单点色散乘以像素宽度
 作为唯一结果。
 
+![图 8 校准后的波长特性、分辨率和相邻像素波长间隔](image/08wavelengthcharacter.png)
+
 ## 17. 导出数据和模型
 
 ### 17.1 峰数据
@@ -295,6 +311,10 @@ Model Comparison 可比较每次拟合快照，包括像素模式、像素域、
 - `*_equation.txt`：可读方程、模式、域、系数和统计。
 
 三种文件应具有相同文件名前缀并一起归档。
+
+应用模型后可在波长坐标下重新检查谱峰和导出结果，如图 9 所示。
+
+![图 9 应用定标模型后的波长轴显示与谱峰重分析](image/09peakreanalysis.png)
 
 ## 18. 保存和恢复会话
 
@@ -365,6 +385,15 @@ figure。原 GUI 中的图不会被移除。
 - `docs/WCC4SM_SESSION_FORMAT_V1.md`
 - `docs/V0_9_GUI_TEST.md`
 
+方法参考文献：
+
+- Du B, Liu L, Wu D, et al. Multi-Parameter Wavelength Characterization of
+  Array Spectrometers Under Near-Limit Sampling Conditions. *Applied
+  Spectroscopy*. 2026. DOI: `10.1177/00037028261468369`。
+
+论文引用信息可随软件公开。出版社排版 PDF 是否可以再次分发，取决于论文的开放
+许可或出版协议；WCC4SM 的 Apache License 2.0 不适用于该论文 PDF。
+
 ## 23. PDF 帮助与 About
 
 点击顶部 `HELP` 打开帮助窗口。软件递归扫描外部 `docs/` 目录及其子目录中的
@@ -373,6 +402,8 @@ PDF 文件，并在下拉框中显示相对文件名。点击 `REFRESH` 可在�
 
 `ABOUT` 显示软件版本、作者 Zheng Feng、联系邮箱 `feng1214@126.com`、个人项目
 标签 NewOptic、Apache License 2.0 及 GitHub 项目地址。NewOptic 不是注册商标。
+
+![图 10 HELP 文档选择、PDF 阅读和 About 信息](image/10help2about.png)
 
 ## 24. EXE 运行方式
 
