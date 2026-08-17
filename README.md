@@ -7,14 +7,14 @@ performance analysis, and complete analysis-session restoration.
 
 ## Versions
 
-The current stable release is **WCC4SM V0.9** (Git tag `v0.9`). It includes the accepted
+The current stable release is **WCC4SM V0.9.2** (Git tag `v0.9.2`). It includes the accepted
 V0.6.2 calibration workflow, organized reference assets, Apache License 2.0,
 PDF help, About information, and Windows EXE deployment support. The immutable
 `v0.6.2` and `v0.6.1` tags remain rollback baselines. Start V0.9 from MATLAB
 R2022a or later:
 
 ```matlab
-WCC4SM_V0_9
+WCC4SM_V0_9_2
 ```
 
 V0.9 distinguishes two one-based pixel coordinate systems:
@@ -35,8 +35,13 @@ Run the non-GUI regression suite from the package root:
 results = run_wc4sm_tests;
 ```
 
-The regression suite currently has 37 tests. The current GUI acceptance
-procedure is in `docs/V0_9_GUI_TEST.md`.
+The regression suite currently has 41 tests. The V0.9.2 GUI acceptance
+procedure is in `docs/V0_9_2_GUI_TEST.md`.
+
+The first optimization-analysis layer is available as non-GUI MATLAB modules:
+`wc4sm_analyze_model_order`, `wc4sm_analyze_add_one`, and
+`wc4sm_plot_optimization_diagnostics`. These return complete iteration
+histories for numerical review before integration into a dedicated GUI tab.
 
 ## License and contact
 

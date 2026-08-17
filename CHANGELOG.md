@@ -1,5 +1,13 @@
 # Changelog
 
+## V0.9.2 — 2026-08-17
+
+- Adds Start X, End X and Reset Range controls for the full-spectrum view.
+- Adds a matching-annotation visibility toggle while retaining detected-peak marker control.
+- Displays imported filenames literally so underscores are not interpreted as subscripts.
+- Resets the full-spectrum range when loading data or switching coordinate axes.
+- Adds four source-level regression checks for the new UI support.
+
 ## V0.9 — 2026-08-04
 
 - Keeps `NIST_ASD_HgAr_20260729.lit` as the only confirmed NIST master and

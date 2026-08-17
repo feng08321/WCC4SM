@@ -15,9 +15,9 @@ function model = wc4sm_fit_calibration(pixel,wavelength,degree,evaluationPixels,
         error('WCC4SM:CalibrationSizeMismatch', ...
             'Pixel and wavelength vectors must have equal length.');
     end
-    if numel(pixel) < degree+2
+    if numel(pixel) < degree+1
         error('WCC4SM:InsufficientCalibrationPoints', ...
-            'Degree %d fitting requires at least %d valid points.',degree,degree+2);
+            'Degree %d fitting requires at least %d valid points.',degree,degree+1);
     end
     if any(~isfinite(pixel)) || any(~isfinite(wavelength))
         error('WCC4SM:InvalidCalibrationData', ...
@@ -57,8 +57,17 @@ function model = wc4sm_fit_calibration(pixel,wavelength,degree,evaluationPixels,
     fitted = polyval(coefficients,pixel,[],mu);
     residual = wavelength-fitted;
     naturalCoefficients = normalizedToNaturalPolynomial(coefficients,mu);
-    validation = wc4sm_validate_calibration_loo(pixel,wavelength,degree, ...
-        coefficients,mu,evaluationPixels);
+    if numel(pixel) >= degree+2
+        validation = wc4sm_validate_calibration_loo(pixel,wavelength,degree, ...
+            coefficients,mu,evaluationPixels);
+        looStatus = 'Available';
+    else
+        validation = struct('LOOResidual',nan(numel(pixel),1), ...
+            'DeletionMaxCurveChange',nan(numel(pixel),1),'LOORMS',NaN, ...
+            'LOOMaxAbs',NaN,'MaxDeletionInfluence',NaN, ...
+            'EvaluationPixels',evaluationPixels(:));
+        looStatus = 'Unavailable: minimum-size model';
+    end
 
     model = struct('valid',true,'PositionMethod',char(positionMethod), ...
         'Degree',degree,'Coefficients',coefficients,'Mu',mu,'S',S, ...
@@ -73,6 +82,8 @@ function model = wc4sm_fit_calibration(pixel,wavelength,degree,evaluationPixels,
         'DeletionMaxCurveChange',validation.DeletionMaxCurveChange, ...
         'LOORMS',validation.LOORMS,'LOOMaxAbs',validation.LOOMaxAbs, ...
         'MaxDeletionInfluence',validation.MaxDeletionInfluence);
+    model.LOOStatus=looStatus;
+    model.DegreesOfFreedom=numel(pixel)-(degree+1);
 end
 
 function natural = normalizedToNaturalPolynomial(coefficients,mu)
