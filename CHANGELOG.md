@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Refactoring (tech-debt batch D1-A): extracted the twelve inline state-structure factories from the `WCC4SM_V1_0` GUI file into reusable `src/wc4sm_empty_*` modules (data, reference, line library, peaks, local candidates, peak dataset, calibration pairs, mapping candidates, initial model, final model, calibration models) plus `wc4sm_make_calibration_pair`. All GUI call sites now use the shared modules; field layouts are pinned by the new `TestEmptyStateFactories` suite (12 cases). No behavior change.
 - Standardized the 8x8 peak-shape gallery by removing all per-axis tick marks and adding compact Peak ID plus center-wavelength titles (falling back to center pixel without an applied model).
 - Extended the wavelength-dependence workspace with selectable Direct/Interpolated/Centroid difference fitting and an all-peak-plot filter for the current calibration set only.
 - Added a reversible, analysis-only `Show` exclusion in the all-peak difference table. Manually rejected saturated or otherwise invalid peaks remain traceable in the table, are omitted from both paper-analysis plots, do not modify the calibration set, and persist in Session files.

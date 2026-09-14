@@ -1,4 +1,4 @@
-﻿function WCC4SM_V1_0
+function WCC4SM_V1_0
 %WCC4SM_V1_0 Wavelength Characterization and Calibration for Spectrometer.
 % Peak analysis plus reference-line matching and provisional calibration.
 % MATLAB R2022a or later. Signal Processing Toolbox is required for findpeaks.
@@ -15,23 +15,23 @@
     end
     addpath(fullfile(packageRoot,'src'));
 
-    D = emptyData();
-    R = emptyReference();
-    peaks = emptyPeaks();
-    peakDataset = emptyDataset();
+    D = wc4sm_empty_data();
+    R = wc4sm_empty_reference();
+    peaks = wc4sm_empty_peaks();
+    peakDataset = wc4sm_empty_peak_dataset();
     Lbasic = basicHgArLibrary();
     Lpaper = paper24HgArLibrary();
     Lnim = nimHgArLibrary();
-    Lexternal = emptyLineLibrary();
+    Lexternal = wc4sm_empty_line_library();
     L = Lbasic;
-    calPairs = emptyCalPairs();
-    provisional = emptyInitialModel();
+    calPairs = wc4sm_empty_calibration_pairs();
+    provisional = wc4sm_empty_initial_model();
     matchingAxisMode = 'Pixel';
     mainAxisMode = 'Pixel';
-    finalModel = emptyFinalModel();
-    appliedModel = emptyFinalModel();
+    finalModel = wc4sm_empty_final_model();
+    appliedModel = wc4sm_empty_final_model();
     appliedModelName = '';
-    calibrationModels = emptyCalibrationModels();
+    calibrationModels = wc4sm_empty_calibration_models();
     optimizationPath = struct();
     optimizationStability = struct();
     optimizationOrder = struct([]);
@@ -54,7 +54,7 @@
     paperPeakAllExcludedIDs = {};
     paperPeakDifferenceSelectedID = '';
     paperPeakDifferenceResult = struct();
-    paperPeakPairArchive = emptyCalPairs();
+    paperPeakPairArchive = wc4sm_empty_calibration_pairs();
     paperPeakAllSelectedRows = [];
     paperPeakCalibrationSelectedRows = [];
     selectedModelRow = 0;
@@ -67,7 +67,7 @@
     subsetWindowPartition = struct();
     windowInfluenceDegree = 3;
     windowSelectedMask = [];
-    localCandidates = emptyLocalCandidates();
+    localCandidates = wc4sm_empty_local_candidates();
     selectedLocalCandidate = 0;
     localSearchWindow = [NaN NaN];
     referenceResolutionNm = 3;
@@ -1870,27 +1870,27 @@
     end
 
     function applySessionState(state)
-        if isempty(fieldnames(state.Spectrum)),D=emptyData();else,D=state.Spectrum;end
+        if isempty(fieldnames(state.Spectrum)),D=wc4sm_empty_data();else,D=state.Spectrum;end
         if ~isfield(D,'PixelCoordinateMode')||isempty(D.PixelCoordinateMode)
             D.PixelCoordinateMode='Legacy natural pixel sequence';
         end
         if ~isfield(D,'PixelFirst')||isempty(D.PixelFirst),D.PixelFirst=minOrNaN(D.pixel);end
         if ~isfield(D,'PixelLast')||isempty(D.PixelLast),D.PixelLast=maxOrNaN(D.pixel);end
         peaks=state.Peaks;peakDataset=state.PeakDataset;
-        if isempty(fieldnames(state.ReferenceLines)),L=emptyLineLibrary();else,L=state.ReferenceLines;end
+        if isempty(fieldnames(state.ReferenceLines)),L=wc4sm_empty_line_library();else,L=state.ReferenceLines;end
         Lexternal=L;calPairs=state.CalibrationPairs;
-        if isempty(fieldnames(state.InitialCalibration)),provisional=emptyInitialModel();else,provisional=state.InitialCalibration;end
-        if isempty(fieldnames(state.FinalCalibration)),finalModel=emptyFinalModel();else,finalModel=state.FinalCalibration;end
+        if isempty(fieldnames(state.InitialCalibration)),provisional=wc4sm_empty_initial_model();else,provisional=state.InitialCalibration;end
+        if isempty(fieldnames(state.FinalCalibration)),finalModel=wc4sm_empty_final_model();else,finalModel=state.FinalCalibration;end
         calibrationModels=state.CalibrationModels;
         if ~isempty(calibrationModels) && ~isfield(calibrationModels,'Visible'),[calibrationModels.Visible]=deal(true);end
-        if isempty(fieldnames(state.AppliedModel)),appliedModel=emptyFinalModel();else,appliedModel=state.AppliedModel;end
+        if isempty(fieldnames(state.AppliedModel)),appliedModel=wc4sm_empty_final_model();else,appliedModel=state.AppliedModel;end
         appliedModelName=char(string(state.AppliedModelName));
-        localCandidates=emptyLocalCandidates();selectedLocalCandidate=0;
+        localCandidates=wc4sm_empty_local_candidates();selectedLocalCandidate=0;
         selectedRow=0;selectedDatasetRow=0;selectedRefRow=0;selectedPairRow=0;
-        selectedValidationRow=0;selectedModelRow=0;selectedSeedRound=0;selectedPositionCrossRow=1;selectedPositionCrossColumn=1;pendingSeedModelItem=struct();addRecommendedSeedModelBtn.Enable='off';R=emptyReference();
+        selectedValidationRow=0;selectedModelRow=0;selectedSeedRound=0;selectedPositionCrossRow=1;selectedPositionCrossColumn=1;pendingSeedModelItem=struct();addRecommendedSeedModelBtn.Enable='off';R=wc4sm_empty_reference();
         influenceResult=struct();influenceOrderStats=struct([]);influenceViewMode='Point influence';seedComboResult=struct();
         selectedResidualContext=struct('X',[],'Residual',[],'Label','','XAxisLabel','');
-        paperPeakDifferenceExcludedIDs={};paperPeakAllExcludedIDs={};paperPeakDifferenceSelectedID='';paperPeakDifferenceResult=struct();paperPeakPairArchive=emptyCalPairs();
+        paperPeakDifferenceExcludedIDs={};paperPeakAllExcludedIDs={};paperPeakDifferenceSelectedID='';paperPeakDifferenceResult=struct();paperPeakPairArchive=wc4sm_empty_calibration_pairs();
         if isfield(state,'PaperPeakDifferenceExcludedIDs')
             paperPeakDifferenceExcludedIDs=cellstr(string(state.PaperPeakDifferenceExcludedIDs(:)));
         end
@@ -2035,7 +2035,7 @@
                 appliedStatus.Text=sprintf('Applied: %s | %s | pixels %s | degree %d | %.4g to %.4g nm', ...
                     appliedModelName,coordinateMode,coordinateDomain,appliedModel.Degree,min(wl),max(wl));
             else
-                appliedModel=emptyFinalModel();appliedModelName='';D.calibratedWavelength=[];mainAxisMode='Pixel';
+                appliedModel=wc4sm_empty_final_model();appliedModelName='';D.calibratedWavelength=[];mainAxisMode='Pixel';
             end
         else
             D.calibratedWavelength=[];mainAxisMode='Pixel';
@@ -2060,14 +2060,14 @@
             D.PixelCoordinateMode=pixelMode.Value;
             D.PixelFirst=min(D.pixel);D.PixelLast=max(D.pixel);
             y=D.raw;
-            sourceLabel.Text=fn; mainAxisMode='Pixel'; matchingAxisMode='Pixel'; axisButton.Text='X Axis: Pixel  <->'; selectedRow=0; peaks=emptyPeaks(); peakDataset=emptyDataset();
-            paperPeakDifferenceExcludedIDs={};paperPeakAllExcludedIDs={};paperPeakDifferenceSelectedID='';paperPeakDifferenceResult=struct();paperPeakPairArchive=emptyCalPairs();
-            localCandidates=emptyLocalCandidates();selectedLocalCandidate=0;
+            sourceLabel.Text=fn; mainAxisMode='Pixel'; matchingAxisMode='Pixel'; axisButton.Text='X Axis: Pixel  <->'; selectedRow=0; peaks=wc4sm_empty_peaks(); peakDataset=wc4sm_empty_peak_dataset();
+            paperPeakDifferenceExcludedIDs={};paperPeakAllExcludedIDs={};paperPeakDifferenceSelectedID='';paperPeakDifferenceResult=struct();paperPeakPairArchive=wc4sm_empty_calibration_pairs();
+            localCandidates=wc4sm_empty_local_candidates();selectedLocalCandidate=0;
             baselineField.Enable='on';clearDarkBtn.Enable='off';darkStatus.Text='Dark: none (manual constant baseline is active)';
             pixelViewStart.Value=min(D.pixel); pixelViewEnd.Value=max(D.pixel);
             fullViewStart.Value=min(D.pixel); fullViewEnd.Value=max(D.pixel);
-            calPairs=emptyCalPairs(); provisional=emptyInitialModel(); selectedPairRow=0;
-            finalModel=emptyFinalModel();appliedModel=emptyFinalModel();appliedModelName='';appliedStatus.Text='Applied model: none | spectrum axis remains Pixel';calibrationModels=emptyCalibrationModels();refreshModelComparison();
+            calPairs=wc4sm_empty_calibration_pairs(); provisional=wc4sm_empty_initial_model(); selectedPairRow=0;
+            finalModel=wc4sm_empty_final_model();appliedModel=wc4sm_empty_final_model();appliedModelName='';appliedStatus.Text='Applied model: none | spectrum axis remains Pixel';calibrationModels=wc4sm_empty_calibration_models();refreshModelComparison();
             preprocess(); refreshAll(); topStatus.Text=sprintf('%d samples loaded',numel(y));
         catch ME
             uialert(fig,ME.message,'Import failed');
@@ -2077,10 +2077,10 @@
     function pixelModeChanged(~,~)
         if isempty(D.raw),return;end
         D.PixelCoordinateMode=pixelMode.Value;
-        calPairs=emptyCalPairs();provisional=emptyInitialModel();finalModel=emptyFinalModel();
-        appliedModel=emptyFinalModel();appliedModelName='';D.calibratedWavelength=[];
-        calibrationModels=emptyCalibrationModels();mainAxisMode='Pixel';matchingAxisMode='Pixel';
-        paperPeakDifferenceExcludedIDs={};paperPeakAllExcludedIDs={};paperPeakDifferenceSelectedID='';paperPeakDifferenceResult=struct();paperPeakPairArchive=emptyCalPairs();
+        calPairs=wc4sm_empty_calibration_pairs();provisional=wc4sm_empty_initial_model();finalModel=wc4sm_empty_final_model();
+        appliedModel=wc4sm_empty_final_model();appliedModelName='';D.calibratedWavelength=[];
+        calibrationModels=wc4sm_empty_calibration_models();mainAxisMode='Pixel';matchingAxisMode='Pixel';
+        paperPeakDifferenceExcludedIDs={};paperPeakAllExcludedIDs={};paperPeakDifferenceSelectedID='';paperPeakDifferenceResult=struct();paperPeakPairArchive=wc4sm_empty_calibration_pairs();
         axisButton.Text='X Axis: Pixel  ⇄';appliedStatus.Text='Applied model: none | spectrum axis remains Pixel';
         refreshCalibration();refreshModelComparison();drawFull();
         topStatus.Text=['Pixel sequence changed to ' pixelMode.Value '; calibration models were cleared'];
@@ -2112,13 +2112,13 @@
     end
 
     function preprocessingReset(message)
-        preprocess();peaks=emptyPeaks();localCandidates=emptyLocalCandidates();selectedLocalCandidate=0;
-        selectedRow=0;peakDataset=emptyDataset();calPairs=emptyCalPairs();provisional=emptyInitialModel();
-        paperPeakDifferenceExcludedIDs={};paperPeakAllExcludedIDs={};paperPeakDifferenceSelectedID='';paperPeakDifferenceResult=struct();paperPeakPairArchive=emptyCalPairs();
-        finalModel=emptyFinalModel();appliedModel=emptyFinalModel();appliedModelName='';
+        preprocess();peaks=wc4sm_empty_peaks();localCandidates=wc4sm_empty_local_candidates();selectedLocalCandidate=0;
+        selectedRow=0;peakDataset=wc4sm_empty_peak_dataset();calPairs=wc4sm_empty_calibration_pairs();provisional=wc4sm_empty_initial_model();
+        paperPeakDifferenceExcludedIDs={};paperPeakAllExcludedIDs={};paperPeakDifferenceSelectedID='';paperPeakDifferenceResult=struct();paperPeakPairArchive=wc4sm_empty_calibration_pairs();
+        finalModel=wc4sm_empty_final_model();appliedModel=wc4sm_empty_final_model();appliedModelName='';
         D.calibratedWavelength=[];mainAxisMode='Pixel';matchingAxisMode='Pixel';axisButton.Text='X Axis: Pixel  <->';
         appliedStatus.Text='Applied model: none | spectrum axis remains Pixel';
-        calibrationModels=emptyCalibrationModels();refreshModelComparison();
+        calibrationModels=wc4sm_empty_calibration_models();refreshModelComparison();
         refreshAll();refreshCalibration();topStatus.Text=message;
     end
 
@@ -2275,8 +2275,8 @@
             if minWidth.Value>0, args=[args {'MinPeakWidth',minWidth.Value}]; end %#ok<AGROW>
             if isfinite(maxWidth.Value), args=[args {'MaxPeakWidth',maxWidth.Value}]; end %#ok<AGROW>
             [pks,locs,widths,proms]=findpeaks(ys,args{:});
-            peaks=emptyPeaks();
-            localCandidates=emptyLocalCandidates();selectedLocalCandidate=0;
+            peaks=wc4sm_empty_peaks();
+            localCandidates=wc4sm_empty_local_candidates();selectedLocalCandidate=0;
             for i=1:numel(locs)
                 peaks(i).ID=sprintf('P%03d',i); peaks(i).Index=locs(i); peaks(i).Pixel=D.pixel(locs(i));
                 peaks(i).InputX=D.inputX(locs(i)); peaks(i).Height=pks(i); peaks(i).Prominence=proms(i);
@@ -2368,7 +2368,7 @@
                 for jj=1:numel(indices),isNew(jj)=~any([peaks.Index]==indices(jj));end
             end
             indices=indices(isNew);pksLocal=pksLocal(isNew);widthsLocal=widthsLocal(isNew);promsLocal=promsLocal(isNew);
-            localCandidates=emptyLocalCandidates();
+            localCandidates=wc4sm_empty_local_candidates();
             for jj=1:numel(indices)
                 localCandidates(jj).Index=indices(jj);localCandidates(jj).Pixel=D.pixel(indices(jj));
                 localCandidates(jj).InputX=D.inputX(indices(jj));localCandidates(jj).Height=pksLocal(jj);
@@ -2461,7 +2461,7 @@
     end
 
     function clearLocalCandidates(candidateDrop,candidateInfo,addLocalBtn,clearLocalBtn)
-        localCandidates=emptyLocalCandidates();selectedLocalCandidate=0;
+        localCandidates=wc4sm_empty_local_candidates();selectedLocalCandidate=0;
         updateLocalCandidateControls(candidateDrop,candidateInfo,addLocalBtn,clearLocalBtn);
         drawFull();topStatus.Text='Local candidate markers cleared';
     end
@@ -2720,11 +2720,11 @@
             w=w(good); inten=inten(good); ord=round(ord(good));
             if numel(w)<2, error('At least two valid reference lines are required.'); end
             [~,ix]=sort(w.*ord); w=w(ix); inten=inten(ix); ord=ord(ix);
-            Lexternal=emptyLineLibrary(); Lexternal.wavelength=w(:); Lexternal.intensity=inten(:); Lexternal.order=ord(:);
+            Lexternal=wc4sm_empty_line_library(); Lexternal.wavelength=w(:); Lexternal.intensity=inten(:); Lexternal.order=ord(:);
             Lexternal.effective=Lexternal.wavelength.*Lexternal.order; Lexternal.enabled=true(size(Lexternal.wavelength));Lexternal.source=fullfile(pn,fn); Lexternal.loaded=true;
             L=Lexternal; referenceSetDrop.Value='External / User';
-            selectedRefRow=0; calPairs=emptyCalPairs(); provisional=emptyInitialModel(); selectedPairRow=0;
-            finalModel=emptyFinalModel();calibrationModels=emptyCalibrationModels();refreshModelComparison();
+            selectedRefRow=0; calPairs=wc4sm_empty_calibration_pairs(); provisional=wc4sm_empty_initial_model(); selectedPairRow=0;
+            finalModel=wc4sm_empty_final_model();calibrationModels=wc4sm_empty_calibration_models();refreshModelComparison();
             refreshCalibration(); showCalibrationView([],[]); topStatus.Text=sprintf('%d reference lines loaded',numel(w));
         catch ME
             uialert(fig,ME.message,'Reference-line import failed');
@@ -2779,7 +2779,7 @@
                     uialert(fig,'Load an external reference-line file first.','External library unavailable');
                 else,L=Lexternal;end
         end
-        selectedRefRow=0; calPairs=emptyCalPairs(); provisional=emptyInitialModel(); finalModel=emptyFinalModel();calibrationModels=emptyCalibrationModels();refreshModelComparison();
+        selectedRefRow=0; calPairs=wc4sm_empty_calibration_pairs(); provisional=wc4sm_empty_initial_model(); finalModel=wc4sm_empty_final_model();calibrationModels=wc4sm_empty_calibration_models();refreshModelComparison();
         refreshCalibration(); showCalibrationView([],[]);
     end
 
@@ -2902,7 +2902,7 @@
 
     function model=modelForDisplay
         if provisional.valid,model=provisional;return;end
-        model=emptyInitialModel();
+        model=wc4sm_empty_initial_model();
         if isempty(D.pixel),return;end
         a=(wavelengthViewEnd.Value-wavelengthViewStart.Value)/max(eps,pixelViewEnd.Value-pixelViewStart.Value); b=wavelengthViewStart.Value-a*pixelViewStart.Value;
         model.valid=true;model.Degree=1;model.Coefficients=[a b];model.Mu=[0 1];model.a=a;model.b=b;
@@ -2990,7 +2990,7 @@
             uialert(fig,'The selected peak is not confirmed. Reconfirm it before matching.','Unconfirmed peak'); return;
         end
         calPairs=removePairByPeakOrReference(calPairs,id,selectedRefRow);
-        q=makeCalPair(id,peakIndex,peakPixel,selectedRefRow,L.effective(selectedRefRow),L.order(selectedRefRow),'Manual',true,'Manual locked');
+        q=wc4sm_make_calibration_pair(id,peakIndex,peakPixel,selectedRefRow,L.effective(selectedRefRow),L.order(selectedRefRow),'Manual',true,'Manual locked');
         calPairs(end+1)=q; selectedPairRow=numel(calPairs);
         archiveCurrentPaperCalibrationPairs();
         if sum([calPairs.ReferenceIndex]>0)>=2,buildInitialCalibration([],[]);else,refreshCalibration();showCalibrationView([],[]);end
@@ -3001,7 +3001,7 @@
         if selectedPairRow<1 || selectedPairRow>numel(calPairs), return; end
         archiveCurrentPaperCalibrationPairs();
         calPairs(selectedPairRow)=[]; selectedPairRow=0;
-        if sum([calPairs.ReferenceIndex]>0)>=2,buildInitialCalibration([],[]);else,provisional=emptyInitialModel();refreshCalibration();showCalibrationView([],[]);end
+        if sum([calPairs.ReferenceIndex]>0)>=2,buildInitialCalibration([],[]);else,provisional=wc4sm_empty_initial_model();refreshCalibration();showCalibrationView([],[]);end
     end
 
     function togglePairLock(~,~)
@@ -3028,7 +3028,7 @@
         px=[calPairs(valid).DetectionPixel].'; wl=[calPairs(valid).ReferenceWavelength].';
         if numel(unique(px))<2, uialert(fig,'Calibration pairs require at least two different pixel positions.','Invalid pairs'); return; end
         deg=min(3,numel(valid)-1); [c,~,mu]=polyfit(px,wl,deg);
-        provisional=emptyInitialModel();provisional.valid=true;provisional.Degree=deg;provisional.Coefficients=c;provisional.Mu=mu;
+        provisional=wc4sm_empty_initial_model();provisional.valid=true;provisional.Degree=deg;provisional.Coefficients=c;provisional.Mu=mu;
         if deg==1
             % Convert normalized-coordinate coefficients to conventional a,b for export compatibility.
             provisional.a=c(1)/mu(2); provisional.b=c(2)-c(1)*mu(1)/mu(2);
@@ -3061,7 +3061,7 @@
         for ii=1:numel(ids)
             r=matchRef(ii);
             if r==0
-                q=makeCalPair(ids{ii},idx(ii),px(ii),0,NaN,NaN,'Auto global',false,'Unmatched',0);
+                q=wc4sm_make_calibration_pair(ids{ii},idx(ii),px(ii),0,NaN,NaN,'Auto global',false,'Unmatched',0);
             else
                 d=abs(L.effective(r)-predicted(ii)); allDist=sort(abs(L.effective(refPool)-predicted(ii)));
                 base=max(0,1-d/tol); separation=1;
@@ -3069,7 +3069,7 @@
                 conf=0.7*base+0.3*separation;
                 if conf>=confidenceThreshold.Value,st='High confidence';high=high+1;
                 elseif conf>=0.4,st='Review';else,st='Low confidence';end
-                q=makeCalPair(ids{ii},idx(ii),px(ii),r,L.effective(r),L.order(r),'Auto global',false,st,conf);matched=matched+1;
+                q=wc4sm_make_calibration_pair(ids{ii},idx(ii),px(ii),r,L.effective(r),L.order(r),'Auto global',false,st,conf);matched=matched+1;
             end
             calPairs(end+1)=q; %#ok<AGROW>
         end
@@ -3562,7 +3562,7 @@
         if selectedValidationRow<1||selectedValidationRow>numel(finalModel.PeakID),return;end
         id=finalModel.PeakID{selectedValidationRow};k=find(strcmp({calPairs.PeakID},id),1);
         if isempty(k),return;end
-        calPairs(k)=[];finalModel=emptyFinalModel();refreshCalibration();drawEmbeddedResults();refreshValidationView([],[]);
+        calPairs(k)=[];finalModel=wc4sm_empty_final_model();refreshCalibration();drawEmbeddedResults();refreshValidationView([],[]);
         topStatus.Text=sprintf('%s removed from current calibration pairs; refit is required',id);tabs.SelectedTab=tabCal;
     end
 
@@ -3624,7 +3624,7 @@
     end
 
     function clearCalibrationModels(~,~)
-        calibrationModels=emptyCalibrationModels();selectedModelRow=0;refreshModelComparison();drawModelComparison([],[]);topStatus.Text='Stored model list cleared';
+        calibrationModels=wc4sm_empty_calibration_models();selectedModelRow=0;refreshModelComparison();drawModelComparison([],[]);topStatus.Text='Stored model list cleared';
     end
 
     function toggleSelectedModelVisibility(~,~)
@@ -3715,7 +3715,7 @@
     end
 
     function clearAppliedModel(~,~)
-        appliedModel=emptyFinalModel();appliedModelName='';D.calibratedWavelength=[];mainAxisMode='Pixel';axisButton.Text='X Axis: Pixel  <->';resetFullViewRange();
+        appliedModel=wc4sm_empty_final_model();appliedModelName='';D.calibratedWavelength=[];mainAxisMode='Pixel';axisButton.Text='X Axis: Pixel  <->';resetFullViewRange();
         appliedStatus.Text='Applied model: none | spectrum axis remains Pixel';drawFull();
         if selectedRow>0&&selectedRow<=numel(peaks)&&~isempty(peaks(selectedRow).Result),drawPeak(peaks(selectedRow).Result);showParameters(peaks(selectedRow).Result);end
         if peakAnalysisTabs.SelectedTab==peakGalleryTab,refreshPeakGallery();end
@@ -4536,7 +4536,7 @@
         if ~strcmp(choice,'Confirm delete'),return;end
         archiveCurrentPaperCalibrationPairs();calPairs=calPairs(~ismember(string({calPairs.PeakID}),deleteIDs));
         paperPeakDifferenceExcludedIDs=paperPeakDifferenceExcludedIDs(~ismember(string(paperPeakDifferenceExcludedIDs),deleteIDs));
-        selectedPairRow=0;if sum([calPairs.ReferenceIndex]>0)>=2,buildInitialCalibration([],[]);else,provisional=emptyInitialModel();refreshCalibration();end
+        selectedPairRow=0;if sum([calPairs.ReferenceIndex]>0)>=2,buildInitialCalibration([],[]);else,provisional=wc4sm_empty_initial_model();refreshCalibration();end
         drawPaperAllPeakDifferences();drawPaperBenchmarkDifference();
         topStatus.Text=sprintf('%d peak(s) removed from the current calibration set; refit the final calibration model when ready.',numel(deleteIDs));
     end
@@ -5368,16 +5368,13 @@ function M=cleanMatrix(M)
     if isempty(M),error('CSV contains no numeric data.');end
     if size(M,2)>2,M=M(:,1:2);end
 end
-function D=emptyData, D=struct('raw',[],'dark',[],'darkSource','','corrected',[],'normalized',[],'pixel',[],'inputX',[],'inputWavelength',[],'calibratedWavelength',[],'xKind','Pixel','source','','PixelCoordinateMode','','PixelFirst',NaN,'PixelLast',NaN); end
-function R=emptyReference, R=struct('x',[],'y',[],'source','','loaded',false); end
-function L=emptyLineLibrary, L=struct('wavelength',[],'intensity',[],'order',[],'effective',[],'enabled',[],'source','','loaded',false); end
 function L=basicHgArLibrary
     % Experience-screened Hg-Ar features for nominal 300-1050 nm instruments.
     % 296.73 nm is intentionally retained through the default 5 nm edge margin.
     w=[296.73;302.15;313.16;334.15;404.66;546.07;576.9598;579.0663;696.54;706.72;727.29;738.40; ...
        763.51;772.38;794.82;826.45;852.14;912.30;922.45;965.79;1013.98];
     inten=[321;60;320;41;767;2258.4;297.9;100;45;8.7;6;7.2;23;15;6.5;11;3.7;11.6;2.3;3.8;5];
-    L=emptyLineLibrary(); L.wavelength=w; L.intensity=inten; L.order=ones(size(w)); L.effective=w;L.enabled=true(size(w));
+    L=wc4sm_empty_line_library(); L.wavelength=w; L.intensity=inten; L.order=ones(size(w)); L.effective=w;L.enabled=true(size(w));
     L.source='Built-in Hg-Ar Basic 21'; L.loaded=true;
 end
 function L=paper24HgArLibrary
@@ -5386,34 +5383,15 @@ function L=paper24HgArLibrary
     w=[313.16;334.15;365.06;404.66;435.72;546.07;578.01;696.54;706.72;727.29;738.40;750.82; ...
        763.51;772.38;794.82;801.08;811.09;826.45;841.81;852.14;912.30;922.45;965.79;1013.98];
     inten=ones(size(w));
-    L=emptyLineLibrary();L.wavelength=w;L.intensity=inten;L.order=ones(size(w));L.effective=w;L.enabled=true(size(w));
+    L=wc4sm_empty_line_library();L.wavelength=w;L.intensity=inten;L.order=ones(size(w));L.effective=w;L.enabled=true(size(w));
     L.source='Paper Table 1 Hg-Ar 24 measured peaks';L.loaded=true;
 end
 function L=nimHgArLibrary
     w=[253.65;296.71;302.15;312.55;313.16;365.02;365.50;366.33;404.65;435.81;546.06;576.92;579.03; ...
        696.55;714.65;727.22;763.48;772.38;794.79;800.60;801.46;810.34;811.52;826.44;840.80;842.44; ...
        852.12;912.26;922.39;935.41;965.78;978.45;1013.98;1047.04];
-    L=emptyLineLibrary();L.wavelength=w;L.intensity=ones(size(w));L.order=ones(size(w));L.effective=w;L.enabled=true(size(w));
+    L=wc4sm_empty_line_library();L.wavelength=w;L.intensity=ones(size(w));L.order=ones(size(w));L.effective=w;L.enabled=true(size(w));
     L.source='NIM Hg-Ar Certificate 34 GXcl2025-02617';L.loaded=true;
-end
-function p=emptyPeaks, p=struct('ID',{},'Index',{},'Pixel',{},'InputX',{},'Height',{},'Prominence',{},'Width',{},'Status',{},'Result',{}); end
-function p=emptyLocalCandidates, p=struct('Index',{},'Pixel',{},'InputX',{},'Height',{},'Prominence',{},'Width',{}); end
-function d=emptyDataset
-    d=struct('PeakID',{},'PeakIndex',{},'Pixel',{},'InputX',{},'ReferenceWavelength',{},'Source',{}, ...
-        'WindowPixel',{},'WindowADCounts',{},'WindowCorrected',{},'AnalysisResult',{}, ...
-        'FindPeakHeight',{},'FindPeakProminence',{},'FindPeakWidth',{},'Status',{}, ...
-        'Confirmed',{},'ConfirmedAt',{},'ConfirmedSettings',{});
-end
-function p=emptyCalPairs, p=struct('PeakID',{},'PeakIndex',{},'DetectionPixel',{},'ReferenceIndex',{},'ReferenceWavelength',{},'Order',{},'Mode',{},'Confidence',{},'Locked',{},'Status',{}); end
-function m=emptyMappingCandidates, m=struct('a',{},'b',{},'RMS',{},'ReferenceIndices',{},'ReferenceWavelengths',{}); end
-function m=emptyInitialModel
-    m=struct('valid',false,'Degree',0,'Coefficients',[],'Mu',[0 1],'a',NaN,'b',NaN);
-end
-function f=emptyFinalModel
-    f=struct('valid',false,'PositionMethod','','Degree',NaN,'Coefficients',[],'Mu',[],'S',[], ...
-        'NaturalCoefficients',[],'Equation','','PeakID',{{}},'Pixel',[],'ReferenceWavelength',[],'FittedWavelength',[],'Residual',[], ...
-        'MeanResidual',NaN,'STD',NaN,'RMS',NaN,'MaxAbsResidual',NaN,'LOOResidual',[], ...
-        'DeletionMaxCurveChange',[],'LOORMS',NaN,'LOOMaxAbs',NaN,'MaxDeletionInfluence',NaN);
 end
 function p=normalizedToNaturalPolynomial(c,mu)
     % Horner composition of c(z), z=(pixel-mu(1))/mu(2).
@@ -5451,14 +5429,6 @@ function limit=robustUpperLimit(v)
     med=median(v);madv=median(abs(v-med));limit=med+3*1.4826*madv;
     if madv==0,limit=max(med,max(v)*0.5);end
     if limit<=0,limit=eps;end
-end
-function m=emptyCalibrationModels
-    m=struct('ModelID',{},'CreatedAt',{},'PairCount',{},'PositionMethod',{},'Degree',{},'PairIDs',{},'Model',{},'Visible',{});
-end
-function q=makeCalPair(id,idx,pixel,refIdx,refWavelength,ord,mode,locked,status,confidence)
-    if nargin<10,confidence=NaN;end
-    q=struct('PeakID',id,'PeakIndex',idx,'DetectionPixel',pixel,'ReferenceIndex',refIdx,'ReferenceWavelength',refWavelength, ...
-        'Order',ord,'Mode',mode,'Confidence',confidence,'Locked',locked,'Status',status);
 end
 function value=minOrNaN(values)
     if isempty(values),value=NaN;else,value=min(values);end
