@@ -1,5 +1,46 @@
 # Changelog
 
+## Unreleased
+
+- Standardized the 8x8 peak-shape gallery by removing all per-axis tick marks and adding compact Peak ID plus center-wavelength titles (falling back to center pixel without an applied model).
+- Extended the wavelength-dependence workspace with selectable Direct/Interpolated/Centroid difference fitting and an all-peak-plot filter for the current calibration set only.
+- Added a reversible, analysis-only `Show` exclusion in the all-peak difference table. Manually rejected saturated or otherwise invalid peaks remain traceable in the table, are omitted from both paper-analysis plots, do not modify the calibration set, and persist in Session files.
+- Added a Calibrated Performance subview for paper-oriented peak-position wavelength-dependence analysis: a three-series all-detected-peak difference plot, a matched-benchmark Centroid-minus-FWHM-center plot with optional degree 1--3 normalized polynomial fit, synchronized point highlighting, reversible per-row fit exclusion, Session persistence, CSV export, and OPEN FIG support.
+- Added peak-position cross-validation overview tabs for simultaneous 2x3 display of all six mismatch metrics, 2x2 display of the four application residual series for the selected calibration row, and a heatmap-aligned 4x4 array of all residual histograms. OPEN FIG preserves each overview as one editable tiled figure.
+- Added independent peak-position cross-validation training-set selection from all matched pairs, the current final model, the selected Model Comparison model, or the selected Set Design candidate. Full fit can now train on a small subset and evaluate on the full matched pool, while LOO remains a training-set leave-one-out diagnostic; Session state and CSV exports preserve the selected source and Train/Eval counts.
+
+## V1.0 — 2026-09-08
+
+- Promoted the paper-support application to the `WCC4SM_V1_0` entry and retained earlier entries for reproducibility.
+- Added a full-size 8x8 detected-peak subwindow gallery. Up to 63 detected peaks occupy the first 63 cells and the final cell remains blank for the current dataset; yellow-filled point-line traces use blue outlines for matched benchmark peaks and red outlines for peaks not selected into the benchmark set.
+- The gallery follows the main Pixel/Wavelength axis state, redraws after batch analysis or model-axis changes, and opens as one editable 8x8 MATLAB figure.
+- Expanded the paper peak-difference workspace with a right-side two-table dataset manager, reversible temporary fit deletion, confirmed calibration-pair deletion, safe restoration from archived reference pairings, three independent upper-plot series toggles, repeat-click highlight clearing, and lower-plot views of outside-set, calibration, and temporary-deletion points with +/-2 and +/-3 residual-STD bands.
+
+## V0.9.3 — 2026-09-01
+
+- Optimized peak-position cross validation by fitting once per calibration-method row (and once per held-out row sample for LOO), then reusing each model across all application-method columns; the result now reports calibration fit count and elapsed time.
+- Added a guarded cross-validation run state: the run and related controls are disabled during calculation, a modal indeterminate progress dialog blocks duplicate interaction, and cleanup restores the controls after success, failure, or interruption.
+- Added a four-by-four peak-position cross-validation workspace that separates calibration and application peak definitions, supports Full fit and LOO, common-intersection and pairwise-available pools, RMSE/Bias/STD/P95/MAX/Slope matrices, selected-cell or diagonal residual inspection, CSV export, OPEN FIG, and Session persistence.
+- Added an explicit V0.9.3 application entry while retaining V0.9.2 as a compatibility wrapper, and updated the About dialog and authoritative documentation set.
+- Added a full-size, four-chart Peak Position Differences subview: one shared difference-series selector synchronizes the trend and configurable distribution histogram; a selectable no-fit or degree 1/2/3 direct peak-position mapping runs from FWHM center to Direct, Centroid, or Interpolated position; and an independently configurable mapping-fit residual histogram completes the view. Scatter plots use normal-size solid markers, with pixel/nm modes, data tips, OPEN FIG support, Session-persisted display settings, and migration of earlier fit-target values.
+- Unified polynomial-degree controls at an upper limit of 20, made the influence scan maximum user-configurable, and constrained actual scans by the sample counts required for LOO and nested deletion LOO.
+- Changed full-set model-order Fit/LOO plots to logarithmic Y axes and added across-order influence plus full/deleted-model Fit/LOO diagnostic curves.
+- Added point-deleted model LOO RMSE and pooled deletion Fit/LOO RMSE summaries while keeping dimensionless RMS influence explicitly separate.
+- Fixed Point Influence order plots to enforce logarithmic axes and made OPEN FIG follow the active Per-point, Across orders, or Set replacement subview without opening empty legacy axes.
+- Restored the dedicated two-curve Full Fit versus LOO order view, while retaining separate four-curve deletion-stability and influence-statistics views.
+- Added signed Full-set and pooled point-deleted generalization gaps (LOO RMSE minus Fit RMSE) to the order table and a dedicated order-scan plot.
+- Added the first-stage Window Partition workspace with equal-wavelength and equal-cumulative-influence rules, deterministic discrete cut indices, window statistics, linked residual/influence plots, Session persistence and CSV export; no representative samples are selected automatically.
+- Reorganized the V0.9.3 documentation into authoritative user-workflow, algorithm-and-metric, software-architecture, and test-acceptance manuals, with a revised documentation index and explicit links to the Set Design specialist guide.
+- Added centroid-center symmetry recommendations with configurable pixel threshold and symmetry-recommended benchmark pool filtering.
+- Added fixed full-benchmark RMSE Add-One validation and RMSE-thresholded seed replacement recommendations.
+- Added Fit/LOO/All matched residual modes and reset scale control in Model Comparison.
+- Added an independent Set Design workspace with influence-ranked deterministic subset generators, fixed full-pool scoring, dual-threshold epsilon cover, and manually confirmed one-layer-at-a-time backward Beam Search.
+- Confirmed Set Design candidates can be sent to Add-One or explicitly refitted with full LOO diagnostics before manual addition to Model Comparison.
+- Added a selected-subset member table, an in-app parameter guide, full Set Design/Beam session persistence, and MAT/CSV exports for pools, candidate metrics, memberships, and Beam layers.
+
+
+- Replaced exhaustive `C(n,5)` seed-combination ranking with five-round, one-for-one seed replacement validation based on the manually selected five-point seed set.
+- Each replacement candidate is compared with the original seed set on the same fixed non-seed validation pool and reports the RMSE change.
 ## V0.9.2 — 2026-08-17
 
 - Adds Start X, End X and Reset Range controls for the full-spectrum view.

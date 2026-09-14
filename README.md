@@ -7,15 +7,19 @@ performance analysis, and complete analysis-session restoration.
 
 ## Versions
 
-The current stable release is **WCC4SM V0.9.2** (Git tag `v0.9.2`). It includes the accepted
-V0.6.2 calibration workflow, organized reference assets, Apache License 2.0,
-PDF help, About information, and Windows EXE deployment support. The immutable
-`v0.6.2` and `v0.6.1` tags remain rollback baselines. Start V0.9 from MATLAB
+The current paper-support release is **WCC4SM V1.0**. It extends the accepted
+calibration workflow with peak-position difference diagnostics, peak-position
+cross validation, model-order and influence analysis, rule-based subset design,
+window partitioning, and staged backward Beam Search. Start it from MATLAB
 R2022a or later:
 
 ```matlab
-WCC4SM_V0_9_2
+WCC4SM_V1_0
 ```
+
+Use `WCC4SM_V1_0` for new work. `WCC4SM_V0_9_3` and the older V0.9.2
+compatibility entry remain available for reproducing prior workflows. A release
+tag should be created only after final regression and GUI acceptance.
 
 V0.9 distinguishes two one-based pixel coordinate systems:
 
@@ -35,13 +39,16 @@ Run the non-GUI regression suite from the package root:
 results = run_wc4sm_tests;
 ```
 
-The regression suite currently has 41 tests. The V0.9.2 GUI acceptance
-procedure is in `docs/V0_9_2_GUI_TEST.md`.
+The suite is discovered dynamically; the release criterion is that every
+discovered test passes with no failed or incomplete result. The latest complete
+regression run reported by the maintainer on 2026-09-01 passed. The current GUI
+acceptance procedure is in
+`docs/WCC4SM_V0.9.3_测试验证与验收说明_V1.0.md`.
 
-The first optimization-analysis layer is available as non-GUI MATLAB modules:
-`wc4sm_analyze_model_order`, `wc4sm_analyze_add_one`, and
-`wc4sm_plot_optimization_diagnostics`. These return complete iteration
-histories for numerical review before integration into a dedicated GUI tab.
+The application includes dedicated workspaces for optimization, point
+influence, Set Design, and peak-position cross validation. Cross validation
+separates the peak-position definition used to calibrate a model from the
+definition used during application, and reports the resulting mismatch matrix.
 
 ## License and contact
 
@@ -79,8 +86,9 @@ the active development tree.
 
 ## Documentation
 
-Formal V0.9 documentation is maintained in `docs/` as reviewable Markdown
-sources with generated DOCX copies:
+The V1.0 release note and the V0.9.3-derived authoritative algorithm manuals
+are maintained in `docs/` as reviewable Markdown
+sources. DOCX/PDF copies are generated only when a release requires them:
 
 - software architecture and technical design;
 - operator user manual;
@@ -90,4 +98,5 @@ sources with generated DOCX copies:
 Format-specific supporting specifications are also maintained in `docs/`.
 See `docs/README.md` for the complete documentation map and regeneration
 instructions. Numerical implementation modules are organized under `src/`,
-while the two root-level MATLAB files remain the application and test entries.
+while the root-level MATLAB files provide the V1.0 application entry, retained
+historical entries, and the regression-test entry.

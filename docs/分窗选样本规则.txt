@@ -1,0 +1,489 @@
+新增一个“规则型子样本集生成”的分窗功能。
+
+暂时不要自动选择样本点，先只完成“分窗计算 + 分窗结果显示”。
+确认分窗效果合理以后，再考虑窗内选点。
+
+当前定标模型阶次固定为 degree = 3。
+分窗对象为当前有效/标杆参考样本集，所有样本具有：
+
+- Peak ID
+- Pixel
+- Reference wavelength λ_i
+- Full-set residual e_i
+- Deletion influence I_i
+- Peak quality 等已有字段
+
+请优先复用现有 Point Influence 和 residual plotting 的数据与绘图接口。
+
+# 一、功能总体结构
+
+规则子样本生成拆成两个独立步骤：
+
+Step 1：Window Partition
+    ↓
+用户检查分窗结果
+    ↓
+Step 2：Within-window Sample Selection
+
+第一版只实现 Step 1。
+
+用户输入：
+
+1. Target sample count / Window count: K
+2. Partition rule:
+   - Equal wavelength width
+   - Equal cumulative influence weight
+
+原则上：
+
+Window count = K
+
+例如 K = 6，则生成：
+
+W1, W2, ..., W6
+
+每个窗口最终在第二阶段选择1个代表样本，因此最终形成6点定标子集。
+
+但当前第一版不要自动选择代表点。
+
+==================================================
+# 二、规则A：等波长宽度分窗
+==================================================
+
+设有效样本参考波长范围：
+
+λ_min = min(λ_i)
+λ_max = max(λ_i)
+
+用户指定：
+
+K = 6
+
+则理论窗宽：
+
+Δλ = (λ_max - λ_min) / K
+
+窗口边界：
+
+b_j = λ_min + j Δλ
+
+j = 1,2,...,K-1
+
+因此：
+
+W1 = [λ_min, b_1)
+W2 = [b_1, b_2)
+...
+WK = [b_(K-1), λ_max]
+
+边界点归属规则保持确定性：
+
+左闭右开，最后一个窗口右端闭合。
+
+即：
+
+W_j = [b_(j-1), b_j)
+
+最后：
+
+W_K = [b_(K-1), λ_max]
+
+该规则作为纯“波长空间均匀覆盖”的基准方法。
+
+==================================================
+# 三、规则B：等累计Influence权重分窗
+==================================================
+
+这个规则不是按照波长长度等分，而是按照三阶模型下的 Deletion Influence 累计权重等分。
+
+目的：
+
+让每一个窗口承担近似相同的累计样本影响权重。
+
+注意术语：
+
+这里称：
+
+Cumulative influence weight
+
+不要称为 information quantity，因为 deletion influence 并不是严格可加的信息量。
+
+## 3.1 按波长排序
+
+首先将有效样本按照参考波长升序排列：
+
+λ_1 < λ_2 < ... < λ_N
+
+对应三阶模型的 deletion influence：
+
+I_1, I_2, ..., I_N
+
+Influence 应满足：
+
+I_i >= 0
+
+## 3.2 归一化Influence
+
+计算总Influence：
+
+I_total = Σ I_i
+
+归一化：
+
+w_i = I_i / I_total
+
+因此：
+
+Σ w_i = 1
+
+## 3.3 累计Influence
+
+定义：
+
+F_i = Σ_(j=1)^i w_j
+
+于是：
+
+F_N = 1
+
+用户指定 K 个窗口，例如：
+
+K = 6
+
+理想累计权重分割位置为：
+
+q_j = j / K
+
+即：
+
+1/6
+2/6
+3/6
+4/6
+5/6
+
+目标是寻找 K-1 个实际样本间隙，使每个窗口的累计 Influence 尽量接近：
+
+1/K
+
+也就是约1/6。
+
+==================================================
+# 四、离散样本条件下的分割边界确认
+==================================================
+
+这是该算法的重要部分。
+
+Influence 是定义在离散谱线上的，不能真正从某一个样本中间把权重切开。
+
+因此：
+
+“窗口边界只能位于两个相邻参考样本之间”。
+
+对于目标累计位置：
+
+q_j = j/K
+
+寻找相邻样本 i 和 i+1，使：
+
+F_i <= q_j <= F_(i+1)
+
+此时有两个候选切法：
+
+Candidate A:
+在样本 i 后切分
+
+Candidate B:
+在样本 i+1 后切分
+（实际实现时需要保证后续窗口仍至少含一个样本）
+
+优先选择使累计Influence最接近 q_j 的切分位置：
+
+min |F_i - q_j|
+
+如果前后两种切法的累计Influence误差非常接近，则使用“波长间距”作为第二判据：
+
+Δλ_i = λ_(i+1) - λ_i
+
+优先在较大的自然峰间距处切分。
+
+也就是说：
+
+一级判据：
+累计Influence分割误差最小
+
+二级判据：
+优先选择较大的相邻波长Gap
+
+这样既尽量实现“等累计权重分窗”，又尽量避免人为切开一个天然密集谱线簇。
+
+## 4.1 实际边界坐标
+
+确定样本 i 属于左窗、样本 i+1 属于右窗以后，显示边界位置：
+
+b_j = (λ_i + λ_(i+1)) / 2
+
+注意：
+
+该 b_j 仅作为可视化窗口边界。
+
+真正的样本归属由 cut index 决定：
+
+样本 i → 左窗
+样本 i+1 → 右窗
+
+不能仅靠浮点波长与 b_j 比较重新决定归属。
+
+## 4.2 特殊情况
+
+如果某一个单独样本：
+
+w_i > 1/K
+
+则它自身已经超过一个理想窗口的累计Influence份额。
+
+第一版不要自动把它变成 Anchor，也不要进行复杂重分配。
+
+只按照“累计误差最小”原则决定边界，并在结果中增加提示：
+
+Dominant influence sample
+
+记录：
+
+Peak ID
+Reference wavelength
+Normalized influence w_i
+
+后续再根据实际结果决定是否引入 Anchor Window 机制。
+
+==================================================
+# 五、分窗结果必须输出的数据
+==================================================
+
+每个窗口保存：
+
+Window ID
+Start wavelength
+End wavelength
+First sample index
+Last sample index
+Number of samples
+Sum influence
+Normalized influence sum
+Mean influence
+Max influence
+Peak ID of max-influence point
+Wavelength of max-influence point
+
+对于 Equal Influence 模式，另外输出：
+
+Target weight = 1/K
+Actual cumulative window weight
+Deviation from target
+
+例如：
+
+Window 1
+Target weight      0.1667
+Actual weight      0.1582
+Deviation         -0.0085
+
+Window 2
+Target weight      0.1667
+Actual weight      0.1724
+Deviation         +0.0057
+
+这样可以直接检查离散样本条件下的等权分窗质量。
+
+==================================================
+# 六、第一阶段可视化
+==================================================
+
+希望把分窗结果直接叠加在现有“Full-set calibration residual”图上。
+
+## 6.1 上图：Full-set residual + Windows
+
+X axis：
+Reference wavelength (nm)
+
+Y axis：
+Full-set calibration residual (nm)
+
+全样本残差点作为背景：
+
+- 所有有效/标杆样本用灰色点显示
+- 保持当前 full-set residual 数值不变
+
+在图上增加：
+
+K-1 条窗口分割线
+
+例如：
+
+b_1, b_2, ..., b_(K-1)
+
+使用竖直虚线。
+
+最好在每个区域顶部显示：
+
+W1
+W2
+...
+WK
+
+如果实现方便，可以使用很浅的交替背景区域表示不同 Window；
+如果会使图形过于复杂，则第一版只画竖直边界线和 Window ID。
+
+第一阶段尚未选样本时：
+
+不要人为高亮任何子样本。
+
+==================================================
+# 七、下图：Influence Weight Distribution
+==================================================
+
+在残差图下方增加与上图共用 wavelength X axis 的 Influence 分布图。
+
+X：
+Reference wavelength (nm)
+
+Y：
+Deletion influence 或 normalized influence
+
+建议提供显示选择：
+
+- Raw influence I_i
+- Normalized weight w_i
+
+默认可以使用 normalized weight。
+
+所有样本显示为柱状/stem。
+
+同时把与上图完全相同的：
+
+b_1, ..., b_(K-1)
+
+窗口边界叠加在 Influence 图中。
+
+这样可以直接看到：
+
+“窗口是如何根据 Influence 分布被切出来的”。
+
+对于 Equal Influence 模式，希望能够非常直观地观察：
+
+每个窗口虽然波长宽度不同，但累计 Influence weight 约为 1/K。
+
+如果实现成本不高，可以增加一条累计权重曲线：
+
+F(λ)
+
+使用右Y轴，范围：
+
+0 → 1
+
+并画水平参考：
+
+1/K, 2/K, ..., (K-1)/K
+
+这样可以直接看到累计曲线与窗口边界的对应关系。
+
+如果双Y轴影响GUI清晰度，可以作为可选 Show cumulative curve 功能。
+
+==================================================
+# 八、第二阶段预留：窗内选点
+==================================================
+
+当前先不要实现自动选点。
+
+但请为下一步预留接口：
+
+Select representative samples from current windows
+
+以后至少支持：
+
+1. Window Center
+2. Maximum Influence
+3. Best Peak Quality
+4. Manual Selection
+
+第二阶段选定样本以后：
+
+在上面的 Full-set residual 图中：
+
+- 全样本继续保持灰色背景点；
+- 被选中的 K 个样本用蓝色或其他明显标记覆盖显示；
+- 最好使用较大的 marker；
+- 窗口边界继续保留。
+
+下面 Influence 图中：
+
+- 所有样本保留原始柱/stem；
+- 被选中的 K 个点同步高亮；
+- 从而可以直接观察：
+  “最终选点位置”
+  与
+  “Influence权重分布”
+  的关系。
+
+==================================================
+# 九、GUI建议
+==================================================
+
+建议先增加一个简单区域：
+
+Subset Window Design
+
+Target K:
+[ 6 ]
+
+Partition rule:
+[ Equal wavelength ]
+[ Equal cumulative influence ]
+
+按钮：
+
+[ Generate Windows ]
+
+生成以后显示窗口表：
+
+Window | λ start | λ end | N points | Weight sum | Max influence peak
+
+按钮：
+
+[ Clear Windows ]
+
+第二阶段以后再增加：
+
+[ Select Representative Samples ]
+
+目前不要把 Generate Windows 和 Select Samples 合并成一个按钮。
+
+==================================================
+# 十、非常重要的实现原则
+==================================================
+
+1. 分窗和选点必须分成两个独立步骤。
+
+2. 第一版先让我看到：
+   Equal wavelength
+   与
+   Equal cumulative influence
+   两种方法实际怎样分割当前37点样本。
+
+3. Influence 使用已经确定的 degree=3 deletion influence 结果，
+   不要重新定义另一套 Influence。
+
+4. Equal cumulative influence 是工程启发式的“累计影响权重等分”，
+   不宣称 Influence 是严格可加的信息量。
+
+5. 分窗后不要自动修改 calibration model。
+
+6. 分窗只是生成候选样本区域，不代表任何样本已经进入最终 calibration subset。
+
+7. Window结果要保存到 Session，便于后续第二阶段继续选点。
+
+8. 上下两张图必须共享 Reference wavelength X轴，便于直接对应观察。
+
+请先实现 Window Partition + Visualization。
+完成后暂停，不要继续实现自动窗内选点。
+我需要先查看当前真实37点数据下两种分窗方法的实际效果，再确定第二阶段选点规则。

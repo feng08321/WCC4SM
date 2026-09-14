@@ -21,5 +21,12 @@ classdef TestOptimizationModules < matlab.unittest.TestCase
             testCase.verifyTrue(all(strcmp({r.Status},'Available')));
             testCase.verifyTrue(all(isfinite([r.ValidationRMSE])));
         end
+        function rejectsDegreeAboveUnifiedLimit(testCase)
+            p=(1:25).';w=300+0.4*p;
+            testCase.verifyError(@()wc4sm_fit_calibration(p,w,21,p), ...
+                'WCC4SM:PolynomialDegreeLimit');
+            r=wc4sm_analyze_model_order(p,w,21,p);
+            testCase.verifyEqual(r.Status,'Degree exceeds supported limit 20');
+        end
     end
 end

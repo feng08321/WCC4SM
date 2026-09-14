@@ -8,6 +8,8 @@ classdef TestSessionModules < matlab.unittest.TestCase
             testCase.verifyEqual(session.FormatVersion,'1.0');
             testCase.verifyTrue(all(isfield(session.State, ...
                 {'Spectrum','PeakDataset','CalibrationPairs','FinalCalibration'})));
+            testCase.verifyTrue(isfield(session.State,'SetDesign'));
+            testCase.verifyTrue(isfield(session.State,'PositionCrossValidation'));
             testCase.verifyGreaterThan(report.WarningCount,0);
         end
 
@@ -46,6 +48,31 @@ classdef TestSessionModules < matlab.unittest.TestCase
                 model.Coefficients,'AbsTol',0);
             testCase.verifyEqual(loaded.State.FinalCalibration.LOOResidual, ...
                 model.LOOResidual,'AbsTol',0);
+        end
+
+        function roundTripPreservesSetDesignState(testCase)
+            partition=struct('Rule','Equal cumulative influence','TargetK',3,'CutIndices',[2 5]);
+            design=struct('SelectedCandidate',2,'PoolUseMask',logical([1;0;1]), ...
+                'WindowPartition',partition,'Settings',struct('TargetK',2,'BPerf',5,'BDiv',5,'WindowK',3));
+            session=wc4sm_create_session(struct('SetDesign',design));
+            path=[tempname '.mat'];cleanup=onCleanup(@() deleteIfPresent(path)); %#ok<NASGU>
+            wc4sm_save_session(path,session);
+            loaded=wc4sm_load_session(path);
+            testCase.verifyEqual(loaded.State.SetDesign.SelectedCandidate,2);
+            testCase.verifyEqual(loaded.State.SetDesign.PoolUseMask,logical([1;0;1]));
+            testCase.verifyEqual(loaded.State.SetDesign.Settings.BPerf,5);
+            testCase.verifyEqual(loaded.State.SetDesign.WindowPartition.CutIndices,[2 5]);
+            testCase.verifyEqual(loaded.State.SetDesign.Settings.WindowK,3);
+        end
+
+        function roundTripPreservesPositionCrossValidation(testCase)
+            crossResult=struct('Degree',3,'ValidationMode','LOO','RMSE',eye(4));
+            session=wc4sm_create_session(struct('PositionCrossValidation',crossResult));
+            path=[tempname '.mat'];cleanup=onCleanup(@() deleteIfPresent(path)); %#ok<NASGU>
+            wc4sm_save_session(path,session);loaded=wc4sm_load_session(path);
+            testCase.verifyEqual(loaded.State.PositionCrossValidation.Degree,3);
+            testCase.verifyEqual(loaded.State.PositionCrossValidation.ValidationMode,'LOO');
+            testCase.verifyEqual(loaded.State.PositionCrossValidation.RMSE,eye(4));
         end
 
         function roundTripPreservesPixelCoordinateMetadata(testCase)

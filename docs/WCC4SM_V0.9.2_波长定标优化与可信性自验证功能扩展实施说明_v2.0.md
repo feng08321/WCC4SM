@@ -1,5 +1,7 @@
 # WCC4SM V0.9.2 波长定标优化与可信性自验证功能扩展实施说明 v2.0
 
+> **文档状态说明（2026-09-01）**：本文保留为 V0.9.2 功能扩展的设计与实施轨迹，不作为当前操作依据。当前软件的完整操作、统一指标、代码架构和验收口径，分别以《WCC4SM V0.9.3 用户操作与完整工作流程说明 V1.0》《WCC4SM V0.9.3 数据处理算法与统一指标说明 V1.0》《WCC4SM V0.9.3 软件架构与核心模块说明 V1.0》《WCC4SM V0.9.3 测试验证与验收说明 V1.0》为准。部分早期 Seed Set 和组合遍历描述仅用于追溯，当前主流程已发展为固定全池评价、任意集合逐一替换、分阶段 Set Design/Beam Search 和峰位定义交叉验证。
+
 > **目标版本基础**：WCC4SM V0.9.2\
 > **文档用途**：供 Codex 在现有 MATLAB 工程上实施功能扩展\
 > **开发原则**：优先复用现有定标核心；先完成计算链和测试，再完善
@@ -806,63 +808,38 @@ Performance plateau reached
 
 ------------------------------------------------------------------------
 
-# 18. 新增模块五：Seed Set Exhaustive Validation
+# 18. 新增模块五：Seed Set 递进替换验证
 
 建议新增：
 
 ``` text
-src/wc4sm_analyze_seed_combinations.m
+src/wc4sm_analyze_seed_replacements.m
 ```
 
-用于验证：
-
-``` text
-最初人工选择的4点 Seed Set 是否具有合理先验？
-优秀的最小定标集合是否具有共同的位置结构？
-```
+用于确认人工选择的 5 点 Seed Set 是否存在明显可替换的成员，而不再执行 `C(n,5)` 的全组合穷举。
 
 ------------------------------------------------------------------------
 
-# 19. 组合遍历
+# 19. 逐点替换流程
 
-用户从可靠参考池中指定一个高质量候选集合：
+1. 用户在 **Optimization** 页人工确认恰好 5 个 Seed 点；
+2. 将原始 Seed 集之外的全部可靠参考点固定为共同验证池；
+3. 依次剔除 5 个 Seed 点中的一个，形成 5 轮验证；
+4. 每轮遍历每个非 Seed 点作为补充点，保持 Seed 集大小仍为 5；
+5. 对原始 Seed 集和每个替换集，都在同一固定验证池上计算 `RMSE`、`P95` 与 `MAX`；
+6. 每轮保留 `RMSE` 最小的替换方案，并以 `Delta RMSE = RMSEreplacement - RMSEbaseline` 判断是否优于原样本。
 
-\[ D_H`\subseteq `{=tex}D_R \]
+总拟合次数为：
 
-建议规模：
+\[
+5 \times (N-5)
+\]
 
-``` text
-10–15 points
-```
+其中 `N` 为可靠参考点数量；这避免了组合数随 `N` 急剧增长的 `C(N,5)` 穷举。
 
-对：
-
-\[ k=m+1 \]
-
-遍历：
-
-\[ `\binom{|D_H|}{k}`{=tex} \]
-
-所有组合。
-
-例如：
-
-\[ `\binom{10}{4}`{=tex}=210 \]
-
-\[ `\binom{15}{4}`{=tex}=1365 \]
-
-对每个组合：
-
-1.  建立固定阶次模型；
-2.  用其余可靠参考点验证；
-3.  计算 `RMSEval`；
-4.  计算 `MAXval`；
-5.  计算 `P95`；
-6.  计算与 Full Reference Model 的差异；
-7.  计算定标点几何覆盖指标。
+输出表每行对应一个被剔除的 Seed 点，显示其最佳补充点、验证误差及是否改善。若 5 行均为“不改善”，则人工 Seed 集在单点替换意义下可予以确认。
 
 ------------------------------------------------------------------------
-
 # 20. 定标集合几何指标
 
 每个组合至少计算：
@@ -913,64 +890,29 @@ src/wc4sm_analyze_seed_combinations.m
 
 ------------------------------------------------------------------------
 
-# 21. 优秀组合统计
+# 21. 替换结果判读
 
-允许定义：
-
-``` text
-Top 5 %
-Top 10 %
-Validation RMSE threshold
-Validation MAX threshold
-```
-
-作为优秀组合。
-
-统计每个参考点在优秀组合中的出现频率：
-
-\[ F_i = `\frac{
-\text{point i appears in top-performing sets}
-}{
-\text{number of top-performing sets}
-}`{=tex} \]
-
-输出：
+每一轮只报告一个最佳替换方案：
 
 ``` text
-Reference-Line Selection Frequency
+Removed seed index
+Best replacement index
+Baseline RMSE
+Replacement RMSE
+Delta RMSE
+Improved / Not improved
 ```
 
-研究重点不是简单找到：
+判读规则：
 
 ``` text
-The Best Four Lines
+Delta RMSE < 0  ：该被剔除 Seed 点存在更优替换候选；
+Delta RMSE >= 0 ：保留该人工 Seed 点。
 ```
 
-而是回答：
-
-``` text
-优秀最小定标集合具有怎样的共同几何特征？
-```
-
-最终可能得到的是：
-
-``` text
-必须包含某个具体点
-```
-
-也可能得到更一般的：
-
-``` text
-必须覆盖短波端
-必须覆盖长波端
-内部至少覆盖两个不同区域
-最大无参考点间隔不能过大
-```
-
-后者对论文和工程推广更有价值。
+若五轮均没有改善，说明该人工确认的 5 点 Seed Set 已通过单点替换自验证；若出现改善，用户可结合峰形、谱线归属与覆盖范围人工决定是否采纳该替换，再重新运行五轮验证。
 
 ------------------------------------------------------------------------
-
 # 22. 应用关键波段
 
 允许用户定义：
@@ -1557,6 +1499,200 @@ Add-One 路径是否符合物理直觉
 
 ------------------------------------------------------------------------
 
+# 34. 交互确认与结果辨识补充
+
+为避免多模型、多轮次残差点重叠后仅靠图例难以辨识，界面补充以下交互规则：
+
+1. 在 Model Comparison 表格中选中模型后，该模型残差点放大、增加按参考波长排序的辅助连线，并在图内显示 ModelID、峰位方法、阶次和残差模式。
+2. 在 Seed 逐点替换结果表中选中轮次后，该轮残差点放大、增加按像素排序的辅助连线，并显示轮次和验证 RMSE。
+3. 辅助连线只用于辨识当前选中数据，不改变残差统计，也不表示采样过程具有时间顺序。
+4. Seed 替换验证不再自动写入 Model Comparison。计算完成后只生成待确认推荐模型，用户点击“Add recommended model to comparison”并确认后才加入模型列表。
+5. Point Influence 页恢复“Analyze sample response”入口，用于执行删除单点后的样本响应/影响度分析。
+6. Calibration Optimization 与 Point Influence 顶部工具区采用显式网格定位，避免按钮文字遮挡；Seed 结果表上方的空白布局行已移除。
+7. 样本响应和 Seed 替换残差使用两个独立图轴，通过“Sample response”和“Seed replacement residuals”子页切换；轮次切换和重新计算前重置 Seed 图轴，避免历史连线、图例或 hold 状态残留。
+8. Calibration Optimization 增加 Peak position 选择，Add-One 与 Seed replacement 均通过与最终定标一致的峰位提取逻辑获得坐标，默认使用 FWHM center，不再直接使用整数 DetectionPixel。
+9. Add-One 默认 Keep=0，允许路径运行到完整标杆集合；历史表和曲线分别显示 Fit RMSE 与 All-point RMSE。当 Ncal 等于标杆集合大小时，两者必须在数值精度范围内一致，并显示 FullSetRMSEGap。
+10. Seed 逐一替换、Seed stability 和推荐模型生成复用同一 Optimization 输入集合、Peak position 与 Degree。替换轮次表同时显示 Fit RMSE 和固定验证池 Validation RMSE；峰位方法或阶次改变时旧 Seed 结果自动失效，避免不同口径结果混用。
+11. 新增 Selected Residuals 统一诊断页。选择模型、Add-One轮次、模型阶次、Seed stability 或Seed替换轮次后，诊断页同步显示逐点残差趋势和残差直方图；趋势图叠加5点移动均值，用于辅助识别尚未被拟合消除的低频结构。
+12. Selected Residuals 直方图支持 Bins、Auto full、Symmetric、正负3 STD和Manual X范围，配置方式与 Calibration Fit & Residuals 页一致；同时报告N、RMS、Mean、STD、Skew和超额峰度，并随Session保存范围设置。
+
+------------------------------------------------------------------------
+
 **文档版本：v2.0**\
 **定位：基于 WCC4SM V0.9.2 现有架构的功能扩展实施说明**\
 **当前优先级：先实现可验证的计算核心，再扩展科研分析与 GUI。**
+
+------------------------------------------------------------------------
+
+# 35. 样本删除影响的空间坐标观察
+
+Point Influence 页的样本响应图支持三种横轴：Sample index、Pixel 和
+Wavelength。三种显示复用同一次删除单点计算结果，只改变横轴坐标，不改变
+Residual、Deleted RMS、Curve change 或 Deletion influence 的定义。
+
+Wavelength 模式采用匹配参考波长，Pixel 模式采用参与拟合的峰像素坐标；两者
+可用于识别边界代表点、局部稀疏区代表点和波长聚集区，而 Sample index 继续
+用于与表格行快速对应。显示坐标和影响分析阶次随 Session 保存、恢复。
+
+影响分析阶次范围由 1--6 扩展为 1--12。6 阶以上用于敏感性与剩余结构诊断，
+不能仅根据影响柱降低或升高决定最终阶次；需要同时检查拟合残差、LOO、残差
+趋势/直方图，以及高阶多项式在光谱边界处的杠杆放大和振荡风险。
+
+------------------------------------------------------------------------
+
+# 36. 影响阶次统计、统一纵轴与任意集合替换
+
+## 36.1 统一纵轴比较
+
+Sample response 子页增加 Y axis 设置。Auto 保持每次结果自适应，Manual 允许
+输入 Y min 和 Y max。手动范围在切换阶次、样本序号/像素/波长横轴时保持不变，
+并随 Session 保存，用于在相同尺度下比较不同多项式阶次的影响强度。
+
+## 36.2 影响阶次扫描
+
+Scan influence 1..k 使用手动设置的 Scan max，对同一匹配样本池自动执行
+m=1--k 的删除单点分析。界面允许的统一上限为20；为保证删除任一点后仍可
+执行内部 LOO，实际 k 不超过 N-3。软件对每阶全部有限 InfluenceRatio 统计：
+
+- Mean influence；
+- RMS influence；
+- P95 influence；
+- MAX influence。
+
+同时报告完整模型的 Fit/LOO RMSE，以及所有点删除模型的 pooled
+Deletion Fit/LOO RMSE。前四种 Influence 统计为无量纲量，误差曲线单位为 nm，
+分别放在对数纵轴图中，不能把 RMS influence 解释为 Fit RMSE。
+
+点击统计表中的某一阶，下面的样本影响图立即切换到该阶结果，并继续使用当前
+横轴和手动 Y 轴范围。该统计用于描述模型对单点删除的总体敏感程度；它不能
+单独代替残差趋势、LOO 和边界振荡检查。
+
+## 36.3 任意已选集合的一换一分析
+
+原 Seed replacement 放宽为 selected-set replacement。Optimization 表中的选中
+点构成当前建模集合，每个选中点依次被删除，并遍历所有未选有效点作为替代点。
+设选中点数为 K、未选候选数为 C，则总试验数为 K×C，并输出 K 个轮次的最佳
+替换结果。K 不再固定为5，但必须满足 K≥degree+1，且 C≥1。
+
+Add-One 仍保留“初始种子集合”的含义；本节只解除一换一替换分析的5点限制。
+当全部有效点均被选中时，不存在集合外替换候选，软件会提示至少保留一个未选点。
+旧的 SeedIndices 和 BestByRemovedSeed 结果字段继续保留，作为已有调用和Session
+的兼容别名；新增 SelectedIndices 和 BestByRemovedPoint 表达一般集合语义。
+
+------------------------------------------------------------------------
+
+# 37. Point Influence 工作区拆分
+
+随着影响阶次扫描和一般集合替换功能增加，Point Influence 页不再让两类任务
+共用同一张结果表。页内拆分为两个完整子工作区：
+
+- Sample influence：包含单阶影响计算、1--10阶扫描、影响结果/统计表、横轴和
+  统一Y轴设置、样本影响图；
+- Set replacement：包含RMSE阈值、验证池、集合替换计算、独立轮次表、替换
+  残差图和手动加入Model Comparison入口。
+
+两个工作区的表格和图形对象相互独立。重新运行样本影响分析不会覆盖集合替换
+轮次；执行集合替换也不会清除影响阶次统计。Optimization中的集合选择或峰位
+方法发生变化时，旧集合替换结果和待加入推荐模型失效，但已完成的样本影响
+结果只在校准匹配对本身变化时刷新。
+
+------------------------------------------------------------------------
+
+# 38. 基于影响画像的子样本集设计空间
+
+拟合阶次确定为3以后，样本影响分析不再只是一次绘图，而应固化为与当前匹配
+样本池绑定的 Influence profile，并作为子样本集设计的输入。该功能不继续堆叠
+在 Point Influence 页，建议新增 Calibration Set Design 工作区。
+
+## 38.1 Influence profile 与排序
+
+每个样本至少保存以下字段：Peak ID、Pixel、Reference wavelength、degree=3下的
+InfluenceRatio、Influence rank、Influence percentile、Curve change、Residual、
+峰对称性推荐、局部波长密度、是否位于短波/长波边界。
+
+影响强度不能直接等同于样本质量，推荐采用二维分类：
+
+- 高影响且峰质量可靠：Representative anchor，优先保留；
+- 高影响但峰质量可疑：Critical review，必须人工复核；
+- 中等影响：Coverage support，用于维持局部覆盖；
+- 低影响且处于密集波长簇：Replaceable candidate，优先作为替换候选。
+
+表格支持按影响值、排名、波长、局部密度和质量状态排序/筛选。影响画像必须记录
+匹配样本池、峰位方法、degree和生成时间；上述输入变化后旧画像标记为失效。
+
+## 38.2 手动子样本集空间
+
+Manual 子页提供两种入口：
+
+1. Top-k辅助：用户输入k，将影响排名前k的可靠样本设为必选点，再由人工从其余
+   样本补足目标集合；Top-k不应直接等同于最终子集，因为高影响点可能集中在边界；
+2. Experience only：不要求已有影响画像，用户根据峰质量、波长覆盖和经验直接
+   勾选，保存为具名候选集合。
+
+每个候选集合保存来源、样本ID、目标K、必选点、人工备注和创建时间，允许复制、
+修改和锁定，不直接覆盖当前最终定标模型。
+
+## 38.3 计算机辅助生成空间
+
+Assisted generation 子页建议按以下优先级提供策略：
+
+1. Wavelength-stratified maximin：波长分层后最大化最小间距，确定性强，作为默认；
+2. Influence + coverage constrained：保留可靠高影响点，同时约束边界、分段覆盖和
+   最大波长空隙；
+3. Constrained Monte Carlo：在相同约束下随机生成大量不重复集合，用于探索多个
+   近似等价解，而不是无约束随机抽样。
+
+生成参数包括目标K或K范围、候选数、随机种子、必选/禁选点、波长分段数、最大
+允许空隙、峰质量阈值。随机种子必须保存以保证结果可复现。
+
+对每个候选集合均采用同一37点标杆池评价，并明确区分 Fit RMSE 与 All-point
+Validation RMSE。建议输出：All-point RMSE/P95/MAX、LOO RMS、Influence P95/MAX、
+最大波长空隙、边界覆盖、残差趋势指标和计算状态。
+
+## 38.4 排名与比较
+
+候选集合不建议只压缩成单一总分。首先剔除不满足硬约束的集合，再保留RMSE、P95、
+MAX、稳定性和覆盖度上的Pareto候选。可提供可调权重总分作为排序辅助，但必须同时
+显示原始指标。
+
+Subset comparison 子页显示候选集合表、样本位置分布、全标杆池残差、残差直方图
+和影响统计。用户确认后才将某个子样本模型加入Model Comparison；自动生成过程
+不得直接修改当前应用模型。
+
+推荐工作流为：
+
+``` text
+Degree 3 influence profile
+        -> manual / assisted subset generation
+        -> fixed 37-point benchmark evaluation
+        -> Pareto shortlist
+        -> residual and influence review
+        -> manual addition to Model Comparison
+```
+
+需要同时提示：候选集合是在同一37点池上生成并评价，排名存在选择乐观偏差；最终
+确认应使用独立光谱、重复测量或后续批次数据复核，而不能把37点标杆池视为绝对真值。
+
+## 39. Set Design 与分层 Beam Search
+
+新增独立 Set Design 工作区，避免样本影响、集合替换和子集搜索相互覆盖结果。工作区包含：
+
+- 固定三阶模型的样本影响排名、对称性质量、局部波长间距和边界标识；
+- Manual、Top-k influence、Maximin coverage、Locked boundary + coverage 及分窗规则生成；
+- 在统一全样本池上的 Fit RMSE、All-point RMSE/P95/MAX 和相对全集模型距离；
+- 基于 D_RMS 与 D_MAX 双阈值的 ε-cover；
+- 可暂停的 Initialize Beam -> Calculate K-1 -> Confirm checked 逐层搜索；
+- 候选的 Pending、Accepted、Rejected 状态和跨轮次保留；
+- 确认集合发送到 Add-One，以及手动确认后加入 Model Comparison。
+
+Beam 每次只计算一次删除层。计算候选不会改变当前父集合，用户确认后才推进；若只保留一个候选则退化为人工辅助贪心删除，保留多个性能/多样性候选时才保持 Beam 的路径覆盖能力。Beam 批量候选拟合跳过内部 LOO，以降低计算量，但所有候选均使用同一个完整标杆池计算验证残差；加入模型比较时重新执行完整 LOO。
+
+## 40. Set Design 可理解性、持久化与导出
+
+Set Design 左侧增加 Full pool / manual selection 与 Selected subset members 两个子页。选中右侧候选集合时，完整池的 Use 掩码同步更新，成员子页列出该集合实际包含的 Peak ID、像素、波长、Influence、排名、峰质量、局部间距和边界属性。
+
+页面增加 Guide，统一解释 Target K、B perf、B div、eps RMS、eps MAX，以及 Fit RMSE、All-point RMSE/P95/MAX、模型距离、Influence、Quality 和 Cover。推荐以 3+3、5+5、10+10 进行 Beam 宽度敏感性检查，而不是仅按单次最低 RMSE 自动确定最终集合。
+
+Session 新增可选 SetDesign 状态，保存影响档案、规则候选、Beam 节点、当前层与 Pending 候选、父子路径、成员掩码、当前选择和全部参数；旧版 Session 没有该字段时仍按空状态加载。
+
+Export results 同时输出完整 MAT 状态、完整池 CSV、候选指标 CSV、候选成员长表 CSV 和 Beam 层级 CSV。相关详细说明见《WCC4SM_V0.9.2_Set_Design操作与指标说明》。

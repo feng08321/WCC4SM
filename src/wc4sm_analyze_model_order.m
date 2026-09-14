@@ -1,7 +1,7 @@
 function result = wc4sm_analyze_model_order(pixel,wavelength,degreeRange,evaluationPixels,options)
 %WC4SM_ANALYZE_MODEL_ORDER Compare polynomial calibration orders.
 % Returns fit, LOO and optional fixed hold-out validation metrics for every order.
-    if nargin<3||isempty(degreeRange),degreeRange=1:7;end
+    if nargin<3||isempty(degreeRange),degreeRange=1:10;end
     if nargin<4||isempty(evaluationPixels),evaluationPixels=pixel;end
     if nargin<5||isempty(options),options=struct;end
     pixel=pixel(:);wavelength=wavelength(:);evaluationPixels=evaluationPixels(:);
@@ -25,6 +25,12 @@ end
     
     for k=1:numel(degreeRange)
         d=degreeRange(k);cal=~validationMask;
+        if ~isscalar(d)||~isfinite(d)||d<1||d~=fix(d)
+            result(k).Status='Invalid degree';continue;
+        end
+        if d>20
+            result(k).Status='Degree exceeds supported limit 20';continue;
+        end
         if sum(cal)<d+1
             result(k).Status='Insufficient calibration points';continue;
         end

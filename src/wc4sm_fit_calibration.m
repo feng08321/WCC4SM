@@ -1,4 +1,4 @@
-function model = wc4sm_fit_calibration(pixel,wavelength,degree,evaluationPixels,positionMethod,peakIDs)
+function model = wc4sm_fit_calibration(pixel,wavelength,degree,evaluationPixels,positionMethod,peakIDs,options)
 %WC4SM_FIT_CALIBRATION Fit and validate a WCC4SM polynomial model.
 % This non-GUI candidate module reproduces the V0.5.2 fitting statistics.
 
@@ -9,11 +9,16 @@ function model = wc4sm_fit_calibration(pixel,wavelength,degree,evaluationPixels,
         evaluationPixels (:,1) double = zeros(0,1)
         positionMethod {mustBeTextScalar} = 'Unspecified'
         peakIDs = {}
+        options struct = struct()
     end
 
     if numel(pixel) ~= numel(wavelength)
         error('WCC4SM:CalibrationSizeMismatch', ...
             'Pixel and wavelength vectors must have equal length.');
+    end
+    if degree > 20
+        error('WCC4SM:PolynomialDegreeLimit', ...
+            'Polynomial degree %d exceeds the supported analysis limit of 20.',degree);
     end
     if numel(pixel) < degree+1
         error('WCC4SM:InsufficientCalibrationPoints', ...
@@ -57,7 +62,8 @@ function model = wc4sm_fit_calibration(pixel,wavelength,degree,evaluationPixels,
     fitted = polyval(coefficients,pixel,[],mu);
     residual = wavelength-fitted;
     naturalCoefficients = normalizedToNaturalPolynomial(coefficients,mu);
-    if numel(pixel) >= degree+2
+    skipLOO=isfield(options,'SkipLOO')&&logical(options.SkipLOO);
+    if numel(pixel) >= degree+2 && ~skipLOO
         validation = wc4sm_validate_calibration_loo(pixel,wavelength,degree, ...
             coefficients,mu,evaluationPixels);
         looStatus = 'Available';
@@ -66,7 +72,7 @@ function model = wc4sm_fit_calibration(pixel,wavelength,degree,evaluationPixels,
             'DeletionMaxCurveChange',nan(numel(pixel),1),'LOORMS',NaN, ...
             'LOOMaxAbs',NaN,'MaxDeletionInfluence',NaN, ...
             'EvaluationPixels',evaluationPixels(:));
-        looStatus = 'Unavailable: minimum-size model';
+        if skipLOO,looStatus='Skipped for batch search';else,looStatus='Unavailable: minimum-size model';end
     end
 
     model = struct('valid',true,'PositionMethod',char(positionMethod), ...
