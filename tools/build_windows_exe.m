@@ -8,8 +8,8 @@ function outputFolder = build_windows_exe
     end
     projectRoot = fileparts(fileparts(mfilename('fullpath')));
     sourceFolder = fullfile(projectRoot,'src');
-    entryFile = fullfile(projectRoot,'WCC4SM_V0_9.m');
-    outputFolder = fullfile(projectRoot,'build','WCC4SM_V0.9_Windows_x64');
+    entryFile = fullfile(projectRoot,'WCC4SM_V1_0.m');
+    outputFolder = fullfile(projectRoot,'build','WCC4SM_V1.0_Windows_x64');
     if isfolder(outputFolder), rmdir(outputFolder,'s'); end
     mkdir(outputFolder);
 

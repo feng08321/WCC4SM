@@ -7,11 +7,14 @@ performance analysis, and complete analysis-session restoration.
 
 ## Versions
 
-The current paper-support release is **WCC4SM V1.0**. It extends the accepted
-calibration workflow with peak-position difference diagnostics, peak-position
-cross validation, model-order and influence analysis, rule-based subset design,
-window partitioning, and staged backward Beam Search. Start it from MATLAB
-R2022a or later:
+The current paper-support release is **WCC4SM V1.1**. V1.1 keeps the V1.0
+feature set and behavior while reorganizing the implementation: all shared
+algorithms, state factories, built-in line libraries, and GUI utilities now
+live as tested modules under `src/`, and the Hg-Ar reference data was
+refreshed from the 2026-09-10 NIST ASD query. V1.0 introduced peak-position
+difference diagnostics, peak-position cross validation, model-order and
+influence analysis, rule-based subset design, window partitioning, and staged
+backward Beam Search. Start it from MATLAB R2022a or later:
 
 ```matlab
 WCC4SM_V1_0
@@ -41,7 +44,7 @@ results = run_wc4sm_tests;
 
 The suite is discovered dynamically; the release criterion is that every
 discovered test passes with no failed or incomplete result. The latest complete
-regression run reported by the maintainer on 2026-09-01 passed. The current GUI
+regression run on 2026-09-15 passed all 145 tests. The current GUI
 acceptance procedure is in
 `docs/WCC4SM_V0.9.3_测试验证与验收说明_V1.0.md`.
 
@@ -67,7 +70,7 @@ addpath('tools');
 build_windows_exe
 ```
 
-The generated `build/WCC4SM_V0.9_Windows_x64/` folder includes the executable
+The generated `build/WCC4SM_V1.0_Windows_x64/` folder includes the executable
 and external `docs/` and `reference_data/` directories. These external
 directories remain replaceable so users can add PDF help documents and
 reference assets.
