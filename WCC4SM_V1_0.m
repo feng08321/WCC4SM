@@ -5413,17 +5413,6 @@ function s=formatCalibrationEquation(p)
     if isempty(parts),rhs='0';else,rhs=strjoin(parts,'');end
     s=['lambda(nm) = ' rhs];
 end
-function [looResidual,maxCurveChange]=leaveOneOutDiagnostics(x,lambda,degree,fullCoef,fullMu,evaluationPixels)
-    x=x(:);lambda=lambda(:);evaluationPixels=evaluationPixels(:).';n=numel(x);
-    looResidual=nan(n,1);maxCurveChange=nan(n,1);fullCurve=polyval(fullCoef,evaluationPixels,[],fullMu);
-    for i=1:n
-        keep=true(n,1);keep(i)=false;
-        if sum(keep)<=degree,continue;end
-        [c,~,mu]=polyfit(x(keep),lambda(keep),degree);
-        looResidual(i)=lambda(i)-polyval(c,x(i),[],mu);
-        deletedCurve=polyval(c,evaluationPixels,[],mu);maxCurveChange(i)=max(abs(fullCurve-deletedCurve));
-    end
-end
 function limit=robustUpperLimit(v)
     v=v(isfinite(v));if isempty(v),limit=Inf;return;end
     med=median(v);madv=median(abs(v-med));limit=med+3*1.4826*madv;
