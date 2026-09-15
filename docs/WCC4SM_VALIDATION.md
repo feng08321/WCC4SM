@@ -76,7 +76,8 @@ TestBuiltinLibraries / TestWcc4smDataAssets 的校验对象，也是 MATLAB 与
    `blas.spec/lapack.spec` 才能运行数值测试（修复方法见项目记忆/运维记录）；
    CI 与标准 Intel/AMD 环境无此问题。
 5. **运行环境要求**：MATLAB R2022a+；EXE 版依赖对应 MCR。
-6. **SlopeStability** 为 GUI 第 5 种峰位定义，未纳入论文 4 定义横向比较。
+6. **Gaussian fit** 为 GUI 第 5 种峰位定义，因条件适用（拟合失败返回
+   NaN、PositionOnly 峰不可用）而未纳入论文 4 定义横向比较（D/I/F/C）。
 
 ## 5. 变更时的验证要求
 

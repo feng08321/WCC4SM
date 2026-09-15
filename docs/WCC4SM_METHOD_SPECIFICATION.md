@@ -65,11 +65,24 @@ HDR 用于识别饱和/削顶风险；饱和峰只允许位置级使用（Positi
 | Interpolated（插值最大点） | I | \(x_I=\xi_{\arg\max_j S_j}\) |
 | FWHM center（半高中心） | F | \(x_F=(x_{h,L}+x_{h,R})/2\)，半高交点线性求交 |
 | Centroid（非负净信号一阶矩） | C | \(x_C=\dfrac{\int xS^+(x)dx}{\int S^+(x)dx}\)，\(S^+=\max(S,0)\)，`trapz` 积分 |
-| SlopeStability（斜率稳定点，GUI 第 5 种） | S | 对窗内位置-信号斜率的稳健定位（详见峰位算法说明文档） |
+| Gaussian fit（高斯拟合，GUI 第 5 种） | G | 见下方专项说明 |
+
+**Gaussian fit**（GUI 内联 `gaussianPeakPosition`）：在峰窗净信号
+\((x,y)\) 上用 `fminsearch` 最小二乘拟合含常数偏置的高斯模型
+
+\[
+g(x)=a\exp\!\left(-\tfrac12\big((x-\mu)/e^{\ell}\big)^2\right)+c,
+\]
+
+对数化 \(\ell=\ln\sigma\) 保证宽度为正；初值 \(a=\max y-\min y\)、
+\(\mu_0=x_I\)、\(\sigma_0=\max(\mathrm{FWHM}/2.35482,\ \mathrm{median}\,\Delta x)\)、
+\(c=\min y\)。返回 \(\mu\) 为峰位；窗内少于 5 点、信号无起伏、拟合失败或
+\(\mu\) 落在窗外时返回 NaN；`PositionOnly`（多峰/饱和降级）峰不可用。
 
 - GUI 默认：\(L=R=5\)，PCHIP，插值因子 \(F=20\)；
 - **论文实际参数：±4 pixel（9 原始点）、cubic spline、\(F=20\)**；
-- 论文横向比较用 4 种（D/I/F/C）；SlopeStability 是 GUI 扩展，
+- **论文横向比较用 4 种（D/I/F/C）**；Gaussian fit 是 GUI 第 5 种定义，
+  因条件适用（可能 NaN）而**不进入** 4×4 交叉定义验证矩阵，
   差异说明见 `WCC4SM_V0.9.3_四种峰位计算算法说明_V1.0.md`；
 - 多峰窗口用相邻实测谷底限制插值搜索，并标记 `PositionOnly`。
 

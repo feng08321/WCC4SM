@@ -184,6 +184,12 @@ OPEN SUBWINDOW SEARCH 使用独立的局部归一化和灵敏参数，仅在指�
 - Centroid position：峰窗内质心；
 - Gaussian fit：高斯拟合位置，仅在适用时使用。
 
+> **峰位定义数量说明（有意区分）**：GUI 提供 5 种峰位定义（上述 Direct /
+> Interpolated / FWHM center / Centroid / Gaussian fit）；论文横向比较只采用
+> 4 种（D/I/F/C），因为 Gaussian fit 是条件适用的（拟合失败或 PositionOnly
+> 峰返回 NaN），无法保证全样本池有效。峰位定义交叉验证矩阵因此为 4 × 4。
+> 数学定义见 `WCC4SM_METHOD_SPECIFICATION.md` §5。
+
 其他主要指标：
 
 - FWHM：半高全宽；
