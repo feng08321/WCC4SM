@@ -74,7 +74,7 @@ function WCC4SM_V1_0
     symmetryThresholdPx = 0.2;
     sessionMetadata = struct();
     currentSessionPath = '';
-    C = colors();
+    C = wc4sm_colors();
     referenceDataDir = fullfile(distributionRoot,'reference_data');
     if ~isfolder(referenceDataDir), referenceDataDir = fullfile(packageRoot,'reference_data'); end
     documentationDir = fullfile(distributionRoot,'docs');
@@ -107,7 +107,7 @@ function WCC4SM_V1_0
     dg.RowHeight={32,32,24,30,30,30,24,30,30,38,30,30,30,30,30,24,34,54,24}; dg.Padding=[9 8 9 9]; dg.RowSpacing=6;
     bLoad=uibutton(dg,'Text','Load spectrum CSV','ButtonPushedFcn',@loadSpectrum); bLoad.Layout.Column=[1 2];
     bRef=uibutton(dg,'Text','Pop out current spectrum plots','ButtonPushedFcn',@popOutSpectrumPlots); bRef.Layout.Column=[1 2];
-    sectionAuto(dg,'Input interpretation');
+    wc4sm_section_label(dg,'Input interpretation');
     uilabel(dg,'Text','Two-column X'); inputType=uidropdown(dg,'Items',{'Wavelength (nm)','Pixel index'},'Value','Wavelength (nm)');
     uilabel(dg,'Text','Pixel sequence'); pixelMode=uidropdown(dg, ...
         'Items',{'Full detector sequence','Valid-pixel sequence'}, ...
@@ -115,7 +115,7 @@ function WCC4SM_V1_0
         'ValueChangedFcn',@pixelModeChanged, ...
         'Tooltip','Full detector: uncalibrated instrument exposes every detector pixel. Valid-pixel: calibrated instrument outputs only its usable cropped sequence. Both sequences start at 1.');
     sourceLabel=uilabel(dg,'Text','No spectrum','FontColor',C.muted); sourceLabel.Layout.Column=[1 2];
-    sectionAuto(dg,'Preprocessing & display');
+    wc4sm_section_label(dg,'Preprocessing & display');
     uilabel(dg,'Text','Manual baseline'); baselineField=uieditfield(dg,'numeric','Value',0,'ValueChangedFcn',@preprocessChanged);
     darkTools=uigridlayout(dg,[1 2]);darkTools.Layout.Column=[1 2];darkTools.ColumnWidth={'1x','1x'};darkTools.Padding=[0 0 0 0];
     uibutton(darkTools,'Text','Load dark spectrum','ButtonPushedFcn',@loadDarkSpectrum);
@@ -126,7 +126,7 @@ function WCC4SM_V1_0
     uilabel(dg,'Text','Y scale'); scaleDrop=uidropdown(dg,'Items',{'Linear','Log'},'Value','Linear','ValueChangedFcn',@displayChanged);
     uilabel(dg,'Text','X axis'); axisButton=uibutton(dg,'Text','X Axis: Pixel  <->','ButtonPushedFcn',@toggleMainAxis);
     refCheck=uicheckbox(dg,'Text','Show detected peak markers','Value',true,'ValueChangedFcn',@displayChanged); refCheck.Layout.Column=[1 2];
-    sectionAuto(dg,'Weak-peak subwindow search');
+    wc4sm_section_label(dg,'Weak-peak subwindow search');
     localSearchBtn=uibutton(dg,'Text','OPEN SUBWINDOW SEARCH','FontWeight','bold','BackgroundColor',C.cyan,'ButtonPushedFcn',@openLocalSearchDialog);localSearchBtn.Layout.Column=[1 2];
     viewPanel=uipanel(dg,'Title','Full-spectrum view range','FontWeight','bold'); viewPanel.Layout.Column=[1 2];
     viewGrid=uigridlayout(viewPanel,[1 5]);viewGrid.ColumnWidth={55,'1x',45,'1x',90};viewGrid.RowHeight={25};viewGrid.Padding=[3 2 3 2];
@@ -137,7 +137,7 @@ function WCC4SM_V1_0
 
     pg=uigridlayout(tabDetection,[16 2]); pg.ColumnWidth={135,'1x'};
     pg.RowHeight={24,30,30,30,30,30,30,32,36,24,30,30,30,30,30,'1x'}; pg.Padding=[9 8 9 9]; pg.RowSpacing=6;
-    sectionAuto(pg,'findpeaks parameters');
+    wc4sm_section_label(pg,'findpeaks parameters');
     normalizedSearch=uicheckbox(pg,'Text','Search normalized signal','Value',true,'ValueChangedFcn',@markDetectionPending); normalizedSearch.Layout.Column=[1 2];
     uilabel(pg,'Text','Min peak height'); minHeight=uieditfield(pg,'numeric','Value',0.02,'Limits',[0 Inf],'ValueChangedFcn',@markDetectionPending);
     uilabel(pg,'Text','Min prominence'); minProm=uieditfield(pg,'numeric','Value',0.005,'Limits',[0 Inf],'ValueChangedFcn',@markDetectionPending);
@@ -147,7 +147,7 @@ function WCC4SM_V1_0
     findHelp=uilabel(pg,'Text','Set parameters first. Detection runs only after pressing the button below.', ...
         'WordWrap','on','FontColor',C.muted); findHelp.Layout.Column=[1 2];
     detectBtn=uibutton(pg,'Text','CONFIRM & DETECT ALL PEAKS','FontWeight','bold','BackgroundColor',C.cyan,'ButtonPushedFcn',@detectPeaks); detectBtn.Layout.Column=[1 2];
-    sectionAuto(pg,'Selected peak window');
+    wc4sm_section_label(pg,'Selected peak window');
     uilabel(pg,'Text','Left pixels'); leftSpin=uispinner(pg,'Limits',[1 5000],'Step',1,'Value',5,'ValueChangedFcn',@windowChanged);
     uilabel(pg,'Text','Right pixels'); rightSpin=uispinner(pg,'Limits',[1 5000],'Step',1,'Value',5,'ValueChangedFcn',@windowChanged);
     uilabel(pg,'Text','Interpolation'); methodDrop=uidropdown(pg, ...
@@ -180,8 +180,8 @@ function WCC4SM_V1_0
     currentPeakHost=uigridlayout(peakAnalysisCurrentTab,[1 1]);currentPeakHost.Padding=[0 0 0 0];
     middle=uipanel(currentPeakHost,'Title','Measured spectrum / Selected peak','FontWeight','bold','BackgroundColor','white');
     mg=uigridlayout(middle,[2 1]); mg.RowHeight={'1.2x','1x'}; mg.Padding=[7 4 7 7];
-    axFull=uiaxes(mg); styleAxes(axFull,C); title(axFull,'Full spectrum');
-    axPeak=uiaxes(mg); styleAxes(axPeak,C); title(axPeak,'Select a peak from the list');
+    axFull=uiaxes(mg); wc4sm_style_axes(axFull,C); title(axFull,'Full spectrum');
+    axPeak=uiaxes(mg); wc4sm_style_axes(axPeak,C); title(axPeak,'Select a peak from the list');
     peakGalleryHost=uigridlayout(peakGalleryTab,[2 1]);peakGalleryHost.RowHeight={32,'1x'};peakGalleryHost.Padding=[5 5 5 5];peakGalleryHost.RowSpacing=3;
     peakGalleryTools=uigridlayout(peakGalleryHost,[1 3]);peakGalleryTools.ColumnWidth={100,'1x',220};peakGalleryTools.Padding=[0 0 0 0];peakGalleryTools.ColumnSpacing=6;
     peakGalleryRefresh=uibutton(peakGalleryTools,'Text','Refresh gallery','FontWeight','bold','BackgroundColor',C.greenLight,'ButtonPushedFcn',@refreshPeakGallery);peakGalleryRefresh.Layout.Column=1;
@@ -195,10 +195,10 @@ function WCC4SM_V1_0
     peakStatisticsOverviewTab=uitab(peakStatisticsTabs,'Title','Overview');
     peakPositionDifferenceTab=uitab(peakStatisticsTabs,'Title','Peak Position Differences');
     statsHost=uigridlayout(peakStatisticsOverviewTab,[2 2]);statsHost.RowHeight={'1x','1x'};statsHost.ColumnWidth={'1x','1x'};statsHost.Padding=[7 7 7 7];
-    axWidthTrend=uiaxes(statsHost);styleAxes(axWidthTrend,C);title(axWidthTrend,'FWHM and ERW versus confirmed peak position');
-    axWidthRelation=uiaxes(statsHost);styleAxes(axWidthRelation,C);title(axWidthRelation,'FWHM versus ERW');
-    axPositionDelta=uiaxes(statsHost);styleAxes(axPositionDelta,C);title(axPositionDelta,'Peak-position differences from FWHM center');
-    axPositionHistogram=uiaxes(statsHost);styleAxes(axPositionHistogram,C);title(axPositionHistogram,'Peak-position-difference histograms');
+    axWidthTrend=uiaxes(statsHost);wc4sm_style_axes(axWidthTrend,C);title(axWidthTrend,'FWHM and ERW versus confirmed peak position');
+    axWidthRelation=uiaxes(statsHost);wc4sm_style_axes(axWidthRelation,C);title(axWidthRelation,'FWHM versus ERW');
+    axPositionDelta=uiaxes(statsHost);wc4sm_style_axes(axPositionDelta,C);title(axPositionDelta,'Peak-position differences from FWHM center');
+    axPositionHistogram=uiaxes(statsHost);wc4sm_style_axes(axPositionHistogram,C);title(axPositionHistogram,'Peak-position-difference histograms');
 
     peakDifferenceHost=uigridlayout(peakPositionDifferenceTab,[2 1]);peakDifferenceHost.RowHeight={64,'1x'};peakDifferenceHost.Padding=[7 7 7 7];peakDifferenceHost.RowSpacing=4;
     peakDifferenceTools=uigridlayout(peakDifferenceHost,[2 8]);peakDifferenceTools.ColumnWidth={85,145,70,145,70,190,'1x',1};peakDifferenceTools.RowHeight={28,28};peakDifferenceTools.Padding=[0 0 0 0];peakDifferenceTools.ColumnSpacing=5;peakDifferenceTools.RowSpacing=4;
@@ -214,10 +214,10 @@ function WCC4SM_V1_0
     peakDifferenceFitOrder=uidropdown(peakDifferenceTools,'Items',{'No fit','Degree 1','Degree 2','Degree 3'},'Value','Degree 1','ValueChangedFcn',@peakDifferenceDisplayChanged);peakDifferenceFitOrder.Layout.Row=2;peakDifferenceFitOrder.Layout.Column=4;
     peakDifferenceStatus=uilabel(peakDifferenceTools,'Text','Confirm peak parameters, then refresh statistics.','FontColor',C.muted);peakDifferenceStatus.Layout.Row=[1 2];peakDifferenceStatus.Layout.Column=7;
     peakDifferenceCharts=uigridlayout(peakDifferenceHost,[2 2]);peakDifferenceCharts.RowHeight={'1x','1x'};peakDifferenceCharts.ColumnWidth={'1x','1x'};peakDifferenceCharts.Padding=[0 0 0 0];peakDifferenceCharts.RowSpacing=4;peakDifferenceCharts.ColumnSpacing=4;
-    axPeakDifferenceMap=uiaxes(peakDifferenceCharts);styleAxes(axPeakDifferenceMap,C);title(axPeakDifferenceMap,'Peak-position differences versus coordinate');
-    axPeakDifferenceFit=uiaxes(peakDifferenceCharts);styleAxes(axPeakDifferenceFit,C);title(axPeakDifferenceFit,'Peak-position mapping fit');
+    axPeakDifferenceMap=uiaxes(peakDifferenceCharts);wc4sm_style_axes(axPeakDifferenceMap,C);title(axPeakDifferenceMap,'Peak-position differences versus coordinate');
+    axPeakDifferenceFit=uiaxes(peakDifferenceCharts);wc4sm_style_axes(axPeakDifferenceFit,C);title(axPeakDifferenceFit,'Peak-position mapping fit');
     peakDifferenceDistributionHost=uigridlayout(peakDifferenceCharts,[2 1]);peakDifferenceDistributionHost.RowHeight={'1x',30};peakDifferenceDistributionHost.Padding=[0 0 0 0];peakDifferenceDistributionHost.RowSpacing=3;
-    axPeakDifferenceDistribution=uiaxes(peakDifferenceDistributionHost);styleAxes(axPeakDifferenceDistribution,C);title(axPeakDifferenceDistribution,'Peak-position-difference distribution');
+    axPeakDifferenceDistribution=uiaxes(peakDifferenceDistributionHost);wc4sm_style_axes(axPeakDifferenceDistribution,C);title(axPeakDifferenceDistribution,'Peak-position-difference distribution');
     peakDifferenceDistributionTools=uigridlayout(peakDifferenceDistributionHost,[1 8]);peakDifferenceDistributionTools.ColumnWidth={30,45,36,60,36,60,82,58};peakDifferenceDistributionTools.Padding=[0 0 0 0];peakDifferenceDistributionTools.ColumnSpacing=3;
     uilabel(peakDifferenceDistributionTools,'Text','Bins');peakDifferenceDistributionBinCount=uispinner(peakDifferenceDistributionTools,'Limits',[1 100],'Step',1,'Value',8,'ValueChangedFcn',@peakDifferenceDisplayChanged);
     uilabel(peakDifferenceDistributionTools,'Text','X min');peakDifferenceDistributionXMin=uieditfield(peakDifferenceDistributionTools,'numeric','Value',-0.1,'ValueChangedFcn',@peakDifferenceDisplayChanged);
@@ -225,7 +225,7 @@ function WCC4SM_V1_0
     peakDifferenceDistributionRangeMode=uidropdown(peakDifferenceDistributionTools,'Items',{'Auto full','Symmetric','+/-3 STD','Manual'},'Value','Auto full','ValueChangedFcn',@peakDifferenceDisplayChanged);
     uibutton(peakDifferenceDistributionTools,'Text','Refresh','ButtonPushedFcn',@peakDifferenceDisplayChanged);
     peakDifferenceHistHost=uigridlayout(peakDifferenceCharts,[2 1]);peakDifferenceHistHost.RowHeight={'1x',30};peakDifferenceHistHost.Padding=[0 0 0 0];peakDifferenceHistHost.RowSpacing=3;
-    axPeakDifferenceHistogram=uiaxes(peakDifferenceHistHost);styleAxes(axPeakDifferenceHistogram,C);title(axPeakDifferenceHistogram,'Linear-fit residual histogram');
+    axPeakDifferenceHistogram=uiaxes(peakDifferenceHistHost);wc4sm_style_axes(axPeakDifferenceHistogram,C);title(axPeakDifferenceHistogram,'Linear-fit residual histogram');
     peakDifferenceHistControls=uigridlayout(peakDifferenceHistHost,[1 9]);peakDifferenceHistControls.ColumnWidth={32,48,40,62,40,62,80,62,'1x'};peakDifferenceHistControls.Padding=[0 0 0 0];peakDifferenceHistControls.ColumnSpacing=3;
     uilabel(peakDifferenceHistControls,'Text','Bins');peakDifferenceHistBinCount=uispinner(peakDifferenceHistControls,'Limits',[1 100],'Step',1,'Value',8,'ValueChangedFcn',@peakDifferenceHistogramChanged);
     uilabel(peakDifferenceHistControls,'Text','X min');peakDifferenceHistXMin=uieditfield(peakDifferenceHistControls,'numeric','Value',-0.1,'ValueChangedFcn',@peakDifferenceHistogramChanged);
@@ -238,11 +238,11 @@ function WCC4SM_V1_0
     calibratedOverviewTab=uitab(calibratedStatsTabs,'Title','Wavelength-domain performance');
     paperPeakDifferenceTab=uitab(calibratedStatsTabs,'Title','Peak-position wavelength dependence');
     calibratedStatsHost=uigridlayout(calibratedOverviewTab,[2 2]);calibratedStatsHost.RowHeight={'1x','1x'};calibratedStatsHost.ColumnWidth={'1x','1x'};calibratedStatsHost.Padding=[7 7 7 7];
-    axCalWidthTrend=uiaxes(calibratedStatsHost);styleAxes(axCalWidthTrend,C);title(axCalWidthTrend,'Spectral resolution versus wavelength');
-    axCalWidthRelation=uiaxes(calibratedStatsHost);styleAxes(axCalWidthRelation,C);title(axCalWidthRelation,'FWHM versus ERW in wavelength domain');
+    axCalWidthTrend=uiaxes(calibratedStatsHost);wc4sm_style_axes(axCalWidthTrend,C);title(axCalWidthTrend,'Spectral resolution versus wavelength');
+    axCalWidthRelation=uiaxes(calibratedStatsHost);wc4sm_style_axes(axCalWidthRelation,C);title(axCalWidthRelation,'FWHM versus ERW in wavelength domain');
     fwhmHistHost=uigridlayout(calibratedStatsHost,[2 1]);fwhmHistHost.Layout.Row=2;fwhmHistHost.Layout.Column=1;
     fwhmHistHost.RowHeight={'1x',30};fwhmHistHost.Padding=[0 0 0 0];fwhmHistHost.RowSpacing=3;
-    axCalPositionDelta=uiaxes(fwhmHistHost);styleAxes(axCalPositionDelta,C);title(axCalPositionDelta,'FWHM distribution');
+    axCalPositionDelta=uiaxes(fwhmHistHost);wc4sm_style_axes(axCalPositionDelta,C);title(axCalPositionDelta,'FWHM distribution');
     fwhmHistControls=uigridlayout(fwhmHistHost,[1 10]);
     fwhmHistControls.ColumnWidth={34,48,42,64,42,64,82,62,'1x',1};fwhmHistControls.Padding=[0 0 0 0];fwhmHistControls.ColumnSpacing=4;
     uilabel(fwhmHistControls,'Text','Bins');
@@ -254,7 +254,7 @@ function WCC4SM_V1_0
     fwhmHistRangeMode=uidropdown(fwhmHistControls,'Items',{'Auto full','Manual'},'Value','Auto full','ValueChangedFcn',@fwhmHistogramControlsChanged);
     uibutton(fwhmHistControls,'Text','Refresh','ButtonPushedFcn',@fwhmHistogramControlsChanged);
     axPixelInterval=uiaxes(calibratedStatsHost);axPixelInterval.Layout.Row=2;axPixelInterval.Layout.Column=2;
-    styleAxes(axPixelInterval,C);title(axPixelInterval,'Pixel wavelength interval');
+    wc4sm_style_axes(axPixelInterval,C);title(axPixelInterval,'Pixel wavelength interval');
 
     paperPeakDifferenceGrid=uigridlayout(paperPeakDifferenceTab,[3 2]);
     paperPeakDifferenceGrid.RowHeight={88,'1x','1x'};paperPeakDifferenceGrid.ColumnWidth={'1x','1x'};
@@ -276,8 +276,8 @@ function WCC4SM_V1_0
     paperShowCalibrationOnly=uicheckbox(paperPeakDifferenceTools,'Text','Calibration set only','Value',false,'ValueChangedFcn',@paperPeakSeriesChanged);paperShowCalibrationOnly.Layout.Row=2;paperShowCalibrationOnly.Layout.Column=7;
     paperClearHighlight=uibutton(paperPeakDifferenceTools,'Text','Clear highlight','ButtonPushedFcn',@clearPaperPeakHighlight);paperClearHighlight.Layout.Row=2;paperClearHighlight.Layout.Column=8;
     paperPeakDifferenceStatus=uilabel(paperPeakDifferenceTools,'Text','Fit a final calibration model, then refresh.','FontColor',C.navy,'WordWrap','on');paperPeakDifferenceStatus.Layout.Row=3;paperPeakDifferenceStatus.Layout.Column=[1 8];
-    axPaperAllPeakDifferences=uiaxes(paperPeakDifferenceGrid);axPaperAllPeakDifferences.Layout.Row=2;axPaperAllPeakDifferences.Layout.Column=[1 2];styleAxes(axPaperAllPeakDifferences,C);title(axPaperAllPeakDifferences,'All detected-peak position differences');
-    axPaperCentroidDifference=uiaxes(paperPeakDifferenceGrid);axPaperCentroidDifference.Layout.Row=3;axPaperCentroidDifference.Layout.Column=[1 2];styleAxes(axPaperCentroidDifference,C);title(axPaperCentroidDifference,'Benchmark Centroid - FWHM center');
+    axPaperAllPeakDifferences=uiaxes(paperPeakDifferenceGrid);axPaperAllPeakDifferences.Layout.Row=2;axPaperAllPeakDifferences.Layout.Column=[1 2];wc4sm_style_axes(axPaperAllPeakDifferences,C);title(axPaperAllPeakDifferences,'All detected-peak position differences');
+    axPaperCentroidDifference=uiaxes(paperPeakDifferenceGrid);axPaperCentroidDifference.Layout.Row=3;axPaperCentroidDifference.Layout.Column=[1 2];wc4sm_style_axes(axPaperCentroidDifference,C);title(axPaperCentroidDifference,'Benchmark Centroid - FWHM center');
 
     optimizationGrid=uigridlayout(tabOptimization,[4 2]);optimizationGrid.RowHeight={46,46,'1x','1x'};optimizationGrid.ColumnWidth={330,'1x'};optimizationGrid.Padding=[7 7 7 7];optimizationGrid.RowSpacing=4;
     optimizationTools=uigridlayout(optimizationGrid,[3 8]);optimizationTools.Layout.Row=[1 2];optimizationTools.Layout.Column=[1 2];optimizationTools.ColumnWidth={48,65,65,90,110,90,190,'1x'};optimizationTools.RowHeight={28,28,28};optimizationTools.Padding=[0 0 0 0];optimizationTools.ColumnSpacing=5;optimizationTools.RowSpacing=4;
@@ -300,7 +300,7 @@ function WCC4SM_V1_0
     optimizationStatus=uilabel(optimizationTools,'Text','Confirm calibration pairs first.','FontColor',C.navy);optimizationStatus.Layout.Row=3;optimizationStatus.Layout.Column=[6 8];
     optimizationSeedTable=uitable(optimizationGrid,'ColumnName',{'Seed','Peak','Pixel','Reference nm'},'ColumnEditable',[true false false false],'CellEditCallback',@optimizationSeedEdited);optimizationSeedTable.Layout.Row=3;optimizationSeedTable.Layout.Column=1;
     optimizationHistoryTable=uitable(optimizationGrid,'ColumnName',{'Round','Ncal','Selected','Fit RMSE','All-point RMSE','P95','MAX','Candidates','Status'},'CellSelectionCallback',@selectOptimizationHistoryRow);optimizationHistoryTable.Layout.Row=3;optimizationHistoryTable.Layout.Column=2;
-    optimizationAxes=uiaxes(optimizationGrid);styleAxes(optimizationAxes,C);title(optimizationAxes,'Sequential Add-One validation path');optimizationAxes.Layout.Row=4;optimizationAxes.Layout.Column=[1 2];
+    optimizationAxes=uiaxes(optimizationGrid);wc4sm_style_axes(optimizationAxes,C);title(optimizationAxes,'Sequential Add-One validation path');optimizationAxes.Layout.Row=4;optimizationAxes.Layout.Column=[1 2];
 
     influenceRoot=uigridlayout(tabInfluence,[1 1]);influenceRoot.Padding=[7 7 7 7];
     influenceFeatureTabs=uitabgroup(influenceRoot);
@@ -327,7 +327,7 @@ function WCC4SM_V1_0
     uilabel(influenceAxisTools,'Text','Y axis');influenceYMode=uidropdown(influenceAxisTools,'Items',{'Auto','Manual'},'Value','Auto','ValueChangedFcn',@influenceAxisSettingsChanged);
     uilabel(influenceAxisTools,'Text','Y min');influenceYMin=uieditfield(influenceAxisTools,'numeric','Value',0,'ValueChangedFcn',@influenceAxisSettingsChanged);
     uilabel(influenceAxisTools,'Text','Y max');influenceYMax=uieditfield(influenceAxisTools,'numeric','Value',0.5,'ValueChangedFcn',@influenceAxisSettingsChanged);
-    influenceAxes=uiaxes(sampleResponsePlotHost);influenceAxes.Layout.Row=2;styleAxes(influenceAxes,C);title(influenceAxes,'Point influence by deletion');
+    influenceAxes=uiaxes(sampleResponsePlotHost);influenceAxes.Layout.Row=2;wc4sm_style_axes(influenceAxes,C);title(influenceAxes,'Point influence by deletion');
     influenceOrderPlotGrid=uigridlayout(influenceOrderPlotTab,[1 1]);influenceOrderPlotGrid.Padding=[3 3 3 3];
     influenceOrderViewTabs=uitabgroup(influenceOrderPlotGrid);
     influenceFullOrderTab=uitab(influenceOrderViewTabs,'Title','Full Fit vs LOO');
@@ -335,13 +335,13 @@ function WCC4SM_V1_0
     influenceDeletionOrderTab=uitab(influenceOrderViewTabs,'Title','Deletion stability');
     influenceStatisticsOrderTab=uitab(influenceOrderViewTabs,'Title','Influence statistics');
     influenceFullOrderGrid=uigridlayout(influenceFullOrderTab,[1 1]);influenceFullOrderGrid.Padding=[5 5 5 5];
-    influenceFullErrorAxes=uiaxes(influenceFullOrderGrid);styleAxes(influenceFullErrorAxes,C);title(influenceFullErrorAxes,'Full-set Fit versus LOO RMSE');
+    influenceFullErrorAxes=uiaxes(influenceFullOrderGrid);wc4sm_style_axes(influenceFullErrorAxes,C);title(influenceFullErrorAxes,'Full-set Fit versus LOO RMSE');
     influenceGapOrderGrid=uigridlayout(influenceGapOrderTab,[1 1]);influenceGapOrderGrid.Padding=[5 5 5 5];
-    influenceGapAxes=uiaxes(influenceGapOrderGrid);styleAxes(influenceGapAxes,C);title(influenceGapAxes,'Generalization gap: LOO RMSE - Fit RMSE');
+    influenceGapAxes=uiaxes(influenceGapOrderGrid);wc4sm_style_axes(influenceGapAxes,C);title(influenceGapAxes,'Generalization gap: LOO RMSE - Fit RMSE');
     influenceDeletionOrderGrid=uigridlayout(influenceDeletionOrderTab,[1 1]);influenceDeletionOrderGrid.Padding=[5 5 5 5];
-    influenceDeletionErrorAxes=uiaxes(influenceDeletionOrderGrid);styleAxes(influenceDeletionErrorAxes,C);title(influenceDeletionErrorAxes,'Full-set and point-deleted model errors');
+    influenceDeletionErrorAxes=uiaxes(influenceDeletionOrderGrid);wc4sm_style_axes(influenceDeletionErrorAxes,C);title(influenceDeletionErrorAxes,'Full-set and point-deleted model errors');
     influenceStatisticsOrderGrid=uigridlayout(influenceStatisticsOrderTab,[1 1]);influenceStatisticsOrderGrid.Padding=[5 5 5 5];
-    influenceOrderStatsAxes=uiaxes(influenceStatisticsOrderGrid);styleAxes(influenceOrderStatsAxes,C);title(influenceOrderStatsAxes,'Influence statistics across polynomial orders');
+    influenceOrderStatsAxes=uiaxes(influenceStatisticsOrderGrid);wc4sm_style_axes(influenceOrderStatsAxes,C);title(influenceOrderStatsAxes,'Influence statistics across polynomial orders');
 
     replacementGrid=uigridlayout(setReplacementTab,[3 1]);replacementGrid.RowHeight={96,'1x','1x'};replacementGrid.Padding=[5 5 5 5];replacementGrid.RowSpacing=4;
     replacementTools=uigridlayout(replacementGrid,[3 4]);replacementTools.Layout.Row=1;replacementTools.ColumnWidth={110,150,160,'1x'};replacementTools.RowHeight={28,28,28};replacementTools.Padding=[0 0 0 0];replacementTools.RowSpacing=4;replacementTools.ColumnSpacing=5;
@@ -354,7 +354,7 @@ function WCC4SM_V1_0
     replacementStatus=uilabel(replacementTools,'Text','Select a set in Calibration Optimization and leave at least one valid candidate unselected.','FontColor',C.navy);replacementStatus.Layout.Row=3;replacementStatus.Layout.Column=[1 4];
     replacementTable=uitable(replacementGrid,'ColumnName',{'Round','Removed point','Replacement','Fit RMSE','Validation RMSE','Delta RMSE','P95','MAX','Conclusion'},'RowName',[],'CellSelectionCallback',@selectReplacementResultRow);replacementTable.Layout.Row=2;
     seedReplacementPlotHost=uigridlayout(replacementGrid,[1 1]);seedReplacementPlotHost.Layout.Row=3;seedReplacementPlotHost.Padding=[5 5 5 5];
-    seedReplacementAxes=uiaxes(seedReplacementPlotHost);styleAxes(seedReplacementAxes,C);title(seedReplacementAxes,'Set replacement residuals');
+    seedReplacementAxes=uiaxes(seedReplacementPlotHost);wc4sm_style_axes(seedReplacementAxes,C);title(seedReplacementAxes,'Set replacement residuals');
 
     setDesignRoot=uigridlayout(tabSetDesign,[1 1]);setDesignRoot.Padding=[0 0 0 0];
     setDesignWorkspaceTabs=uitabgroup(setDesignRoot);
@@ -385,8 +385,8 @@ function WCC4SM_V1_0
     setDesignPoolTable=uitable(setDesignFullPoolTab,'Units','normalized','Position',[0 0 1 1],'ColumnName',{'Use','Rank','Peak','Pixel','Wavelength','Influence','Percentile','Quality','Spacing','Boundary'},'ColumnEditable',[true false false false false false false false false false],'RowName',[]);
     setDesignSelectedTable=uitable(setDesignSelectedTab,'Units','normalized','Position',[0 0 1 1],'ColumnName',{'Peak','Pixel','Wavelength','Influence','Rank','Percentile','Quality','Spacing','Boundary'},'ColumnEditable',false(1,9),'RowName',[]);
     setDesignCandidateTable=uitable(setDesignGrid,'ColumnName',{'Keep','ID','State','Source','Role','K','Deleted','All RMSE','P95','MAX','D RMS','D MAX','Cover'},'ColumnEditable',[true false false false false false false false false false false false false],'RowName',[],'CellSelectionCallback',@selectSetDesignCandidate);setDesignCandidateTable.Layout.Row=2;setDesignCandidateTable.Layout.Column=2;
-    setDesignSelectionAxes=uiaxes(setDesignGrid);setDesignSelectionAxes.Layout.Row=3;setDesignSelectionAxes.Layout.Column=1;styleAxes(setDesignSelectionAxes,C);title(setDesignSelectionAxes,'Selected sample coverage and influence');
-    setDesignResidualAxes=uiaxes(setDesignGrid);setDesignResidualAxes.Layout.Row=3;setDesignResidualAxes.Layout.Column=2;styleAxes(setDesignResidualAxes,C);title(setDesignResidualAxes,'Selected subset residuals on the full pool');
+    setDesignSelectionAxes=uiaxes(setDesignGrid);setDesignSelectionAxes.Layout.Row=3;setDesignSelectionAxes.Layout.Column=1;wc4sm_style_axes(setDesignSelectionAxes,C);title(setDesignSelectionAxes,'Selected sample coverage and influence');
+    setDesignResidualAxes=uiaxes(setDesignGrid);setDesignResidualAxes.Layout.Row=3;setDesignResidualAxes.Layout.Column=2;wc4sm_style_axes(setDesignResidualAxes,C);title(setDesignResidualAxes,'Selected subset residuals on the full pool');
 
     windowPartitionGrid=uigridlayout(windowPartitionTab,[3 1]);windowPartitionGrid.RowHeight={92,'1x','1x'};windowPartitionGrid.Padding=[7 7 7 7];windowPartitionGrid.RowSpacing=4;
     windowPartitionTools=uigridlayout(windowPartitionGrid,[3 8]);windowPartitionTools.Layout.Row=1;windowPartitionTools.RowHeight={28,28,28};windowPartitionTools.ColumnWidth={70,90,85,'1x','1x','1x','1x',110};windowPartitionTools.Padding=[0 0 0 0];windowPartitionTools.RowSpacing=4;windowPartitionTools.ColumnSpacing=5;
@@ -417,13 +417,13 @@ function WCC4SM_V1_0
     windowMemberTable=uitable(windowSamplesTab,'Units','normalized','Position',[0 0 1 1],'ColumnName',{'Use','Window','Peak','Pixel','Wavelength','Influence','Influence / mean','Symmetry px','Score','Recommendation'},'ColumnEditable',[true false false false false false false false false false],'CellEditCallback',@windowMemberEdited,'RowName',[]);
     windowTableTabs.SelectedTab=windowSamplesTab;
     windowPartitionPlots=uigridlayout(windowPartitionGrid,[2 1]);windowPartitionPlots.Layout.Row=3;windowPartitionPlots.RowHeight={'1x','1x'};windowPartitionPlots.Padding=[3 3 3 3];windowPartitionPlots.RowSpacing=4;
-    windowResidualAxes=uiaxes(windowPartitionPlots);styleAxes(windowResidualAxes,C);title(windowResidualAxes,'Full-set residual with window boundaries');
-    windowInfluenceAxes=uiaxes(windowPartitionPlots);styleAxes(windowInfluenceAxes,C);title(windowInfluenceAxes,'Influence weight distribution');
+    windowResidualAxes=uiaxes(windowPartitionPlots);wc4sm_style_axes(windowResidualAxes,C);title(windowResidualAxes,'Full-set residual with window boundaries');
+    windowInfluenceAxes=uiaxes(windowPartitionPlots);wc4sm_style_axes(windowInfluenceAxes,C);title(windowInfluenceAxes,'Influence weight distribution');
     linkaxes([windowResidualAxes windowInfluenceAxes],'x');
 
     matchHost=uigridlayout(tabMatchingPlots,[2 1]);matchHost.RowHeight={'1x','1x'};matchHost.Padding=[7 7 7 7];
-    axMatchMeasured=uiaxes(matchHost);styleAxes(axMatchMeasured,C);title(axMatchMeasured,'Selected measured peaks');
-    axMatchReference=uiaxes(matchHost);styleAxes(axMatchReference,C);title(axMatchReference,'Reference wavelength lines');
+    axMatchMeasured=uiaxes(matchHost);wc4sm_style_axes(axMatchMeasured,C);title(axMatchMeasured,'Selected measured peaks');
+    axMatchReference=uiaxes(matchHost);wc4sm_style_axes(axMatchReference,C);title(axMatchReference,'Reference wavelength lines');
 
     %% RIGHT TABS
     tabs=uitabgroup(root); tabs.Layout.Row=2; tabs.Layout.Column=3;
@@ -496,13 +496,13 @@ function WCC4SM_V1_0
     gcal.Padding=[7 7 7 7]; gcal.RowSpacing=3;
     refSummary=uilabel(gcal,'Text','Reference lines are managed in the middle Reference Lines tab.','FontColor',C.muted,'WordWrap','on');refSummary.Layout.Column=[1 2];
     equationLabel=uilabel(gcal,'Text','Local linear guide: set the two windows','FontColor',C.navy,'FontWeight','bold','WordWrap','on'); equationLabel.Layout.Column=[1 2];
-    sectionAuto(gcal,'Peak-reference pairing');
+    wc4sm_section_label(gcal,'Peak-reference pairing');
     uilabel(gcal,'Text','Measured peak'); calPeakDrop=uidropdown(gcal,'Items',{'(none)'},'Value','(none)');
     pairBtn=uibutton(gcal,'Text','Pair peak with selected reference line','ButtonPushedFcn',@addManualPair); pairBtn.Layout.Column=[1 2];
     pairTools=uigridlayout(gcal,[1 2]); pairTools.Layout.Column=[1 2]; pairTools.ColumnWidth={'1x','1x'}; pairTools.Padding=[0 0 0 0];
     uibutton(pairTools,'Text','Remove pair','ButtonPushedFcn',@removePair);
     uibutton(pairTools,'Text','Lock / Unlock','ButtonPushedFcn',@togglePairLock);
-    sectionAuto(gcal,'Automatic extension');
+    wc4sm_section_label(gcal,'Automatic extension');
     uilabel(gcal,'Text','Match tolerance (nm)'); matchTolerance=uieditfield(gcal,'numeric','Value',2,'Limits',[0 Inf]);
     uilabel(gcal,'Text','Lock confidence'); confidenceThreshold=uieditfield(gcal,'numeric','Value',0.75,'Limits',[0 1]);
     sourceDrop=uidropdown(gcal,'Items',{'Confirmed Peak Dataset','All detected peaks'},'Value','Confirmed Peak Dataset'); sourceDrop.Layout.Column=[1 2];
@@ -518,27 +518,27 @@ function WCC4SM_V1_0
 
     %% EMBEDDED FIT AND RESIDUAL PLOTS
     gr=uigridlayout(tabResults,[4 1]); gr.RowHeight={'1x','1x',30,'1x'}; gr.Padding=[7 7 7 7];
-    axFitResult=uiaxes(gr); styleAxes(axFitResult,C); title(axFitResult,'Calibration fit');
-    axResidualResult=uiaxes(gr); styleAxes(axResidualResult,C); title(axResidualResult,'Residual trend');
+    axFitResult=uiaxes(gr); wc4sm_style_axes(axFitResult,C); title(axFitResult,'Calibration fit');
+    axResidualResult=uiaxes(gr); wc4sm_style_axes(axResidualResult,C); title(axResidualResult,'Residual trend');
     histControls=uigridlayout(gr,[1 9]); histControls.ColumnWidth={32,48,40,65,40,65,82,70,'1x'}; histControls.Padding=[0 0 0 0];
     uilabel(histControls,'Text','Bins'); histBinCount=uispinner(histControls,'Limits',[1 100],'Step',1,'Value',8,'ValueChangedFcn',@histogramControlsChanged);
     uilabel(histControls,'Text','X min'); histXMin=uieditfield(histControls,'numeric','Value',-0.5,'ValueChangedFcn',@histogramControlsChanged);
     uilabel(histControls,'Text','X max'); histXMax=uieditfield(histControls,'numeric','Value',0.5,'ValueChangedFcn',@histogramControlsChanged);
     histRangeMode=uidropdown(histControls,'Items',{'Auto full','Symmetric','+/-3 STD','Manual'},'Value','Auto full','ValueChangedFcn',@histogramControlsChanged);
     uibutton(histControls,'Text','Refresh','ButtonPushedFcn',@histogramControlsChanged);
-    axHistogramResult=uiaxes(gr); styleAxes(axHistogramResult,C); title(axHistogramResult,'Residual histogram');
+    axHistogramResult=uiaxes(gr); wc4sm_style_axes(axHistogramResult,C); title(axHistogramResult,'Residual histogram');
 
     %% SELECTED RESULT RESIDUAL DIAGNOSTICS
     selectedResidualGrid=uigridlayout(tabSelectedResidual,[4 1]);selectedResidualGrid.RowHeight={36,'1x',30,'1x'};selectedResidualGrid.Padding=[7 7 7 7];selectedResidualGrid.RowSpacing=4;
     selectedResidualSummary=uilabel(selectedResidualGrid,'Text','Select a model, Add-One round, model degree, or set replacement round.','FontWeight','bold','FontColor',C.navy);
-    axSelectedResidualTrend=uiaxes(selectedResidualGrid);styleAxes(axSelectedResidualTrend,C);title(axSelectedResidualTrend,'Selected residual trend');
+    axSelectedResidualTrend=uiaxes(selectedResidualGrid);wc4sm_style_axes(axSelectedResidualTrend,C);title(axSelectedResidualTrend,'Selected residual trend');
     selectedHistControls=uigridlayout(selectedResidualGrid,[1 9]);selectedHistControls.ColumnWidth={32,48,40,65,40,65,82,70,'1x'};selectedHistControls.Padding=[0 0 0 0];
     uilabel(selectedHistControls,'Text','Bins');selectedHistBinCount=uispinner(selectedHistControls,'Limits',[1 100],'Step',1,'Value',8,'ValueChangedFcn',@selectedResidualHistogramControlsChanged);
     uilabel(selectedHistControls,'Text','X min');selectedHistXMin=uieditfield(selectedHistControls,'numeric','Value',-0.5,'ValueChangedFcn',@selectedResidualHistogramControlsChanged);
     uilabel(selectedHistControls,'Text','X max');selectedHistXMax=uieditfield(selectedHistControls,'numeric','Value',0.5,'ValueChangedFcn',@selectedResidualHistogramControlsChanged);
     selectedHistRangeMode=uidropdown(selectedHistControls,'Items',{'Auto full','Symmetric','+/-3 STD','Manual'},'Value','Auto full','ValueChangedFcn',@selectedResidualHistogramControlsChanged);
     uibutton(selectedHistControls,'Text','Refresh','ButtonPushedFcn',@selectedResidualHistogramControlsChanged);
-    axSelectedResidualHistogram=uiaxes(selectedResidualGrid);styleAxes(axSelectedResidualHistogram,C);title(axSelectedResidualHistogram,'Selected residual histogram');
+    axSelectedResidualHistogram=uiaxes(selectedResidualGrid);wc4sm_style_axes(axSelectedResidualHistogram,C);title(axSelectedResidualHistogram,'Selected residual histogram');
 
     %% MODEL VALIDATION
     validationRoot=uigridlayout(tabValidation,[1 1]);validationRoot.Padding=[0 0 0 0];
@@ -546,8 +546,8 @@ function WCC4SM_V1_0
     currentModelValidationTab=uitab(validationTabs,'Title','Current model');
     positionCrossValidationTab=uitab(validationTabs,'Title','Peak-position cross validation');
     gv=uigridlayout(currentModelValidationTab,[4 1]);gv.RowHeight={'1x','1x',34,235};gv.Padding=[7 7 7 7];
-    axLOO=uiaxes(gv);styleAxes(axLOO,C);title(axLOO,'Leave-one-out prediction residual');
-    axInfluence=uiaxes(gv);styleAxes(axInfluence,C);title(axInfluence,'Maximum calibration-curve change after deleting one point');
+    axLOO=uiaxes(gv);wc4sm_style_axes(axLOO,C);title(axLOO,'Leave-one-out prediction residual');
+    axInfluence=uiaxes(gv);wc4sm_style_axes(axInfluence,C);title(axInfluence,'Maximum calibration-curve change after deleting one point');
     validationTools=uigridlayout(gv,[1 4]);validationTools.ColumnWidth={'1.5x','1x','1x','1x'};validationTools.Padding=[0 0 0 0];
     validationSummary=uilabel(validationTools,'Text','Fit a model to run validation','FontWeight','bold','FontColor',C.navy);
     uibutton(validationTools,'Text','Open selected peak','ButtonPushedFcn',@openValidationPeak);
@@ -587,13 +587,13 @@ function WCC4SM_V1_0
         'ValueChangedFcn',@positionCrossDisplayChanged);positionCrossResidualView.Layout.Row=3;positionCrossResidualView.Layout.Column=4;
     exportPositionCrossBtn=uibutton(positionCrossTools,'Text','Export CSV','ButtonPushedFcn',@exportPositionCrossValidation);exportPositionCrossBtn.Layout.Row=3;exportPositionCrossBtn.Layout.Column=8;
     positionCrossSelectionLabel=uilabel(positionCrossTools,'Text','No selected result.','FontColor',C.muted,'Tooltip','No selected result.');positionCrossSelectionLabel.Layout.Row=3;positionCrossSelectionLabel.Layout.Column=[5 7];
-    positionCrossHeatmapAxes=uiaxes(positionCrossGrid);positionCrossHeatmapAxes.Layout.Row=2;positionCrossHeatmapAxes.Layout.Column=1;styleAxes(positionCrossHeatmapAxes,C);title(positionCrossHeatmapAxes,'Mismatch matrix');
+    positionCrossHeatmapAxes=uiaxes(positionCrossGrid);positionCrossHeatmapAxes.Layout.Row=2;positionCrossHeatmapAxes.Layout.Column=1;wc4sm_style_axes(positionCrossHeatmapAxes,C);title(positionCrossHeatmapAxes,'Mismatch matrix');
     positionCrossTable=uitable(positionCrossGrid,'Data',cell(4,4),'ColumnName',{'Direct','Interpolated','FWHM center','Centroid'}, ...
         'ColumnWidth',{58,72,78,64},'RowName',{'Direct','Interpolated','FWHM center','Centroid'}, ...
         'Tooltip','Rows = calibration peak position; columns = application peak position.','CellSelectionCallback',@selectPositionCrossTableCell);positionCrossTable.Layout.Row=2;positionCrossTable.Layout.Column=2;
-    positionCrossResidualAxes=uiaxes(positionCrossGrid);positionCrossResidualAxes.Layout.Row=3;positionCrossResidualAxes.Layout.Column=1;styleAxes(positionCrossResidualAxes,C);title(positionCrossResidualAxes,'Cross-method residuals');
+    positionCrossResidualAxes=uiaxes(positionCrossGrid);positionCrossResidualAxes.Layout.Row=3;positionCrossResidualAxes.Layout.Column=1;wc4sm_style_axes(positionCrossResidualAxes,C);title(positionCrossResidualAxes,'Cross-method residuals');
     positionCrossHistHost=uigridlayout(positionCrossGrid,[2 1]);positionCrossHistHost.Layout.Row=3;positionCrossHistHost.Layout.Column=2;positionCrossHistHost.RowHeight={'1x',28};positionCrossHistHost.Padding=[0 0 0 0];positionCrossHistHost.RowSpacing=3;
-    positionCrossHistogramAxes=uiaxes(positionCrossHistHost);styleAxes(positionCrossHistogramAxes,C);title(positionCrossHistogramAxes,'Selected mismatch residual histogram');
+    positionCrossHistogramAxes=uiaxes(positionCrossHistHost);wc4sm_style_axes(positionCrossHistogramAxes,C);title(positionCrossHistogramAxes,'Selected mismatch residual histogram');
     positionCrossHistTools=uigridlayout(positionCrossHistHost,[1 9]);positionCrossHistTools.Layout.Row=2;positionCrossHistTools.ColumnWidth={32,48,40,65,40,65,82,70,'1x'};positionCrossHistTools.Padding=[0 0 0 0];
     uilabel(positionCrossHistTools,'Text','Bins');positionCrossHistBins=uispinner(positionCrossHistTools,'Limits',[1 100],'Step',1,'Value',10,'ValueChangedFcn',@positionCrossHistogramChanged);
     uilabel(positionCrossHistTools,'Text','X min');positionCrossHistXMin=uieditfield(positionCrossHistTools,'numeric','Value',-0.1,'ValueChangedFcn',@positionCrossHistogramChanged);
@@ -603,18 +603,18 @@ function WCC4SM_V1_0
 
     positionCrossMetricOverviewGrid=uigridlayout(positionCrossMetricOverviewTab,[2 3]);positionCrossMetricOverviewGrid.RowHeight={'1x','1x'};positionCrossMetricOverviewGrid.ColumnWidth={'1x','1x','1x'};positionCrossMetricOverviewGrid.Padding=[5 5 5 5];positionCrossMetricOverviewGrid.RowSpacing=4;positionCrossMetricOverviewGrid.ColumnSpacing=4;
     positionCrossMetricOverviewAxes=gobjects(1,6);
-    for crossInitAxesIndex=1:6,positionCrossMetricOverviewAxes(crossInitAxesIndex)=uiaxes(positionCrossMetricOverviewGrid);styleAxes(positionCrossMetricOverviewAxes(crossInitAxesIndex),C);end
+    for crossInitAxesIndex=1:6,positionCrossMetricOverviewAxes(crossInitAxesIndex)=uiaxes(positionCrossMetricOverviewGrid);wc4sm_style_axes(positionCrossMetricOverviewAxes(crossInitAxesIndex),C);end
 
     positionCrossRowResidualGrid=uigridlayout(positionCrossRowResidualTab,[2 2]);positionCrossRowResidualGrid.RowHeight={'1x','1x'};positionCrossRowResidualGrid.ColumnWidth={'1x','1x'};positionCrossRowResidualGrid.Padding=[5 5 5 5];positionCrossRowResidualGrid.RowSpacing=4;positionCrossRowResidualGrid.ColumnSpacing=4;
     positionCrossRowResidualAxes=gobjects(1,4);
-    for crossInitAxesIndex=1:4,positionCrossRowResidualAxes(crossInitAxesIndex)=uiaxes(positionCrossRowResidualGrid);styleAxes(positionCrossRowResidualAxes(crossInitAxesIndex),C);end
+    for crossInitAxesIndex=1:4,positionCrossRowResidualAxes(crossInitAxesIndex)=uiaxes(positionCrossRowResidualGrid);wc4sm_style_axes(positionCrossRowResidualAxes(crossInitAxesIndex),C);end
 
     positionCrossHistogramOverviewGrid=uigridlayout(positionCrossHistogramOverviewTab,[4 4]);positionCrossHistogramOverviewGrid.RowHeight={'1x','1x','1x','1x'};positionCrossHistogramOverviewGrid.ColumnWidth={'1x','1x','1x','1x'};positionCrossHistogramOverviewGrid.Padding=[4 4 4 4];positionCrossHistogramOverviewGrid.RowSpacing=3;positionCrossHistogramOverviewGrid.ColumnSpacing=3;
     positionCrossHistogramOverviewAxes=gobjects(4,4);
     for crossInitVisualRow=1:4
         for crossInitColumnIndex=1:4
             positionCrossHistogramOverviewAxes(crossInitVisualRow,crossInitColumnIndex)=uiaxes(positionCrossHistogramOverviewGrid);
-            styleAxes(positionCrossHistogramOverviewAxes(crossInitVisualRow,crossInitColumnIndex),C);
+            wc4sm_style_axes(positionCrossHistogramOverviewAxes(crossInitVisualRow,crossInitColumnIndex),C);
             positionCrossHistogramOverviewAxes(crossInitVisualRow,crossInitColumnIndex).FontSize=7;
         end
     end
@@ -635,7 +635,7 @@ function WCC4SM_V1_0
     compareResidualMode=uidropdown(compareTools,'Items',{'Fit residual','LOO residual','All matched points'},'Value','Fit residual','ValueChangedFcn',@drawModelComparison);compareResidualMode.Layout.Row=3;compareResidualMode.Layout.Column=3;
     uibutton(compareTools,'Text','Reset plot scale','ButtonPushedFcn',@resetModelCompareView);
     appliedStatus=uilabel(compareTools,'Text','Applied model: none | spectrum axis remains Pixel','FontWeight','bold','FontColor',C.navy);appliedStatus.Layout.Column=[1 4];appliedStatus.Layout.Row=4;
-    axModelCompare=uiaxes(gc);styleAxes(axModelCompare,C);title(axModelCompare,'Stored-model residual comparison');
+    axModelCompare=uiaxes(gc);wc4sm_style_axes(axModelCompare,C);title(axModelCompare,'Stored-model residual comparison');
     modelComparisonTable=uitable(gc,'ColumnName',{'Model','N','Peak position','Degree','Pixel mode','Pixel domain','Fit RMS','LOO RMS','LOO max','Influence','STD','Max','Equation'}, ...
         'ColumnWidth',{58,38,100,50,135,90,65,68,68,68,60,60,320},'RowName',[],'CellSelectionCallback',@selectModelRow);
 
@@ -643,9 +643,9 @@ function WCC4SM_V1_0
     gf=uigridlayout(tabFit,[11 2]); gf.ColumnWidth={145,'1x'};
     gf.RowHeight={24,'1x',24,26,26,32,32,34,105,55,40};
     gf.Padding=[7 7 7 7]; gf.RowSpacing=3;
-    sectionAuto(gf,'Active reference set');
+    wc4sm_section_label(gf,'Active reference set');
     activeRefTable=uitable(gf,'ColumnName',{'nm','Intensity','Spacing','Status'},'ColumnWidth',{72,70,65,95},'RowName',[]); activeRefTable.Layout.Column=[1 2];
-    sectionAuto(gf,'Final calibration model');
+    wc4sm_section_label(gf,'Final calibration model');
     uilabel(gf,'Text','Peak position'); positionDrop=uidropdown(gf,'Items',{'Direct peak','Interpolated peak','FWHM center','Centroid','Gaussian fit'},'Value','FWHM center');
     uilabel(gf,'Text','Polynomial degree'); degreeSpin=uispinner(gf,'Limits',[1 20],'Step',1,'Value',3);
     fitBtn=uibutton(gf,'Text','FIT CALIBRATION MODEL','FontWeight','bold','BackgroundColor',C.greenLight,'ButtonPushedFcn',@fitFinalCalibration); fitBtn.Layout.Column=[1 2];
@@ -679,7 +679,7 @@ function WCC4SM_V1_0
 
     function optimizationPositionMethodChanged(~,~)
         optimizationPath=struct();optimizationStability=struct();optimizationViewMode='';optimizationHistoryTable.Data=cell(0,9);
-        cla(optimizationAxes,'reset');styleAxes(optimizationAxes,C);title(optimizationAxes,'Sequential Add-One validation path');
+        cla(optimizationAxes,'reset');wc4sm_style_axes(optimizationAxes,C);title(optimizationAxes,'Sequential Add-One validation path');
         clearSetDesignState('Peak-position method changed; refresh the Set Design pool.');
         refreshOptimizationSeeds([],[]);
     end
@@ -847,11 +847,11 @@ function WCC4SM_V1_0
         if ~preserveSeed
             clearReplacementResults('Calibration pairs changed; select a set and run replacement validation again.');
         end
-        cla(influenceAxes,'reset');styleAxes(influenceAxes,C);title(influenceAxes,'Point influence by deletion');
-        cla(influenceFullErrorAxes,'reset');styleAxes(influenceFullErrorAxes,C);title(influenceFullErrorAxes,'Full-set Fit versus LOO RMSE');
-        cla(influenceGapAxes,'reset');styleAxes(influenceGapAxes,C);title(influenceGapAxes,'Generalization gap: LOO RMSE - Fit RMSE');
-        cla(influenceOrderStatsAxes,'reset');styleAxes(influenceOrderStatsAxes,C);title(influenceOrderStatsAxes,'Influence statistics across polynomial orders');
-        cla(influenceDeletionErrorAxes,'reset');styleAxes(influenceDeletionErrorAxes,C);title(influenceDeletionErrorAxes,'Full-set and point-deleted model errors');
+        cla(influenceAxes,'reset');wc4sm_style_axes(influenceAxes,C);title(influenceAxes,'Point influence by deletion');
+        cla(influenceFullErrorAxes,'reset');wc4sm_style_axes(influenceFullErrorAxes,C);title(influenceFullErrorAxes,'Full-set Fit versus LOO RMSE');
+        cla(influenceGapAxes,'reset');wc4sm_style_axes(influenceGapAxes,C);title(influenceGapAxes,'Generalization gap: LOO RMSE - Fit RMSE');
+        cla(influenceOrderStatsAxes,'reset');wc4sm_style_axes(influenceOrderStatsAxes,C);title(influenceOrderStatsAxes,'Influence statistics across polynomial orders');
+        cla(influenceDeletionErrorAxes,'reset');wc4sm_style_axes(influenceDeletionErrorAxes,C);title(influenceDeletionErrorAxes,'Full-set and point-deleted model errors');
         valid=find([calPairs.ReferenceIndex]>0 & isfinite([calPairs.ReferenceWavelength]));
         influenceTable.ColumnName={'Index','Peak','Pixel','Reference nm','Residual','Deleted Fit RMSE','Deleted LOO RMSE','Curve change','Influence','Match status','Class','Recommendation'};
         dat=cell(numel(peaks),12);
@@ -878,7 +878,7 @@ function WCC4SM_V1_0
         try,replacementTable.Selection=[];catch,end
         replacementTable.ColumnName={'Round','Removed point','Replacement','Fit RMSE','Validation RMSE','Delta RMSE','P95','MAX','Conclusion'};
         replacementTable.Data=cell(0,9);
-        legend(seedReplacementAxes,'off');cla(seedReplacementAxes,'reset');styleAxes(seedReplacementAxes,C);title(seedReplacementAxes,'Set replacement residuals');
+        legend(seedReplacementAxes,'off');cla(seedReplacementAxes,'reset');wc4sm_style_axes(seedReplacementAxes,C);title(seedReplacementAxes,'Set replacement residuals');
         replacementStatus.Text=message;
     end
 
@@ -940,10 +940,10 @@ function WCC4SM_V1_0
     end
 
     function drawInfluenceOrderCurves
-        cla(influenceFullErrorAxes,'reset');styleAxes(influenceFullErrorAxes,C);
-        cla(influenceGapAxes,'reset');styleAxes(influenceGapAxes,C);
-        cla(influenceOrderStatsAxes,'reset');styleAxes(influenceOrderStatsAxes,C);
-        cla(influenceDeletionErrorAxes,'reset');styleAxes(influenceDeletionErrorAxes,C);
+        cla(influenceFullErrorAxes,'reset');wc4sm_style_axes(influenceFullErrorAxes,C);
+        cla(influenceGapAxes,'reset');wc4sm_style_axes(influenceGapAxes,C);
+        cla(influenceOrderStatsAxes,'reset');wc4sm_style_axes(influenceOrderStatsAxes,C);
+        cla(influenceDeletionErrorAxes,'reset');wc4sm_style_axes(influenceDeletionErrorAxes,C);
         if isempty(influenceOrderStats),return;end
         s=influenceOrderStats;d=[s.Degree];
         hold(influenceFullErrorAxes,'on');
@@ -995,7 +995,7 @@ function WCC4SM_V1_0
     end
 
     function drawPointInfluence
-        cla(influenceAxes,'reset');styleAxes(influenceAxes,C);title(influenceAxes,'Point influence by deletion');
+        cla(influenceAxes,'reset');wc4sm_style_axes(influenceAxes,C);title(influenceAxes,'Point influence by deletion');
         if isempty(fieldnames(influenceResult))||~isfield(influenceResult,'Points')||isempty(influenceResult.Points)
             xlabel(influenceAxes,influenceXAxisMode.Value);ylabel(influenceAxes,'Deletion influence');return;
         end
@@ -1026,7 +1026,7 @@ function WCC4SM_V1_0
         try
             selectedSeedRound=0;pendingSeedModelItem=struct();addRecommendedSeedModelBtn.Enable='off';
             try,replacementTable.Selection=[];catch,end
-            legend(seedReplacementAxes,'off');cla(seedReplacementAxes,'reset');styleAxes(seedReplacementAxes,C);title(seedReplacementAxes,'Set replacement residuals');
+            legend(seedReplacementAxes,'off');cla(seedReplacementAxes,'reset');wc4sm_style_axes(seedReplacementAxes,C);title(seedReplacementAxes,'Set replacement residuals');
             [px,wl,seedMask,sourceRows]=optimizationInputs();
             if all(seedMask),error('WCC4SM:SetReplacementNoCandidates','Leave at least one valid pair unselected as a replacement candidate.');end
             seedComboResult=wc4sm_analyze_seed_replacements(px,wl,seedMask,optimizationDegree.Value,struct('ValidationMode',seedValidationMode.Value,'RMSEThreshold',replacementRMSEThreshold.Value));
@@ -1076,7 +1076,7 @@ function WCC4SM_V1_0
     function drawSeedReplacementResiduals
         if ~isstruct(seedComboResult)||~isfield(seedComboResult,'BestByRemovedSeed'),return;end
         r=seedComboResult.BestByRemovedSeed;baseline=seedComboResult.Baseline.ValidationRMSE;
-        hold(seedReplacementAxes,'off');legend(seedReplacementAxes,'off');cla(seedReplacementAxes,'reset');styleAxes(seedReplacementAxes,C);hold(seedReplacementAxes,'on');
+        hold(seedReplacementAxes,'off');legend(seedReplacementAxes,'off');cla(seedReplacementAxes,'reset');wc4sm_style_axes(seedReplacementAxes,C);hold(seedReplacementAxes,'on');
         scatter(seedReplacementAxes,seedComboResult.Baseline.EvaluationPixels,seedComboResult.Baseline.Residual,28,'k','filled','DisplayName','Baseline');
         cols=lines(max(1,numel(r)));
         for jj=1:numel(r)
@@ -1286,8 +1286,8 @@ function WCC4SM_V1_0
     end
 
     function drawWindowPartition
-        cla(windowResidualAxes,'reset');styleAxes(windowResidualAxes,C);title(windowResidualAxes,'Full-set residual with window boundaries');
-        cla(windowInfluenceAxes,'reset');styleAxes(windowInfluenceAxes,C);title(windowInfluenceAxes,'Influence weight distribution');
+        cla(windowResidualAxes,'reset');wc4sm_style_axes(windowResidualAxes,C);title(windowResidualAxes,'Full-set residual with window boundaries');
+        cla(windowInfluenceAxes,'reset');wc4sm_style_axes(windowInfluenceAxes,C);title(windowInfluenceAxes,'Influence weight distribution');
         if isempty(fieldnames(subsetWindowPartition))||~isfield(subsetWindowPartition,'Windows'),return;end
         r=subsetWindowPartition;s=subsetDesignProfile.Samples;ord=r.SortedOriginalIndices;
         wl=r.SortedWavelength(:);residual=[s(ord).Residual].';
@@ -1348,8 +1348,8 @@ function WCC4SM_V1_0
         if nargin>=1&&ischar(source),message=source;end
         subsetWindowPartition=struct();windowPartitionTable.Data=cell(0,15);
         windowSelectedMask=[];windowMemberTable.Data=cell(0,10);
-        cla(windowResidualAxes,'reset');styleAxes(windowResidualAxes,C);title(windowResidualAxes,'Full-set residual with window boundaries');
-        cla(windowInfluenceAxes,'reset');styleAxes(windowInfluenceAxes,C);title(windowInfluenceAxes,'Influence weight distribution');
+        cla(windowResidualAxes,'reset');wc4sm_style_axes(windowResidualAxes,C);title(windowResidualAxes,'Full-set residual with window boundaries');
+        cla(windowInfluenceAxes,'reset');wc4sm_style_axes(windowInfluenceAxes,C);title(windowInfluenceAxes,'Influence weight distribution');
         windowPartitionStatus.Text=message;
     end
 
@@ -1387,8 +1387,8 @@ function WCC4SM_V1_0
     end
 
     function drawSetDesignCandidate
-        cla(setDesignSelectionAxes,'reset');styleAxes(setDesignSelectionAxes,C);
-        cla(setDesignResidualAxes,'reset');styleAxes(setDesignResidualAxes,C);
+        cla(setDesignSelectionAxes,'reset');wc4sm_style_axes(setDesignSelectionAxes,C);
+        cla(setDesignResidualAxes,'reset');wc4sm_style_axes(setDesignResidualAxes,C);
         if isempty(fieldnames(subsetDesignProfile))||~isfield(subsetDesignProfile,'Samples')
             title(setDesignSelectionAxes,'Selected sample coverage and influence');
             title(setDesignResidualAxes,'Selected subset residuals on the full pool');return;
@@ -1713,8 +1713,8 @@ function WCC4SM_V1_0
     function clearSetDesignState(message)
         subsetDesignProfile=struct();subsetBeamState=struct();subsetDesignCandidates=struct([]);selectedSubsetCandidate=0;subsetWindowPartition=struct();
         try,setDesignPoolTable.Data=cell(0,10);setDesignSelectedTable.Data=cell(0,9);setDesignCandidateTable.Data=cell(0,13);catch,end
-        try,cla(setDesignSelectionAxes,'reset');styleAxes(setDesignSelectionAxes,C);title(setDesignSelectionAxes,'Selected sample coverage and influence');catch,end
-        try,cla(setDesignResidualAxes,'reset');styleAxes(setDesignResidualAxes,C);title(setDesignResidualAxes,'Selected subset residuals on the full pool');catch,end
+        try,cla(setDesignSelectionAxes,'reset');wc4sm_style_axes(setDesignSelectionAxes,C);title(setDesignSelectionAxes,'Selected sample coverage and influence');catch,end
+        try,cla(setDesignResidualAxes,'reset');wc4sm_style_axes(setDesignResidualAxes,C);title(setDesignResidualAxes,'Selected subset residuals on the full pool');catch,end
         try,clearWindowPartition('No saved Window Partition result.',[]);catch,end
         if nargin>0,try,setDesignStatus.Text=message;catch,end,end
     end
@@ -1733,7 +1733,7 @@ function WCC4SM_V1_0
             target=fullfile(pn,fn);
             wc4sm_save_session(target,WCC4SMSession);
             currentSessionPath=target;
-            topStatus.Text=['Session saved: ' shortName(target)];
+            topStatus.Text=['Session saved: ' wc4sm_short_name(target)];
         catch ME
             uialert(fig,ME.message,'Session save failed');
         end
@@ -1750,9 +1750,9 @@ function WCC4SM_V1_0
             refreshSessionViews();
             if report.WarningCount>0
                 topStatus.Text=sprintf('Session loaded with %d provenance warning(s): %s', ...
-                    report.WarningCount,shortName(target));
+                    report.WarningCount,wc4sm_short_name(target));
             else
-                topStatus.Text=['Session loaded: ' shortName(target)];
+                topStatus.Text=['Session loaded: ' wc4sm_short_name(target)];
             end
         catch ME
             try
@@ -1798,7 +1798,7 @@ function WCC4SM_V1_0
     end
 
     function provenance=defaultProvenance
-        provenance=struct('MasterLibrary',shortName(L.source),'MasterVersion','', ...
+        provenance=struct('MasterLibrary',wc4sm_short_name(L.source),'MasterVersion','', ...
             'Authority',inferReferenceAuthority(L.source),'WavelengthMedium','Unspecified', ...
             'SelectionMode',referenceSetDrop.Value,'SelectionModeVersion','','Notes','');
         if isfield(sessionMetadata,'ReferenceProvenance')&&isstruct(sessionMetadata.ReferenceProvenance)
@@ -1874,8 +1874,8 @@ function WCC4SM_V1_0
         if ~isfield(D,'PixelCoordinateMode')||isempty(D.PixelCoordinateMode)
             D.PixelCoordinateMode='Legacy natural pixel sequence';
         end
-        if ~isfield(D,'PixelFirst')||isempty(D.PixelFirst),D.PixelFirst=minOrNaN(D.pixel);end
-        if ~isfield(D,'PixelLast')||isempty(D.PixelLast),D.PixelLast=maxOrNaN(D.pixel);end
+        if ~isfield(D,'PixelFirst')||isempty(D.PixelFirst),D.PixelFirst=wc4sm_min_or_nan(D.pixel);end
+        if ~isfield(D,'PixelLast')||isempty(D.PixelLast),D.PixelLast=wc4sm_max_or_nan(D.pixel);end
         peaks=state.Peaks;peakDataset=state.PeakDataset;
         if isempty(fieldnames(state.ReferenceLines)),L=wc4sm_empty_line_library();else,L=state.ReferenceLines;end
         Lexternal=L;calPairs=state.CalibrationPairs;
@@ -2019,11 +2019,11 @@ function WCC4SM_V1_0
     end
 
     function refreshSessionViews
-        sourceLabel.Text=shortName(D.source);
+        sourceLabel.Text=wc4sm_short_name(D.source);
         if isempty(D.dark)
             baselineField.Enable='on';clearDarkBtn.Enable='off';darkStatus.Text='Dark: none (manual constant baseline is active)';
         else
-            baselineField.Enable='off';clearDarkBtn.Enable='on';darkStatus.Text=['Dark active: ' shortName(D.darkSource) ' | manual baseline disabled'];
+            baselineField.Enable='off';clearDarkBtn.Enable='on';darkStatus.Text=['Dark active: ' wc4sm_short_name(D.darkSource) ' | manual baseline disabled'];
         end
         if ~isempty(D.pixel),pixelViewStart.Value=min(D.pixel);pixelViewEnd.Value=max(D.pixel);end
         if L.loaded,referenceSetDrop.Value='External / User';end
@@ -2125,7 +2125,7 @@ function WCC4SM_V1_0
     function loadReference(~,~)
         [fn,pn]=uigetfile({'*.csv','CSV (*.csv)'},'Load reference spectrum'); if isequal(fn,0), return; end
         try
-            M=cleanMatrix(readmatrix(fullfile(pn,fn))); if size(M,2)<2, error('Reference spectrum requires two numeric columns.'); end
+            M=wc4sm_clean_matrix(readmatrix(fullfile(pn,fn))); if size(M,2)<2, error('Reference spectrum requires two numeric columns.'); end
             R.x=M(:,1); R.y=M(:,2); good=isfinite(R.x)&isfinite(R.y); R.x=R.x(good); R.y=R.y(good);
             if any(diff(R.x)<=0), error('Reference X must be strictly increasing.'); end
             R.source=fullfile(pn,fn); R.loaded=true; drawFull(); topStatus.Text=['Reference: ' fn];
@@ -2692,14 +2692,14 @@ function WCC4SM_V1_0
         if isempty(event.Indices), return; end
         row=event.Indices(1); col=event.Indices(2);
         if col==3 && row>=1 && row<=numel(peakDataset)
-            peakDataset(row).ReferenceWavelength=numberOrNaN(event.NewData);
+            peakDataset(row).ReferenceWavelength=wc4sm_number_or_nan(event.NewData);
         end
     end
 
     function exportDataset(~,~)
         if isempty(peakDataset), uialert(fig,'Peak Dataset is empty.','Nothing to export'); return; end
         % Synchronize editable reference wavelengths from the table.
-        td=datasetTable.Data; for i=1:numel(peakDataset), peakDataset(i).ReferenceWavelength=numberOrNaN(td{i,3}); end
+        td=datasetTable.Data; for i=1:numel(peakDataset), peakDataset(i).ReferenceWavelength=wc4sm_number_or_nan(td{i,3}); end
         [fn,pn]=uiputfile('WCC4SM_peak_dataset.mat','Export Peak Dataset'); if isequal(fn,0), return; end
         PeakDataset=peakDataset; Spectrum=D; save(fullfile(pn,fn),'PeakDataset','Spectrum'); %#ok<NASGU>
         T=datasetSummaryTable(); [~,stem]=fileparts(fn); writetable(T,fullfile(pn,[stem '.csv'])); topStatus.Text='Peak Dataset exported';
@@ -2843,8 +2843,8 @@ function WCC4SM_V1_0
 
     function showCalibrationView(~,~)
         plotTabs.SelectedTab=tabMatchingPlots;
-        cla(axMatchMeasured,'reset');styleAxes(axMatchMeasured,C);
-        cla(axMatchReference,'reset');styleAxes(axMatchReference,C);
+        cla(axMatchMeasured,'reset');wc4sm_style_axes(axMatchMeasured,C);
+        cla(axMatchReference,'reset');wc4sm_style_axes(axMatchReference,C);
         if isempty(D.raw)
             title(axMatchMeasured,'Load a measured spectrum first'); return;
         end
@@ -2892,7 +2892,7 @@ function WCC4SM_V1_0
         ylim(axMatchReference,[0 1.18]);xlim(axMatchReference,[wavelengthViewStart.Value wavelengthViewEnd.Value]);
         dp=pixelViewEnd.Value-pixelViewStart.Value;dw=wavelengthViewEnd.Value-wavelengthViewStart.Value;
         localA=dw/dp;localB=wavelengthViewStart.Value-localA*pixelViewStart.Value;
-        title(axMatchReference,sprintf('Reference template | local guide: lambda = %.7g pixel %+.7g | %s',localA,localB,shortName(L.source)),'Interpreter','none');
+        title(axMatchReference,sprintf('Reference template | local guide: lambda = %.7g pixel %+.7g | %s',localA,localB,wc4sm_short_name(L.source)),'Interpreter','none');
         if provisional.valid
             equationLabel.Text=sprintf('Local guide a=%.7g, b=%+.7g | fitted initial degree %d, RMS %.5g nm',localA,localB,provisional.Degree,initialRMS());
         else
@@ -2911,11 +2911,11 @@ function WCC4SM_V1_0
 
     function model=attachPixelCoordinateMetadata(model)
         model.PixelCoordinateMode=currentPixelCoordinateMode();
-        model.PixelFirst=minOrNaN(D.pixel);
-        model.PixelLast=maxOrNaN(D.pixel);
+        model.PixelFirst=wc4sm_min_or_nan(D.pixel);
+        model.PixelLast=wc4sm_max_or_nan(D.pixel);
         model.PixelCount=numel(D.pixel);
-        model.CalibrationPixelFirst=minOrNaN(model.Pixel);
-        model.CalibrationPixelLast=maxOrNaN(model.Pixel);
+        model.CalibrationPixelFirst=wc4sm_min_or_nan(model.Pixel);
+        model.CalibrationPixelLast=wc4sm_max_or_nan(model.Pixel);
     end
 
     function [mode,domain,calibrationDomain]=modelCoordinateLabels(model)
@@ -2986,7 +2986,7 @@ function WCC4SM_V1_0
         else
             uialert(fig,'The selected peak is not confirmed. Reconfirm it before matching.','Unconfirmed peak'); return;
         end
-        calPairs=removePairByPeakOrReference(calPairs,id,selectedRefRow);
+        calPairs=wc4sm_remove_calibration_pair(calPairs,id,selectedRefRow);
         q=wc4sm_make_calibration_pair(id,peakIndex,peakPixel,selectedRefRow,L.effective(selectedRefRow),L.order(selectedRefRow),'Manual',true,'Manual locked');
         calPairs(end+1)=q; selectedPairRow=numel(calPairs);
         archiveCurrentPaperCalibrationPairs();
@@ -3170,13 +3170,13 @@ function WCC4SM_V1_0
     end
 
     function refreshValidationView(~,~)
-        cla(axLOO,'reset');cla(axInfluence,'reset');styleAxes(axLOO,C);styleAxes(axInfluence,C);selectedValidationRow=0;
+        cla(axLOO,'reset');cla(axInfluence,'reset');wc4sm_style_axes(axLOO,C);wc4sm_style_axes(axInfluence,C);selectedValidationRow=0;
         if ~finalModel.valid || isempty(finalModel.LOOResidual)
             validationTable.Data=cell(0,10);validationSummary.Text='Fit a model to run validation';
             title(axLOO,'No validated model');title(axInfluence,'No validated model');return;
         end
         n=numel(finalModel.Pixel);loo=finalModel.LOOResidual(:);infl=finalModel.DeletionMaxCurveChange(:);wl=finalModel.ReferenceWavelength(:);
-        looLimit=robustUpperLimit(abs(loo));influenceLimit=robustUpperLimit(infl);
+        looLimit=wc4sm_robust_upper_limit(abs(loo));influenceLimit=wc4sm_robust_upper_limit(infl);
         dat=cell(n,10);
         for ii=1:n
             id=finalModel.PeakID{ii};fwhm=NaN;ratio=NaN;centroidShift=NaN;
@@ -3332,9 +3332,9 @@ function WCC4SM_V1_0
     end
 
     function drawPositionCrossValidation
-        cla(positionCrossHeatmapAxes,'reset');styleAxes(positionCrossHeatmapAxes,C);
-        cla(positionCrossResidualAxes,'reset');styleAxes(positionCrossResidualAxes,C);
-        cla(positionCrossHistogramAxes,'reset');styleAxes(positionCrossHistogramAxes,C);
+        cla(positionCrossHeatmapAxes,'reset');wc4sm_style_axes(positionCrossHeatmapAxes,C);
+        cla(positionCrossResidualAxes,'reset');wc4sm_style_axes(positionCrossResidualAxes,C);
+        cla(positionCrossHistogramAxes,'reset');wc4sm_style_axes(positionCrossHistogramAxes,C);
         if isempty(fieldnames(positionCrossResult))||~isfield(positionCrossResult,'Cells')
             positionCrossTable.Data=cell(4,4);positionCrossSelectionLabel.Text='No selected result.';
             title(positionCrossHeatmapAxes,'Run cross validation');title(positionCrossResidualAxes,'No cross-validation residuals');title(positionCrossHistogramAxes,'No selected residuals');clearPositionCrossOverviews();return;
@@ -3389,7 +3389,7 @@ function WCC4SM_V1_0
     function clearPositionCrossOverviews
         overviewAxes=[positionCrossMetricOverviewAxes(:);positionCrossRowResidualAxes(:);positionCrossHistogramOverviewAxes(:)];
         for axesIndex=1:numel(overviewAxes)
-            cla(overviewAxes(axesIndex),'reset');styleAxes(overviewAxes(axesIndex),C);
+            cla(overviewAxes(axesIndex),'reset');wc4sm_style_axes(overviewAxes(axesIndex),C);
             title(overviewAxes(axesIndex),'Run cross validation');
         end
     end
@@ -3398,7 +3398,7 @@ function WCC4SM_V1_0
         metricNames={'RMSE','STD','Bias','P95','MAX','Slope'};
         shortNames={'Direct','Interp.','FWHM','Centroid'};
         for metricIndex=1:numel(metricNames)
-            ax=positionCrossMetricOverviewAxes(metricIndex);cla(ax,'reset');styleAxes(ax,C);
+            ax=positionCrossMetricOverviewAxes(metricIndex);cla(ax,'reset');wc4sm_style_axes(ax,C);
             values=positionCrossResult.(metricNames{metricIndex});
             h=imagesc(ax,values);h.AlphaData=isfinite(values);h.ButtonDownFcn=@selectPositionCrossOverviewCell;
             ax.YDir='normal';ax.XTick=1:numel(methods);ax.YTick=1:numel(methods);
@@ -3419,7 +3419,7 @@ function WCC4SM_V1_0
 
         colors=lines(numel(methods));
         for applicationIndex=1:numel(methods)
-            ax=positionCrossRowResidualAxes(applicationIndex);cla(ax,'reset');styleAxes(ax,C);
+            ax=positionCrossRowResidualAxes(applicationIndex);cla(ax,'reset');wc4sm_style_axes(ax,C);
             q=positionCrossResult.Cells(selectedPositionCrossRow,applicationIndex);
             if strcmp(q.Status,'Available')&&~isempty(q.Residual)
                 scatter(ax,q.Wavelength,q.Residual,22,colors(applicationIndex,:),'filled');
@@ -3442,7 +3442,7 @@ function WCC4SM_V1_0
         for visualRow=1:numel(methods)
             calibrationIndex=numel(methods)-visualRow+1;
             for applicationIndex=1:numel(methods)
-                ax=positionCrossHistogramOverviewAxes(visualRow,applicationIndex);cla(ax,'reset');styleAxes(ax,C);ax.FontSize=7;
+                ax=positionCrossHistogramOverviewAxes(visualRow,applicationIndex);cla(ax,'reset');wc4sm_style_axes(ax,C);ax.FontSize=7;
                 q=positionCrossResult.Cells(calibrationIndex,applicationIndex);
                 residual=q.Residual(:);residual=residual(isfinite(residual));
                 if ~isempty(residual)
@@ -3592,8 +3592,8 @@ function WCC4SM_V1_0
             elseif isfield(S,'CalibrationModels'),incoming=arrayfun(@(q)q.Model,S.CalibrationModels,'UniformOutput',false);end
             for jj=1:numel(incoming)
                 m=incoming{jj};if ~isstruct(m)||~isfield(m,'valid')||~m.valid,continue;end
-                if ~isfield(m,'NaturalCoefficients')||isempty(m.NaturalCoefficients),m.NaturalCoefficients=normalizedToNaturalPolynomial(m.Coefficients,m.Mu);end
-                if ~isfield(m,'Equation')||isempty(m.Equation),m.Equation=formatCalibrationEquation(m.NaturalCoefficients);end
+                if ~isfield(m,'NaturalCoefficients')||isempty(m.NaturalCoefficients),m.NaturalCoefficients=wc4sm_poly_normalized_to_natural(m.Coefficients,m.Mu);end
+                if ~isfield(m,'Equation')||isempty(m.Equation),m.Equation=wc4sm_format_calibration_equation(m.NaturalCoefficients);end
                 if ~isfield(m,'LOOResidual')||isempty(m.LOOResidual)
                     validation=wc4sm_validate_calibration_loo(m.Pixel(:), ...
                         m.ReferenceWavelength(:),m.Degree,m.Coefficients,m.Mu,m.Pixel(:));
@@ -3667,7 +3667,7 @@ function WCC4SM_V1_0
 
     function importAndApplyModel(~,~)
         [fn,pn]=uigetfile('*.mat','Import and apply calibration model');if isequal(fn,0),return;end
-        S=load(fullfile(pn,fn));m=[];name=shortName(fn);
+        S=load(fullfile(pn,fn));m=[];name=wc4sm_short_name(fn);
         if isfield(S,'CalibrationModel'),m=S.CalibrationModel;
         elseif isfield(S,'FinalCalibration'),m=S.FinalCalibration;
         elseif isfield(S,'CalibrationModels')&&~isempty(S.CalibrationModels),m=S.CalibrationModels(end).Model;end
@@ -3715,7 +3715,7 @@ function WCC4SM_V1_0
     end
 
     function drawModelComparison(~,~)
-        legend(axModelCompare,'off');cla(axModelCompare,'reset');styleAxes(axModelCompare,C);
+        legend(axModelCompare,'off');cla(axModelCompare,'reset');wc4sm_style_axes(axModelCompare,C);
         if isempty(calibrationModels),title(axModelCompare,'No stored calibration models');return;end
         cols=lines(max(1,numel(calibrationModels)));hold(axModelCompare,'on');mode='Fit residual';if exist('compareResidualMode','var'),mode=compareResidualMode.Value;end
         for kk=1:numel(calibrationModels)
@@ -3769,8 +3769,8 @@ function WCC4SM_V1_0
     end
 
     function drawSelectedResidualDiagnostics
-        cla(axSelectedResidualTrend,'reset');styleAxes(axSelectedResidualTrend,C);
-        cla(axSelectedResidualHistogram,'reset');styleAxes(axSelectedResidualHistogram,C);
+        cla(axSelectedResidualTrend,'reset');wc4sm_style_axes(axSelectedResidualTrend,C);
+        cla(axSelectedResidualHistogram,'reset');wc4sm_style_axes(axSelectedResidualHistogram,C);
         r=selectedResidualContext.Residual(:);x=selectedResidualContext.X(:);
         if isempty(r)
             selectedResidualSummary.Text='Select a model, Add-One round, model degree, or set replacement round.';
@@ -3835,14 +3835,14 @@ function WCC4SM_V1_0
         if ~finalModel.valid,uialert(fig,'Fit a final calibration model first.','No final model');return;end
         rf=uifigure('Name','WCC4SM V1.0 | Calibration Fit & Residual Analysis','Position',[120 90 1160 760],'Color',C.bg);
         rg=uigridlayout(rf,[2 2]); rg.RowHeight={'1.05x','1x'}; rg.ColumnWidth={'1.25x','1x'}; rg.Padding=[12 10 12 12];
-        a1=uiaxes(rg); a1.Layout.Column=[1 2]; styleAxes(a1,C); hold(a1,'on');
+        a1=uiaxes(rg); a1.Layout.Column=[1 2]; wc4sm_style_axes(a1,C); hold(a1,'on');
         xx=linspace(min(finalModel.Pixel),max(finalModel.Pixel),800); yy=polyval(finalModel.Coefficients,xx,[],finalModel.Mu);
         plot(a1,xx,yy,'-','Color',C.blue,'LineWidth',1.5,'DisplayName','Polynomial fit');
         scatter(a1,finalModel.Pixel,finalModel.ReferenceWavelength,42,C.orange,'filled','DisplayName','Calibration points');
         for jj=1:numel(finalModel.Pixel),text(a1,finalModel.Pixel(jj),finalModel.ReferenceWavelength(jj),[' ' finalModel.PeakID{jj}],'FontSize',7,'Color',C.muted);end
         hold(a1,'off');grid(a1,'on');xlabel(a1,'Peak position (pixel)');ylabel(a1,'Reference wavelength (nm)');
         title(a1,{sprintf('%s | degree %d | N=%d',finalModel.PositionMethod,finalModel.Degree,numel(finalModel.Pixel)),finalModel.Equation},'Interpreter','none');legend(a1,'Location','best');
-        a2=uiaxes(rg);styleAxes(a2,C);hold(a2,'on');yline(a2,0,'-','Color',C.gray);
+        a2=uiaxes(rg);wc4sm_style_axes(a2,C);hold(a2,'on');yline(a2,0,'-','Color',C.gray);
         scatter(a2,finalModel.ReferenceWavelength,finalModel.Residual,40,C.red,'filled');
         for jj=1:numel(finalModel.Pixel),text(a2,finalModel.ReferenceWavelength(jj),finalModel.Residual(jj),[' ' finalModel.PeakID{jj}],'FontSize',7,'Color',C.muted);end
         if numel(finalModel.Residual)>1
@@ -3850,7 +3850,7 @@ function WCC4SM_V1_0
             yline(a2,finalModel.MeanResidual-finalModel.STD,'--','-1 sigma','Color',C.green);
         end
         hold(a2,'off');grid(a2,'on');xlabel(a2,'Reference wavelength (nm)');ylabel(a2,'Residual: reference - fitted (nm)');title(a2,'Residual trend');
-        a3=uiaxes(rg);styleAxes(a3,C); [lo,hi,nb]=histogramSettings();
+        a3=uiaxes(rg);wc4sm_style_axes(a3,C); [lo,hi,nb]=histogramSettings();
         histogram(a3,finalModel.Residual,'NumBins',nb,'BinLimits',[lo hi],'FaceColor',C.cyanDark,'FaceAlpha',0.65);hold(a3,'on');
         if numel(finalModel.Residual)>=6 && finalModel.STD>0
             xr=linspace(lo,hi,300); bw=(hi-lo)/nb;
@@ -3863,7 +3863,7 @@ function WCC4SM_V1_0
 
     function drawEmbeddedResults
         cla(axFitResult);cla(axResidualResult);cla(axHistogramResult);
-        styleAxes(axFitResult,C);styleAxes(axResidualResult,C);styleAxes(axHistogramResult,C);
+        wc4sm_style_axes(axFitResult,C);wc4sm_style_axes(axResidualResult,C);wc4sm_style_axes(axHistogramResult,C);
         if ~finalModel.valid
             title(axFitResult,'Fit a final calibration model first');return;
         end
@@ -3947,7 +3947,7 @@ function WCC4SM_V1_0
         fwhm=fwhm(order);erw=erw(order);
         directDelta=directDelta(order);centroidDelta=centroidDelta(order);interpDelta=interpDelta(order);
 
-        cla(axWidthTrend,'reset');styleAxes(axWidthTrend,C);hold(axWidthTrend,'on');
+        cla(axWidthTrend,'reset');wc4sm_style_axes(axWidthTrend,C);hold(axWidthTrend,'on');
         goodF=isfinite(peakOrder)&isfinite(fwhm);
         goodE=isfinite(peakOrder)&isfinite(erw);
         if any(goodF),plot(axWidthTrend,peakOrder(goodF),fwhm(goodF),'o-','Color',C.blue,'LineWidth',1.5,'MarkerFaceColor','white','DisplayName','FWHM');end
@@ -3956,7 +3956,7 @@ function WCC4SM_V1_0
         title(axWidthTrend,sprintf('FWHM and ERW trend (%d confirmed peaks)',n));grid(axWidthTrend,'on');grid(axWidthTrend,'minor');
         if any(goodF)|any(goodE),legend(axWidthTrend,'Location','best');else,showNoStatistics(axWidthTrend,'No valid FWHM / ERW values');end
 
-        cla(axWidthRelation,'reset');styleAxes(axWidthRelation,C);
+        cla(axWidthRelation,'reset');wc4sm_style_axes(axWidthRelation,C);
         good=isfinite(fwhm)&isfinite(erw);
         if any(good)
             xFit=fwhm(good);yFit=erw(good);
@@ -3982,7 +3982,7 @@ function WCC4SM_V1_0
             showNoStatistics(axWidthRelation,'No complete single-peak width data');
         end
 
-        cla(axPositionDelta,'reset');styleAxes(axPositionDelta,C);
+        cla(axPositionDelta,'reset');wc4sm_style_axes(axPositionDelta,C);
         deltaMatrix=[directDelta centroidDelta interpDelta];
         if any(isfinite(deltaMatrix(:)))
             b=bar(axPositionDelta,peakOrder,deltaMatrix,'grouped');
@@ -3996,7 +3996,7 @@ function WCC4SM_V1_0
             showNoStatistics(axPositionDelta,'No valid FWHM-center comparisons');
         end
 
-        cla(axPositionHistogram,'reset');styleAxes(axPositionHistogram,C);hold(axPositionHistogram,'on');
+        cla(axPositionHistogram,'reset');wc4sm_style_axes(axPositionHistogram,C);hold(axPositionHistogram,'on');
         allDelta=deltaMatrix(isfinite(deltaMatrix));
         if ~isempty(allDelta)
             binCount=max(5,min(15,ceil(sqrt(numel(allDelta)))));
@@ -4032,7 +4032,7 @@ function WCC4SM_V1_0
     end
 
     function drawPeakPositionDifferenceMap
-        cla(axPeakDifferenceMap,'reset');styleAxes(axPeakDifferenceMap,C);
+        cla(axPeakDifferenceMap,'reset');wc4sm_style_axes(axPeakDifferenceMap,C);
         clearPeakDifferenceAuxiliary('Refresh confirmed peak statistics to calculate diagnostics.');
         confirmed=false(1,numel(peakDataset));
         if ~isempty(peakDataset),confirmed=[peakDataset.Confirmed];end
@@ -4124,7 +4124,7 @@ function WCC4SM_V1_0
     function clearPeakDifferenceAuxiliary(message)
         axesList=[axPeakDifferenceFit axPeakDifferenceDistribution axPeakDifferenceHistogram];
         for aa=axesList
-            cla(aa,'reset');styleAxes(aa,C);showNoStatistics(aa,message);
+            cla(aa,'reset');wc4sm_style_axes(aa,C);showNoStatistics(aa,message);
         end
     end
 
@@ -4137,7 +4137,7 @@ function WCC4SM_V1_0
         elseif strcmp(peakDifferenceSeries.Value,'Interpolated - center'),distributionColumn=3;
         else,distributionColumn=2;end
         distributionValues=deltaMatrix(:,distributionColumn);distributionValues=distributionValues(isfinite(distributionValues));
-        cla(axPeakDifferenceDistribution,'reset');styleAxes(axPeakDifferenceDistribution,C);
+        cla(axPeakDifferenceDistribution,'reset');wc4sm_style_axes(axPeakDifferenceDistribution,C);
         if isempty(distributionValues)
             showNoStatistics(axPeakDifferenceDistribution,'No valid peak-position differences');
         else
@@ -4155,10 +4155,10 @@ function WCC4SM_V1_0
         elseif strcmp(peakDifferenceFitTarget.Value,'Centroid'),targetColumn=2;targetLabel='Centroid position';fitColor=C.green;
         else,targetColumn=1;targetLabel='Direct peak position';fitColor=C.blue;end
         yFit=positionMatrix(:,targetColumn);good=isfinite(xFit)&isfinite(yFit);
-        cla(axPeakDifferenceFit,'reset');styleAxes(axPeakDifferenceFit,C);
+        cla(axPeakDifferenceFit,'reset');wc4sm_style_axes(axPeakDifferenceFit,C);
         if sum(good)<2 || max(xFit(good))-min(xFit(good))<=eps
             showNoStatistics(axPeakDifferenceFit,'At least two distinct center positions are required');
-            cla(axPeakDifferenceHistogram,'reset');styleAxes(axPeakDifferenceHistogram,C);showNoStatistics(axPeakDifferenceHistogram,'No valid fit residuals');
+            cla(axPeakDifferenceHistogram,'reset');wc4sm_style_axes(axPeakDifferenceHistogram,C);showNoStatistics(axPeakDifferenceHistogram,'No valid fit residuals');
             return;
         end
         xx=xFit(good);yy=yFit(good);ids=peakID(good);
@@ -4169,13 +4169,13 @@ function WCC4SM_V1_0
         if strcmp(peakDifferenceFitOrder.Value,'No fit')
             hold(axPeakDifferenceFit,'off');title(axPeakDifferenceFit,[targetLabel ' versus FWHM center | points only']);
             grid(axPeakDifferenceFit,'on');grid(axPeakDifferenceFit,'minor');legend(axPeakDifferenceFit,'Location','best','Interpreter','none');
-            cla(axPeakDifferenceHistogram,'reset');styleAxes(axPeakDifferenceHistogram,C);showNoStatistics(axPeakDifferenceHistogram,'Select polynomial degree 1..3 to calculate fit residuals');
+            cla(axPeakDifferenceHistogram,'reset');wc4sm_style_axes(axPeakDifferenceHistogram,C);showNoStatistics(axPeakDifferenceHistogram,'Select polynomial degree 1..3 to calculate fit residuals');
             return;
         end
         fitOrder=str2double(regexprep(peakDifferenceFitOrder.Value,'\D',''));
         if numel(xx)<fitOrder+1 || numel(unique(xx))<fitOrder+1
             hold(axPeakDifferenceFit,'off');showNoStatistics(axPeakDifferenceFit,sprintf('Degree %d fit requires at least %d distinct X values',fitOrder,fitOrder+1));
-            cla(axPeakDifferenceHistogram,'reset');styleAxes(axPeakDifferenceHistogram,C);showNoStatistics(axPeakDifferenceHistogram,'Insufficient data for selected fit order');return;
+            cla(axPeakDifferenceHistogram,'reset');wc4sm_style_axes(axPeakDifferenceHistogram,C);showNoStatistics(axPeakDifferenceHistogram,'Insufficient data for selected fit order');return;
         end
         coef=polyfit(xx,yy,fitOrder);predicted=polyval(coef,xx);residual=yy-predicted;
         ssTotal=sum((yy-mean(yy)).^2);if ssTotal>eps,rSquared=1-sum(residual.^2)/ssTotal;else,rSquared=NaN;end
@@ -4189,7 +4189,7 @@ function WCC4SM_V1_0
     end
 
     function drawPeakDifferenceResidualHistogram(residual,unit,targetLabel,coef,rSquared,fitOrder)
-        residual=residual(isfinite(residual));cla(axPeakDifferenceHistogram,'reset');styleAxes(axPeakDifferenceHistogram,C);
+        residual=residual(isfinite(residual));cla(axPeakDifferenceHistogram,'reset');wc4sm_style_axes(axPeakDifferenceHistogram,C);
         if isempty(residual),showNoStatistics(axPeakDifferenceHistogram,'No valid linear-fit residuals');return;end
         [edges,lo,hi]=peakDifferenceResidualHistogramSettings(residual);
         histogram(axPeakDifferenceHistogram,residual,edges,'FaceColor',C.purple,'EdgeColor','white');hold(axPeakDifferenceHistogram,'on');
@@ -4251,7 +4251,7 @@ function WCC4SM_V1_0
     end
 
     function drawPaperAllPeakDifferences
-        cla(axPaperAllPeakDifferences,'reset');styleAxes(axPaperAllPeakDifferences,C);hold(axPaperAllPeakDifferences,'on');
+        cla(axPaperAllPeakDifferences,'reset');wc4sm_style_axes(axPaperAllPeakDifferences,C);hold(axPaperAllPeakDifferences,'on');
         n=numel(peaks);ids=cell(n,1);wavelength=nan(n,1);delta=nan(n,3);
         for kk=1:n
             ids{kk}=peaks(kk).ID;rr=peaks(kk).Result;
@@ -4358,7 +4358,7 @@ function WCC4SM_V1_0
     end
 
     function drawPaperBenchmarkAxes
-        cla(axPaperCentroidDifference,'reset');styleAxes(axPaperCentroidDifference,C);
+        cla(axPaperCentroidDifference,'reset');wc4sm_style_axes(axPaperCentroidDifference,C);
         if isempty(fieldnames(paperPeakDifferenceResult))||~isfield(paperPeakDifferenceResult,'Difference')
             showNoStatistics(axPaperCentroidDifference,'No common matched FWHM-center/Centroid data');return;
         end
@@ -4509,7 +4509,7 @@ function WCC4SM_V1_0
         for jj=1:numel(selectedIDs)
             qidx=find(archiveIDs==selectedIDs(jj),1,'last');
             if isempty(qidx),notAvailable(end+1)=selectedIDs(jj);continue;end %#ok<AGROW>
-            q=paperPeakPairArchive(qidx);calPairs=removePairByPeakOrReference(calPairs,q.PeakID,q.ReferenceIndex);calPairs(end+1)=q;added=added+1;
+            q=paperPeakPairArchive(qidx);calPairs=wc4sm_remove_calibration_pair(calPairs,q.PeakID,q.ReferenceIndex);calPairs(end+1)=q;added=added+1;
         end
         if added>0
             paperPeakDifferenceExcludedIDs=paperPeakDifferenceExcludedIDs(~ismember(string(paperPeakDifferenceExcludedIDs),selectedIDs));
@@ -4620,7 +4620,7 @@ function WCC4SM_V1_0
         fwhmNm=calibratedPerformance.FWHM_nm;
         erwNm=calibratedPerformance.ERW_nm;
 
-        cla(axCalWidthTrend,'reset');styleAxes(axCalWidthTrend,C);hold(axCalWidthTrend,'on');
+        cla(axCalWidthTrend,'reset');wc4sm_style_axes(axCalWidthTrend,C);hold(axCalWidthTrend,'on');
         goodF=isfinite(centerNm)&isfinite(fwhmNm);goodE=isfinite(centerNm)&isfinite(erwNm);
         if any(goodF),plot(axCalWidthTrend,centerNm(goodF),fwhmNm(goodF),'o-','Color',C.blue,'LineWidth',1.5,'MarkerFaceColor','white','DisplayName','FWHM');end
         if any(goodE),plot(axCalWidthTrend,centerNm(goodE),erwNm(goodE),'o-','Color',C.orange,'LineWidth',1.5,'MarkerFaceColor','white','DisplayName','ERW');end
@@ -4628,7 +4628,7 @@ function WCC4SM_V1_0
         title(axCalWidthTrend,sprintf('Wavelength-domain FWHM and ERW (%d confirmed peaks)',n));grid(axCalWidthTrend,'on');grid(axCalWidthTrend,'minor');
         if any(goodF)|any(goodE),legend(axCalWidthTrend,'Location','best');else,showNoStatistics(axCalWidthTrend,'No valid wavelength-domain widths');end
 
-        cla(axCalWidthRelation,'reset');styleAxes(axCalWidthRelation,C);
+        cla(axCalWidthRelation,'reset');wc4sm_style_axes(axCalWidthRelation,C);
         good=isfinite(fwhmNm)&isfinite(erwNm);
         if any(good)
             plot(axCalWidthRelation,fwhmNm(good),erwNm(good),'o','LineStyle','none','Color',C.purple,'MarkerFaceColor',C.cyan,'DisplayName','Confirmed peaks');
@@ -4648,7 +4648,7 @@ function WCC4SM_V1_0
             showNoStatistics(axCalWidthRelation,'No complete wavelength-domain width data');
         end
 
-        cla(axCalPositionDelta,'reset');styleAxes(axCalPositionDelta,C);
+        cla(axCalPositionDelta,'reset');wc4sm_style_axes(axCalPositionDelta,C);
         validFwhm=fwhmNm(isfinite(fwhmNm)&fwhmNm>0);
         if ~isempty(validFwhm)
             nFwhm=numel(validFwhm);
@@ -4682,7 +4682,7 @@ function WCC4SM_V1_0
             showNoStatistics(axCalPositionDelta,'No valid wavelength-domain FWHM values');
         end
 
-        cla(axPixelInterval,'reset');styleAxes(axPixelInterval,C);
+        cla(axPixelInterval,'reset');wc4sm_style_axes(axPixelInterval,C);
         intervalNm=calibratedPerformance.PixelInterval_nm;
         intervalWavelength=calibratedPerformance.IntervalWavelength_nm;
         goodInterval=calibratedPerformance.ValidPixelInterval;
@@ -4961,7 +4961,7 @@ function WCC4SM_V1_0
             [st,spacing]=referenceStatuses();
             datRef=wc4sm_format_reference_table(L.effective,L.intensity,L.order,st);
             refTable.Data=datRef;
-            lineInfo.Text=sprintf('%d lines | %s',numel(L.wavelength),shortName(L.source));
+            lineInfo.Text=sprintf('%d lines | %s',numel(L.wavelength),wc4sm_short_name(L.source));
             active=find(~strcmp(st,'Out of range') & ~strcmp(st,'Disabled'));
             datActive=cell(numel(active),4);
             for jj=1:numel(active),q=active(jj);datActive(jj,:)={L.effective(q),sprintf('%.0f',L.intensity(q)),spacing(q),st{q}};end
@@ -4982,7 +4982,7 @@ function WCC4SM_V1_0
         dat=cell(numel(calPairs),7);
         for ii=1:numel(calPairs)
             dat(ii,:)={calPairs(ii).PeakID,calPairs(ii).DetectionPixel,calPairs(ii).ReferenceWavelength, ...
-                calPairs(ii).Mode,calPairs(ii).Confidence,logicalText(calPairs(ii).Locked),calPairs(ii).Status};
+                calPairs(ii).Mode,calPairs(ii).Confidence,wc4sm_logical_text(calPairs(ii).Locked),calPairs(ii).Status};
         end
         pairTable.Data=dat;
         if provisional.valid
@@ -5052,7 +5052,7 @@ function WCC4SM_V1_0
             k=peaks(selectedRow).Index; plot(axFull,x(k),yplot(k),'o','Color',C.red,'LineWidth',1.8,'MarkerSize',9,'HitTest','off');
         end
         hold(axFull,'off'); grid(axFull,'on'); xlabel(axFull,xlab); ylabel(axFull,ylab);
-        ttl=['Full spectrum | ' shortName(D.source)];
+        ttl=['Full spectrum | ' wc4sm_short_name(D.source)];
         if strcmp(mainAxisMode,'Wavelength') && ~isempty(appliedModelName), ttl=[ttl ' | ' appliedModelName]; end
         title(axFull,ttl,'Interpreter','none');
         if isfinite(fullViewStart.Value)&&isfinite(fullViewEnd.Value)&&fullViewEnd.Value>fullViewStart.Value
@@ -5189,16 +5189,16 @@ function WCC4SM_V1_0
             'ERW - FWHM';'ERW / FWHM';'Direct - Center';'Interp - Center';'Centroid - Center';'Sampling ratio';'ERW sampling ratio'; ...
             'Peak area';'Local dispersion';'Window points'};
         pv={rr.Status;shapeStatus;usability;sprintf('%d',detectedCount); ...
-            fmt(rr.DirectPeakX);fmt(rr.InterpolatedPeakX);fmt(rr.CenterX);fmt(rr.CentroidX);fmt(rr.FWHM);fmt(rr.ERW); ...
-            fmt(rr.ERWminusFWHM);fmt(rr.ERWdivFWHM);fmt(rr.PeakCenterDelta);fmt(rr.InterpolationCenterDelta);fmt(rr.CentroidCenterDelta); ...
-            fmt(rr.SamplingRatio);fmt(rr.ERWSamplingRatio);fmt(rr.PeakArea);'--';sprintf('%d',rr.OriginalPointCount)};
+            wc4sm_format_value(rr.DirectPeakX);wc4sm_format_value(rr.InterpolatedPeakX);wc4sm_format_value(rr.CenterX);wc4sm_format_value(rr.CentroidX);wc4sm_format_value(rr.FWHM);wc4sm_format_value(rr.ERW); ...
+            wc4sm_format_value(rr.ERWminusFWHM);wc4sm_format_value(rr.ERWdivFWHM);wc4sm_format_value(rr.PeakCenterDelta);wc4sm_format_value(rr.InterpolationCenterDelta);wc4sm_format_value(rr.CentroidCenterDelta); ...
+            wc4sm_format_value(rr.SamplingRatio);wc4sm_format_value(rr.ERWSamplingRatio);wc4sm_format_value(rr.PeakArea);'--';sprintf('%d',rr.OriginalPointCount)};
         wv=repmat({'--'},numel(n),1); wv(1:4)={rr.Status;shapeStatus;usability;sprintf('%d',detectedCount)};
         if appliedModel.valid
             q=wavelengthPeakParameters(rr);
             wv={rr.Status;shapeStatus;usability;sprintf('%d',detectedCount); ...
-                fmt(q.Direct);fmt(q.Interp);fmt(q.Center);fmt(q.Centroid);fmt(q.FWHM);fmt(q.ERW); ...
-                fmt(q.ERW-q.FWHM);fmt(q.ERW/q.FWHM);fmt(q.Direct-q.Center);fmt(q.Interp-q.Center);fmt(q.Centroid-q.Center); ...
-                fmt(q.FWHM/q.Dispersion);fmt(q.ERW/q.Dispersion);fmt(q.Area);fmt(q.Dispersion);sprintf('%d',rr.OriginalPointCount)};
+                wc4sm_format_value(q.Direct);wc4sm_format_value(q.Interp);wc4sm_format_value(q.Center);wc4sm_format_value(q.Centroid);wc4sm_format_value(q.FWHM);wc4sm_format_value(q.ERW); ...
+                wc4sm_format_value(q.ERW-q.FWHM);wc4sm_format_value(q.ERW/q.FWHM);wc4sm_format_value(q.Direct-q.Center);wc4sm_format_value(q.Interp-q.Center);wc4sm_format_value(q.Centroid-q.Center); ...
+                wc4sm_format_value(q.FWHM/q.Dispersion);wc4sm_format_value(q.ERW/q.Dispersion);wc4sm_format_value(q.Area);wc4sm_format_value(q.Dispersion);sprintf('%d',rr.OriginalPointCount)};
         end
         currentTable.Data=[n pv wv]; if isempty(rr.Warnings),warnings.Value={'No warning.'};else,warnings.Value=cellstr(rr.Warnings);end
     end
@@ -5355,57 +5355,5 @@ function WCC4SM_V1_0
     end
 end
 
-function M=cleanMatrix(M)
-    M=M(~all(isnan(M),2),:); M=M(:,~all(isnan(M),1));
-    if isempty(M),error('CSV contains no numeric data.');end
-    if size(M,2)>2,M=M(:,1:2);end
-end
-function p=normalizedToNaturalPolynomial(c,mu)
-    % Horner composition of c(z), z=(pixel-mu(1))/mu(2).
-    p=0;affine=[1/mu(2),-mu(1)/mu(2)];
-    for k=1:numel(c)
-        p=conv(p,affine);p(end)=p(end)+c(k);
-    end
-    first=find(abs(p)>max(1e-15,max(abs(p))*1e-14),1,'first');
-    if isempty(first),p=0;else,p=p(first:end);end
-end
-function s=formatCalibrationEquation(p)
-    n=numel(p)-1;parts={};
-    for k=1:numel(p)
-        power=n-k+1;a=p(k);if abs(a)<1e-15,continue;end
-        if power==0,term=sprintf('%.12g',abs(a));elseif power==1,term=sprintf('%.12g*p',abs(a));else,term=sprintf('%.12g*p^%d',abs(a),power);end
-        if isempty(parts),if a<0,term=['-' term];end;parts{end+1}=term; %#ok<AGROW>
-        elseif a<0,parts{end+1}=[' - ' term];else,parts{end+1}=[' + ' term];end %#ok<AGROW>
-    end
-    if isempty(parts),rhs='0';else,rhs=strjoin(parts,'');end
-    s=['lambda(nm) = ' rhs];
-end
-function limit=robustUpperLimit(v)
-    v=v(isfinite(v));if isempty(v),limit=Inf;return;end
-    med=median(v);madv=median(abs(v-med));limit=med+3*1.4826*madv;
-    if madv==0,limit=max(med,max(v)*0.5);end
-    if limit<=0,limit=eps;end
-end
-function value=minOrNaN(values)
-    if isempty(values),value=NaN;else,value=min(values);end
-end
-function value=maxOrNaN(values)
-    if isempty(values),value=NaN;else,value=max(values);end
-end
-function pairs=removePairByPeakOrReference(pairs,id,refIdx)
-    if isempty(pairs),return;end
-    keep=~strcmp({pairs.PeakID},id) & [pairs.ReferenceIndex]~=refIdx; pairs=pairs(keep);
-end
-function sectionAuto(g,t),q=uilabel(g,'Text',t,'FontWeight','bold','FontColor',[.07 .28 .46]);q.Layout.Column=[1 2];end
-function styleAxes(a,C),a.Color='white';a.XColor=C.muted;a.YColor=C.muted;a.GridColor=[.86 .89 .92];a.Box='on';end
-function s=fmt(v),if isnan(v),s='NaN';elseif isinf(v),s='Inf';else,s=sprintf('%.8g',v);end,end
-function s=shortName(p),if isempty(p),s='';else,[~,n,e]=fileparts(p);s=[n e];end,end
-function v=numberOrNaN(x),if isnumeric(x),v=x;else,v=str2double(string(x));end;if isempty(v)||~isfinite(v),v=NaN;end,end
-function s=logicalText(v),if v,s='Yes';else,s='No';end,end
-function C=colors
-    C.bg=[.94 .96 .98];C.navy=[.055 .18 .30];C.blue=[.10 .38 .67];C.cyan=[.30 .82 .88];C.cyanDark=[0 .55 .64];
-    C.orange=[.95 .49 .16];C.red=[.82 .18 .20];C.green=[.12 .55 .34];C.greenLight=[.72 .90 .79];C.purple=[.47 .28 .65];C.gray=[.55 .58 .61];C.muted=[.34 .40 .46];
-    C.sky=[.16 .78 .88];C.yellow=[1.00 .88 .05];C.blueStrong=[.05 .18 .95];C.greenBright=[.15 .90 .08];
-end
 
 
