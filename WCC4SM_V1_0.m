@@ -2028,7 +2028,7 @@ function WCC4SM_V1_0
         if ~isempty(D.pixel),pixelViewStart.Value=min(D.pixel);pixelViewEnd.Value=max(D.pixel);end
         if L.loaded,referenceSetDrop.Value='External / User';end
         if isfield(appliedModel,'valid')&&appliedModel.valid&&~isempty(D.pixel)
-            wl=evaluateWavelengthModel(appliedModel,D.pixel);
+            wl=wc4sm_evaluate_wavelength_model(appliedModel,D.pixel);
             if all(isfinite(wl))&&all(diff(wl)>0)
                 D.calibratedWavelength=wl(:);
                 [coordinateMode,coordinateDomain]=modelCoordinateLabels(appliedModel);
@@ -2195,7 +2195,7 @@ function WCC4SM_V1_0
                 continue;
             end
             rr=p.Result;x=rr.WindowX(:);y=rr.NetY(:);
-            if useWavelength,x=evaluateWavelengthModel(appliedModel,x);end
+            if useWavelength,x=wc4sm_evaluate_wavelength_model(appliedModel,x);end
             good=isfinite(x)&isfinite(y);x=x(good);y=y(good);
             if isempty(x),axis(ax,'off');continue;end
             plot(ax,x,y,'o-','Color',lineColor,'LineWidth',0.75,'MarkerSize',3.2, ...
@@ -2204,7 +2204,7 @@ function WCC4SM_V1_0
             ylim(ax,[ymin-.06*span ymax+.10*span]);
             centerX=NaN;if isfield(rr,'CenterX'),centerX=rr.CenterX;end
             if appliedModel.valid&&isfinite(centerX)
-                centerWavelength=evaluateWavelengthModel(appliedModel,centerX);
+                centerWavelength=wc4sm_evaluate_wavelength_model(appliedModel,centerX);
                 if isfinite(centerWavelength),galleryTitle=sprintf('%s | %.3f nm',p.ID,centerWavelength);else,galleryTitle=p.ID;end
             elseif isfinite(centerX)
                 galleryTitle=sprintf('%s | %.2f px',p.ID,centerX);
@@ -2908,9 +2908,6 @@ function WCC4SM_V1_0
         model.valid=true;model.Degree=1;model.Coefficients=[a b];model.Mu=[0 1];model.a=a;model.b=b;
     end
 
-    function wl=evaluateWavelengthModel(model,pixel)
-        if isempty(model.Coefficients),wl=nan(size(pixel));else,wl=polyval(model.Coefficients,pixel,[],model.Mu);end
-    end
 
     function model=attachPixelCoordinateMetadata(model)
         model.PixelCoordinateMode=currentPixelCoordinateMode();
@@ -2960,7 +2957,7 @@ function WCC4SM_V1_0
 
     function pixel=invertWavelengthModel(model,wavelength)
         pixel=nan(size(wavelength)); if isempty(D.pixel)||isempty(model.Coefficients),return;end
-        pg=linspace(min(D.pixel),max(D.pixel),max(4000,4*numel(D.pixel))); wg=evaluateWavelengthModel(model,pg);
+        pg=linspace(min(D.pixel),max(D.pixel),max(4000,4*numel(D.pixel))); wg=wc4sm_evaluate_wavelength_model(model,pg);
         good=isfinite(wg);pg=pg(good);wg=wg(good);[wg,ia]=unique(wg,'stable');pg=pg(ia);
         if numel(wg)<2||any(diff(wg)<=0),return;end
         pixel=interp1(wg,pg,wavelength,'linear',NaN);
@@ -3027,13 +3024,8 @@ function WCC4SM_V1_0
         if numel(valid)<2, uialert(fig,'At least two confirmed peak-reference pairs are required.','Insufficient pairs'); return; end
         px=[calPairs(valid).DetectionPixel].'; wl=[calPairs(valid).ReferenceWavelength].';
         if numel(unique(px))<2, uialert(fig,'Calibration pairs require at least two different pixel positions.','Invalid pairs'); return; end
-        deg=min(3,numel(valid)-1); [c,~,mu]=polyfit(px,wl,deg);
-        provisional=wc4sm_empty_initial_model();provisional.valid=true;provisional.Degree=deg;provisional.Coefficients=c;provisional.Mu=mu;
-        if deg==1
-            % Convert normalized-coordinate coefficients to conventional a,b for export compatibility.
-            provisional.a=c(1)/mu(2); provisional.b=c(2)-c(1)*mu(1)/mu(2);
-        end
-        refreshCalibration(); showCalibrationView([],[]); topStatus.Text=sprintf('Initial degree-%d polynomial updated from %d anchors',deg,numel(valid));
+        provisional=wc4sm_build_initial_model(px,wl);
+        refreshCalibration(); showCalibrationView([],[]); topStatus.Text=sprintf('Initial degree-%d polynomial updated from %d anchors',provisional.Degree,numel(valid));
     end
 
     function autoMatchPeaks(~,~)
@@ -3055,8 +3047,8 @@ function WCC4SM_V1_0
         [px,ord]=sort(px);ids=ids(ord);idx=idx(ord);
         refPool=setdiff(usableReferenceIndices(),usedRef,'stable');
         [~,ord]=sort(L.effective(refPool));refPool=refPool(ord);
-        predicted=evaluateWavelengthModel(provisional,px);
-        matchRef=orderedSequenceMatch(predicted,L.effective(refPool),refPool,tol);
+        predicted=wc4sm_evaluate_wavelength_model(provisional,px);
+        matchRef=wc4sm_match_ordered_sequence(predicted,L.effective(refPool),refPool,tol);
         matched=0; high=0;
         for ii=1:numel(ids)
             r=matchRef(ii);
@@ -3694,7 +3686,7 @@ function WCC4SM_V1_0
         if ~coordinateCompatible
             uialert(fig,coordinateMessage,'Pixel sequence mismatch');return;
         end
-        wl=evaluateWavelengthModel(m,D.pixel);
+        wl=wc4sm_evaluate_wavelength_model(m,D.pixel);
         if any(~isfinite(wl))||any(diff(wl)<=0)
             uialert(fig,'The model does not produce a finite, strictly increasing wavelength axis for this spectrum.','Model rejected');return;
         end
@@ -4060,10 +4052,10 @@ function WCC4SM_V1_0
             if isempty(rr),continue;end
             centerPx(jj)=rr.CenterX;directPx(jj)=rr.DirectPeakX;centroidPx(jj)=rr.CentroidX;interpPx(jj)=rr.InterpolatedPeakX;
             if appliedModel.valid
-                centerNm(jj)=evaluateWavelengthModel(appliedModel,centerPx(jj));
-                directNm(jj)=evaluateWavelengthModel(appliedModel,directPx(jj));
-                centroidNm(jj)=evaluateWavelengthModel(appliedModel,centroidPx(jj));
-                interpNm(jj)=evaluateWavelengthModel(appliedModel,interpPx(jj));
+                centerNm(jj)=wc4sm_evaluate_wavelength_model(appliedModel,centerPx(jj));
+                directNm(jj)=wc4sm_evaluate_wavelength_model(appliedModel,directPx(jj));
+                centroidNm(jj)=wc4sm_evaluate_wavelength_model(appliedModel,centroidPx(jj));
+                interpNm(jj)=wc4sm_evaluate_wavelength_model(appliedModel,interpPx(jj));
             end
         end
 
@@ -4264,7 +4256,7 @@ function WCC4SM_V1_0
         for kk=1:n
             ids{kk}=peaks(kk).ID;rr=peaks(kk).Result;
             if isempty(rr)||~isstruct(rr)||~isfield(rr,'CenterX')||~isfinite(rr.CenterX),continue;end
-            wavelength(kk)=evaluateWavelengthModel(finalModel,rr.CenterX);
+            wavelength(kk)=wc4sm_evaluate_wavelength_model(finalModel,rr.CenterX);
             if isfield(rr,'DirectPeakX'),delta(kk,1)=rr.DirectPeakX-rr.CenterX;end
             if isfield(rr,'InterpolatedPeakX'),delta(kk,2)=rr.InterpolatedPeakX-rr.CenterX;end
             if isfield(rr,'CentroidX'),delta(kk,3)=rr.CentroidX-rr.CenterX;end
@@ -4437,7 +4429,7 @@ function WCC4SM_V1_0
         for kk=1:n
             ids{kk}=peaks(kk).ID;rr=peaks(kk).Result;
             if isempty(rr)||~isstruct(rr)||~isfield(rr,'CenterX')||~isfinite(rr.CenterX),continue;end
-            wavelength(kk)=evaluateWavelengthModel(finalModel,rr.CenterX);
+            wavelength(kk)=wc4sm_evaluate_wavelength_model(finalModel,rr.CenterX);
             q=find(strcmp({calPairs.PeakID},ids{kk})&[calPairs.ReferenceIndex]>0,1);
             if isempty(q)
                 q=find(strcmp({paperPeakPairArchive.PeakID},ids{kk})&[paperPeakPairArchive.ReferenceIndex]>0,1,'last');
@@ -5049,7 +5041,7 @@ function WCC4SM_V1_0
         if all(isfinite(localSearchWindow))
             markerX=localSearchWindow;
             if strcmp(mainAxisMode,'Wavelength')&&appliedModel.valid
-                markerX=evaluateWavelengthModel(appliedModel,markerX);
+                markerX=wc4sm_evaluate_wavelength_model(appliedModel,markerX);
             end
             xline(axFull,markerX(1),'--','Subwindow start','Color',C.purple,'LineWidth',1.5, ...
                 'LabelVerticalAlignment','bottom','HandleVisibility','off','Tag','WCC4SMSubwindowGuide');
@@ -5070,16 +5062,16 @@ function WCC4SM_V1_0
     function drawPeak(rr)
         useWavelength=strcmp(mainAxisMode,'Wavelength') && appliedModel.valid;
         if useWavelength
-            wx=evaluateWavelengthModel(appliedModel,rr.WindowX);
-            ix=evaluateWavelengthModel(appliedModel,rr.InterpX);
-            directX=evaluateWavelengthModel(appliedModel,rr.DirectPeakX);
-            interpPeakX=evaluateWavelengthModel(appliedModel,rr.InterpolatedPeakX);
-            centerX=evaluateWavelengthModel(appliedModel,rr.CenterX);
-            centroidX=evaluateWavelengthModel(appliedModel,rr.CentroidX);
-            leftX=evaluateWavelengthModel(appliedModel,rr.LeftHalfX);
-            rightX=evaluateWavelengthModel(appliedModel,rr.RightHalfX);
-            erwLeftX=evaluateWavelengthModel(appliedModel,rr.CentroidX-0.5*rr.ERW);
-            erwRightX=evaluateWavelengthModel(appliedModel,rr.CentroidX+0.5*rr.ERW);
+            wx=wc4sm_evaluate_wavelength_model(appliedModel,rr.WindowX);
+            ix=wc4sm_evaluate_wavelength_model(appliedModel,rr.InterpX);
+            directX=wc4sm_evaluate_wavelength_model(appliedModel,rr.DirectPeakX);
+            interpPeakX=wc4sm_evaluate_wavelength_model(appliedModel,rr.InterpolatedPeakX);
+            centerX=wc4sm_evaluate_wavelength_model(appliedModel,rr.CenterX);
+            centroidX=wc4sm_evaluate_wavelength_model(appliedModel,rr.CentroidX);
+            leftX=wc4sm_evaluate_wavelength_model(appliedModel,rr.LeftHalfX);
+            rightX=wc4sm_evaluate_wavelength_model(appliedModel,rr.RightHalfX);
+            erwLeftX=wc4sm_evaluate_wavelength_model(appliedModel,rr.CentroidX-0.5*rr.ERW);
+            erwRightX=wc4sm_evaluate_wavelength_model(appliedModel,rr.CentroidX+0.5*rr.ERW);
             xlab='Calibrated wavelength (nm)';
         else
             wx=rr.WindowX; ix=rr.InterpX; directX=rr.DirectPeakX; interpPeakX=rr.InterpolatedPeakX;
@@ -5212,23 +5204,23 @@ function WCC4SM_V1_0
     end
     function q=wavelengthPeakParameters(rr)
         q=struct();
-        q.Direct=evaluateWavelengthModel(appliedModel,rr.DirectPeakX);
-        q.Interp=evaluateWavelengthModel(appliedModel,rr.InterpolatedPeakX);
+        q.Direct=wc4sm_evaluate_wavelength_model(appliedModel,rr.DirectPeakX);
+        q.Interp=wc4sm_evaluate_wavelength_model(appliedModel,rr.InterpolatedPeakX);
         if isfield(rr,'CalibrationUsability') && strcmp(rr.CalibrationUsability,'PositionOnly')
             q.Center=NaN;q.Centroid=NaN;q.FWHM=NaN;q.ERW=NaN;
             q.Area=NaN;q.Dispersion=NaN;
             return;
         end
-        q.Center=evaluateWavelengthModel(appliedModel,rr.CenterX);
-        q.Centroid=evaluateWavelengthModel(appliedModel,rr.CentroidX);
-        left=evaluateWavelengthModel(appliedModel,rr.LeftHalfX); right=evaluateWavelengthModel(appliedModel,rr.RightHalfX);
+        q.Center=wc4sm_evaluate_wavelength_model(appliedModel,rr.CenterX);
+        q.Centroid=wc4sm_evaluate_wavelength_model(appliedModel,rr.CentroidX);
+        left=wc4sm_evaluate_wavelength_model(appliedModel,rr.LeftHalfX); right=wc4sm_evaluate_wavelength_model(appliedModel,rr.RightHalfX);
         q.FWHM=abs(right-left);
-        lam=evaluateWavelengthModel(appliedModel,rr.InterpX); yy=max(rr.InterpNetY,0);
+        lam=wc4sm_evaluate_wavelength_model(appliedModel,rr.InterpX); yy=max(rr.InterpNetY,0);
         q.Area=abs(trapz(lam,yy)); ymax=max(yy);
         if ymax>0,q.ERW=q.Area/ymax;else,q.ERW=NaN;end
         den=trapz(lam,yy);
         if den~=0,q.Centroid=trapz(lam,lam.*yy)/den;end
-        h=1e-3; q.Dispersion=abs((evaluateWavelengthModel(appliedModel,rr.CenterX+h)-evaluateWavelengthModel(appliedModel,rr.CenterX-h))/(2*h));
+        h=1e-3; q.Dispersion=abs((wc4sm_evaluate_wavelength_model(appliedModel,rr.CenterX+h)-wc4sm_evaluate_wavelength_model(appliedModel,rr.CenterX-h))/(2*h));
     end
     function clearCurrent
         currentTable.Data=cell(0,3); warnings.Value={'Select a row in Peak List.'}; currentLabel.Text='No peak selected';
@@ -5266,7 +5258,7 @@ function WCC4SM_V1_0
         use=[calPairs.ReferenceIndex]>0 & isfinite([calPairs.ReferenceWavelength]);
         if ~provisional.valid || ~any(use),rmsValue=NaN;return;end
         px=[calPairs(use).DetectionPixel]; wl=[calPairs(use).ReferenceWavelength];
-        rr=wl-evaluateWavelengthModel(provisional,px); rmsValue=sqrt(mean(rr.^2));
+        rr=wl-wc4sm_evaluate_wavelength_model(provisional,px); rmsValue=sqrt(mean(rr.^2));
     end
     function T=calibrationPairTable
         n=numel(calPairs); PeakID=strings(n,1); DetectionPixel=nan(n,1); ReferenceWavelength_nm=nan(n,1);
@@ -5276,7 +5268,7 @@ function WCC4SM_V1_0
             ReferenceWavelength_nm(ii)=calPairs(ii).ReferenceWavelength; PeakOrder(ii)=calPairs(ii).Order;
             Mode(ii)=calPairs(ii).Mode; Confidence(ii)=calPairs(ii).Confidence; Locked(ii)=calPairs(ii).Locked; Status(ii)=calPairs(ii).Status;
             if provisional.valid && isfinite(calPairs(ii).ReferenceWavelength)
-                InitialResidual_nm(ii)=calPairs(ii).ReferenceWavelength-evaluateWavelengthModel(provisional,calPairs(ii).DetectionPixel);
+                InitialResidual_nm(ii)=calPairs(ii).ReferenceWavelength-wc4sm_evaluate_wavelength_model(provisional,calPairs(ii).DetectionPixel);
             end
         end
         T=table(PeakID,DetectionPixel,ReferenceWavelength_nm,PeakOrder,Mode,Confidence,Locked,Status,InitialResidual_nm);
@@ -5399,37 +5391,6 @@ function value=minOrNaN(values)
 end
 function value=maxOrNaN(values)
     if isempty(values),value=NaN;else,value=max(values);end
-end
-function matchedRef=orderedSequenceMatch(predicted,referenceWavelengths,referenceIndices,tolerance)
-    % Dynamic-programming sequence alignment. Matches must remain monotonic;
-    % either measured or reference lines may be skipped.
-    predicted=predicted(:);referenceWavelengths=referenceWavelengths(:);referenceIndices=referenceIndices(:);
-    n=numel(predicted);m=numel(referenceWavelengths);D=inf(n+1,m+1);B=zeros(n+1,m+1,'uint8');D(1,1)=0;
-    skipPeak=1.0;skipReference=0.03;
-    for i=0:n
-        for j=0:m
-            base=D(i+1,j+1);if ~isfinite(base),continue;end
-            if i<n && base+skipPeak<D(i+2,j+1),D(i+2,j+1)=base+skipPeak;B(i+2,j+1)=2;end
-            if j<m && base+skipReference<D(i+1,j+2),D(i+1,j+2)=base+skipReference;B(i+1,j+2)=3;end
-            if i<n && j<m
-                dist=abs(predicted(i+1)-referenceWavelengths(j+1));
-                if dist<=tolerance
-                    cost=base+0.8*(dist/tolerance)^2;
-                    if cost<D(i+2,j+2),D(i+2,j+2)=cost;B(i+2,j+2)=1;end
-                end
-            end
-        end
-    end
-    matchedRef=zeros(n,1);i=n;j=m;
-    while i>0 || j>0
-        action=B(i+1,j+1);
-        if action==1,matchedRef(i)=referenceIndices(j);i=i-1;j=j-1;
-        elseif action==2,i=i-1;
-        elseif action==3,j=j-1;
-        else
-            if i>0,i=i-1;elseif j>0,j=j-1;end
-        end
-    end
 end
 function pairs=removePairByPeakOrReference(pairs,id,refIdx)
     if isempty(pairs),return;end
