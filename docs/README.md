@@ -2,6 +2,17 @@
 
 Markdown 是评审、维护和版本追踪的权威源文件。DOCX/PDF 是按发布需要生成的交付副本。
 
+## V1.0 技术文档基线（Technical Documentation Baseline）
+
+当前软件状态的权威查阅基准，四件套相互引用、与代码同步维护：
+
+| 文档 | 内容 |
+|---|---|
+| `WCC4SM_ARCHITECTURE.md` | 软件架构、67 个 src 模块地图和数据流 |
+| `WCC4SM_METHOD_SPECIFICATION.md` | HDR、Peak D/I/F/C、Calibration、LOO、Gap、Influence、Compatibility 等数学定义 |
+| `WCC4SM_DATA_DICTIONARY.md` | 状态结构字段、Peak ID、样本状态枚举、Reference line、Model 字段含义 |
+| `WCC4SM_VALIDATION.md` | 145 个测试的验证内容、算法基准案例、已知限制 |
+
 ## V1.0 论文服务定版
 
 - `WCC4SM_V1.0_论文服务定版说明.md`：V1.0 启动入口、8×8峰形总览和定版验收说明。
