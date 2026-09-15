@@ -45,7 +45,7 @@ function model = wc4sm_fit_calibration(pixel,wavelength,degree,evaluationPixels,
             (1:numel(pixel)).','UniformOutput',false);
     elseif isstring(peakIDs)
         peakIDs = cellstr(peakIDs(:));
-    elseif iscellstr(peakIDs) %#ok<ISCLSTR>
+    elseif iscellstr(peakIDs)
         peakIDs = peakIDs(:);
     else
         error('WCC4SM:InvalidPeakIDs','Peak IDs must be text values.');
@@ -125,7 +125,7 @@ function equation = formatCalibrationEquation(coefficients)
             term = sprintf('%.12g*p^%d',abs(value),power);
         end
         if isempty(parts)
-            if value < 0, term = ['-' term]; end
+            if value < 0, term = ['-' term]; end %#ok<AGROW> % bounded by degree+1 terms; display-only
             parts{end+1} = term; %#ok<AGROW>
         elseif value < 0
             parts{end+1} = [' - ' term]; %#ok<AGROW>

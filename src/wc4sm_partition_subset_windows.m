@@ -23,7 +23,7 @@ function result = wc4sm_partition_subset_windows(wavelength,influence,targetK,ru
     totalInfluence=sum(infl);
     if totalInfluence>0,weight=infl/totalInfluence;else,weight=zeros(n,1);end
     cumulative=cumsum(weight);method=lower(strtrim(char(string(rule))));
-    warnings={};cutIndices=[];boundaries=[];
+    warnings={};
     switch method
         case {'equal wavelength width','equal wavelength','wavelength'}
             if targetK>1&&wl(end)<=wl(1)
@@ -60,7 +60,7 @@ function result = wc4sm_partition_subset_windows(wavelength,influence,targetK,ru
             startWavelength=reshape([wl(1),boundaries],1,[]);
             endWavelength=reshape([boundaries,wl(end)],1,[]);
             coincident=find(targetK>1 & wl(cutIndices)==wl(cutIndices+1));
-            if ~isempty(coincident),warnings{end+1}=sprintf('%d boundary/boundaries split coincident wavelengths.',numel(coincident));end %#ok<AGROW>
+            if ~isempty(coincident),warnings{end+1}=sprintf('%d boundary/boundaries split coincident wavelengths.',numel(coincident));end
         otherwise
             error('WCC4SM:WindowPartitionUnknownRule','Unknown partition rule: %s',rule);
     end
@@ -71,7 +71,7 @@ function result = wc4sm_partition_subset_windows(wavelength,influence,targetK,ru
         q=dominant(k);dominantSamples(k)=struct('SortedIndex',q,'OriginalIndex',order(q), ...
             'PeakID',ids{q},'Wavelength',wl(q),'NormalizedInfluence',weight(q));
     end
-    if ~isempty(dominant),warnings{end+1}=sprintf('%d dominant influence sample(s) exceed the target weight 1/K.',numel(dominant));end %#ok<AGROW>
+    if ~isempty(dominant),warnings{end+1}=sprintf('%d dominant influence sample(s) exceed the target weight 1/K.',numel(dominant));end
     targetWeight=NaN;if contains(method,'influence'),targetWeight=1/targetK;end
     emptyWindow=struct('WindowID','','StartWavelength',NaN,'EndWavelength',NaN, ...
         'FirstSampleIndex',NaN,'LastSampleIndex',NaN,'NumberOfSamples',0, ...
@@ -99,7 +99,7 @@ function result = wc4sm_partition_subset_windows(wavelength,influence,targetK,ru
             'CumulativeEndWeight',cumulativeEnd,'Status',status);
     end
     emptyCount=sum([windows.NumberOfSamples]==0);
-    if emptyCount>0,warnings{end+1}=sprintf('%d empty equal-width window(s) were retained without moving the theoretical boundaries.',emptyCount);end %#ok<AGROW>
+    if emptyCount>0,warnings{end+1}=sprintf('%d empty equal-width window(s) were retained without moving the theoretical boundaries.',emptyCount);end
     originalWindowIndex=zeros(n,1);originalWindowIndex(order)=windowIndex;
     result=struct('Version',1,'Degree',3,'Rule',char(string(rule)),'TargetK',targetK, ...
         'SortedOriginalIndices',order(:).','SortedPeakIDs',{ids(:).'},'SortedWavelength',wl, ...

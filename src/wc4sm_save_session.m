@@ -23,6 +23,6 @@ function wc4sm_save_session(filePath,session)
             'Session validation failed: %s',strjoin(cellstr(report.Errors),' | '));
     end
     session.ModifiedAt = datetime('now');
-    WCC4SMSession = session; %#ok<NASGU>
+    WCC4SMSession = session;
     save(filePath,'WCC4SMSession','-mat');
 end

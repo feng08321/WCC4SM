@@ -85,4 +85,6 @@ TestBuiltinLibraries / TestWcc4smDataAssets 的校验对象，也是 MATLAB 与
 - 状态结构字段修改：同步改工厂 + TestEmptyStateFactories + DATA_DICTIONARY；
 - 数值口径修改（残差方向、STD 定义、P95 方法等）：必须先改
   METHOD_SPECIFICATION 并评估对基准案例的影响；
-- GUI 修改：除回归外，按验收说明做人工抽查。
+- GUI 修改：除回归外，按验收说明做人工抽查；
+- **发布前静态检查**：运行 `tools/check_src_code_quality.m`——对全部
+  src 模块执行 checkcode，零告警基线，任何消息都会报错（C3 起生效）。

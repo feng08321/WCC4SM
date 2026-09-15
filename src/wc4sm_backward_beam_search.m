@@ -35,7 +35,7 @@ function result = wc4sm_backward_beam_search(pixel,wavelength,degree,targetK,eva
         [selected,roles]=selectCandidates(candidates,bPerf,bDiv,epsilonRMS,epsilonMAX);accepted=candidates(selected);
         for aa=1:numel(accepted)
             accepted(aa).Role=roles{aa};
-            accepted(aa).NodeID=nextID;accepted(aa).PathNodeIDs(end)=nextID;nodes(nextID)=accepted(aa);nextID=nextID+1; %#ok<AGROW>
+            accepted(aa).NodeID=nextID;accepted(aa).PathNodeIDs(end)=nextID;nodes(nextID)=accepted(aa);nextID=nextID+1;
         end
         currentIDs=[accepted.NodeID];records=[accepted.Record];cover=wc4sm_build_epsilon_cover(records,epsilonRMS,epsilonMAX);
         for aa=1:numel(accepted)

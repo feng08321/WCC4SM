@@ -20,7 +20,6 @@ function result = wc4sm_analyze_point_influence(pixel,wavelength,degree,options)
     for k=1:n
         use=true(n,1);use(k)=false;
         m=wc4sm_fit_calibration(pixel(use),wavelength(use),degree,pixel);
-        deleted=wavelength-polyval(m.Coefficients,pixel,[],m.Mu);
         curve=max(abs(polyval(full.Coefficients,pixel,[],full.Mu)-polyval(m.Coefficients,pixel,[],m.Mu)));
         ratio=abs(full.LOORMS-m.LOORMS)/baseline;
         result(k).Index=k;result(k).Pixel=pixel(k);result(k).Wavelength=wavelength(k);

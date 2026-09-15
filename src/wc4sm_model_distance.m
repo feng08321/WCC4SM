@@ -2,8 +2,8 @@ function distance = wc4sm_model_distance(modelA,modelB,evaluationPixels)
 %WC4SM_MODEL_DISTANCE Compare two calibration mappings on a common grid.
     if nargin<3||isempty(evaluationPixels)
         values=[];
-        if isfield(modelA,'Pixel'),values=[values;modelA.Pixel(:)];end %#ok<AGROW>
-        if isfield(modelB,'Pixel'),values=[values;modelB.Pixel(:)];end %#ok<AGROW>
+        if isfield(modelA,'Pixel'),values=[values;modelA.Pixel(:)];end
+        if isfield(modelB,'Pixel'),values=[values;modelB.Pixel(:)];end
         if isempty(values),error('WCC4SM:ModelDistanceNoGrid','A common evaluation grid is required.');end
         evaluationPixels=linspace(min(values),max(values),200).';
     else
