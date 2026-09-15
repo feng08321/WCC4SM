@@ -2,6 +2,11 @@ function WCC4SM_V0_9_3
 %WCC4SM_V0_9_3 Wavelength Characterization and Calibration for Spectrometer.
 % Peak analysis plus reference-line matching and provisional calibration.
 % MATLAB R2022a or later. Signal Processing Toolbox is required for findpeaks.
+%
+% LEGACY ENTRY — frozen snapshot of V0.9.3, kept only for reproducing
+% historical workflows and results. Not maintained: bug fixes and new
+% features land exclusively in the current entry WCC4SM_V1_0.m.
+% Use WCC4SM_V1_0 for all new work.
 
     packageRoot = fileparts(mfilename('fullpath'));
     distributionRoot = packageRoot;

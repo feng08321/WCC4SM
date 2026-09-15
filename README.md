@@ -20,8 +20,10 @@ backward Beam Search. Start it from MATLAB R2022a or later:
 WCC4SM_V1_0
 ```
 
-Use `WCC4SM_V1_0` for new work. `WCC4SM_V0_9_3` and the older V0.9.2
-compatibility entry remain available for reproducing prior workflows. A release
+Use `WCC4SM_V1_0` for new work. `WCC4SM_V0_9_3` and the older V0.9 / V0.9.2
+entries are **frozen legacy snapshots** (marked LEGACY in their file headers):
+they are kept only to reproduce prior workflows and results and are not
+maintained. A release
 tag should be created only after final regression and GUI acceptance.
 
 V0.9 distinguishes two one-based pixel coordinate systems:

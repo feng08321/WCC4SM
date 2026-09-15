@@ -18,6 +18,7 @@
 - Documentation: established the WCC4SM V1.0 Technical Documentation Baseline — four canonical documents under `docs/`: `WCC4SM_ARCHITECTURE.md` (layers, 67-module src map, data flow), `WCC4SM_METHOD_SPECIFICATION.md` (math definitions for preprocessing, HDR, D/I/F/C peak positions, calibration, LOO, Gap, Influence, Compatibility, cross-validation), `WCC4SM_DATA_DICTIONARY.md` (state-structure fields, ID rules, status enums, file-format index, State five-domain grouping blueprint), and `WCC4SM_VALIDATION.md` (145-test inventory, benchmark cases, known limitations). `docs/README.md` indexes the baseline.
 - Documentation (E1): added `reference_data/README.md` provenance index and `NIST_ASD_HgAr_20260910_Metadata.md` for the current 326-row master (20260729 master + 4 weak Hg lines at 390.6371/567.581/612.327/671.634 nm, none removed), closing the provenance gap left by the 2026-09-10 data refresh.
 - Documentation (E2): the user workflow manual now explicitly explains why the GUI offers 5 peak-position definitions while the paper compares 4 (Gaussian fit is conditional and excluded from the 4x4 cross-definition matrix).
+- Normalization (C2): the three legacy entry points (`WCC4SM_V0_9_3.m`, `WCC4SM_V0_9.m`, `WCC4SM_V0_9_2.m`) now carry explicit LEGACY header comments (frozen, not maintained, use `WCC4SM_V1_0` for new work). They stay in the package root because they resolve `src/`, `reference_data/`, and `docs/` relative to their own location; README and the architecture baseline document this constraint. No behavior change.
 
 ## V1.0 — 2026-09-08
 
