@@ -19,9 +19,9 @@ function WCC4SM_V1_0
     R = wc4sm_empty_reference();
     peaks = wc4sm_empty_peaks();
     peakDataset = wc4sm_empty_peak_dataset();
-    Lbasic = basicHgArLibrary();
-    Lpaper = paper24HgArLibrary();
-    Lnim = nimHgArLibrary();
+    Lbasic = wc4sm_load_builtin_library("basic");
+    Lpaper = wc4sm_load_builtin_library("paper24");
+    Lnim = wc4sm_load_builtin_library("nim");
     Lexternal = wc4sm_empty_line_library();
     L = Lbasic;
     calPairs = wc4sm_empty_calibration_pairs();
@@ -5367,31 +5367,6 @@ function M=cleanMatrix(M)
     M=M(~all(isnan(M),2),:); M=M(:,~all(isnan(M),1));
     if isempty(M),error('CSV contains no numeric data.');end
     if size(M,2)>2,M=M(:,1:2);end
-end
-function L=basicHgArLibrary
-    % Experience-screened Hg-Ar features for nominal 300-1050 nm instruments.
-    % 296.73 nm is intentionally retained through the default 5 nm edge margin.
-    w=[296.73;302.15;313.16;334.15;404.66;546.07;576.9598;579.0663;696.54;706.72;727.29;738.40; ...
-       763.51;772.38;794.82;826.45;852.14;912.30;922.45;965.79;1013.98];
-    inten=[321;60;320;41;767;2258.4;297.9;100;45;8.7;6;7.2;23;15;6.5;11;3.7;11.6;2.3;3.8;5];
-    L=wc4sm_empty_line_library(); L.wavelength=w; L.intensity=inten; L.order=ones(size(w)); L.effective=w;L.enabled=true(size(w));
-    L.source='Built-in Hg-Ar Basic 21'; L.loaded=true;
-end
-function L=paper24HgArLibrary
-    % Table 1 of the user's 2019 paper. Starred values are measured blended
-    % peaks at the instrument's approximately 5 nm resolution.
-    w=[313.16;334.15;365.06;404.66;435.72;546.07;578.01;696.54;706.72;727.29;738.40;750.82; ...
-       763.51;772.38;794.82;801.08;811.09;826.45;841.81;852.14;912.30;922.45;965.79;1013.98];
-    inten=ones(size(w));
-    L=wc4sm_empty_line_library();L.wavelength=w;L.intensity=inten;L.order=ones(size(w));L.effective=w;L.enabled=true(size(w));
-    L.source='Paper Table 1 Hg-Ar 24 measured peaks';L.loaded=true;
-end
-function L=nimHgArLibrary
-    w=[253.65;296.71;302.15;312.55;313.16;365.02;365.50;366.33;404.65;435.81;546.06;576.92;579.03; ...
-       696.55;714.65;727.22;763.48;772.38;794.79;800.60;801.46;810.34;811.52;826.44;840.80;842.44; ...
-       852.12;912.26;922.39;935.41;965.78;978.45;1013.98;1047.04];
-    L=wc4sm_empty_line_library();L.wavelength=w;L.intensity=ones(size(w));L.order=ones(size(w));L.effective=w;L.enabled=true(size(w));
-    L.source='NIM Hg-Ar Certificate 34 GXcl2025-02617';L.loaded=true;
 end
 function p=normalizedToNaturalPolynomial(c,mu)
     % Horner composition of c(z), z=(pixel-mu(1))/mu(2).

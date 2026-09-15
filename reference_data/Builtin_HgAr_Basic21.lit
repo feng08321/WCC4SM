@@ -1,0 +1,24 @@
+# Built-in Hg-Ar Basic 21 — experience-screened Hg-Ar features for nominal 300-1050 nm instruments.
+# 296.73 nm is intentionally retained through the default 5 nm edge margin.
+# Columns: wavelength_nm <tab> relative_intensity
+296.73	321
+302.15	60
+313.16	320
+334.15	41
+404.66	767
+546.07	2258.4
+576.9598	297.9
+579.0663	100
+696.54	45
+706.72	8.7
+727.29	6
+738.40	7.2
+763.51	23
+772.38	15
+794.82	6.5
+826.45	11
+852.14	3.7
+912.30	11.6
+922.45	2.3
+965.79	3.8
+1013.98	5
