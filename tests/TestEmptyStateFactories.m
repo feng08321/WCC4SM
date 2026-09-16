@@ -111,5 +111,55 @@ classdef TestEmptyStateFactories < matlab.unittest.TestCase
                 'Visible'});
             testCase.verifyTrue(isempty(m));
         end
+
+        function emptyStateAssemblesFiveDomains(testCase)
+            State = wc4sm_empty_state();
+            testCase.verifyEqual(fieldnames(State), ...
+                {'Data';'Peaks';'Calibration';'Design';'UI'});
+        end
+
+        function emptyStateDataDomain(testCase)
+            State = wc4sm_empty_state();
+            D = State.Data;
+            testCase.verifyEqual(fieldnames(D),{'Spectrum';'Reference'; ...
+                'LibraryBasic';'LibraryPaper';'LibraryNim';'LibraryExternal'; ...
+                'Library'});
+            % Spectrum must be the shared empty-data factory.
+            testCase.verifyEqual(fieldnames(D.Spectrum),{'raw';'dark'; ...
+                'darkSource';'corrected';'normalized';'pixel';'inputX'; ...
+                'inputWavelength';'calibratedWavelength';'xKind';'source'; ...
+                'PixelCoordinateMode';'PixelFirst';'PixelLast'});
+            % Built-in libraries load and the active library defaults to basic.
+            testCase.verifyTrue(D.LibraryBasic.loaded);
+            testCase.verifyTrue(D.LibraryPaper.loaded);
+            testCase.verifyTrue(D.LibraryNim.loaded);
+            testCase.verifyFalse(D.LibraryExternal.loaded);
+            testCase.verifyEqual(D.Library,D.LibraryBasic);
+        end
+
+        function emptyStatePeaksCalibrationDefaults(testCase)
+            State = wc4sm_empty_state();
+            testCase.verifyTrue(isempty(State.Peaks.Raw));
+            testCase.verifyTrue(isempty(State.Peaks.Dataset));
+            testCase.verifyTrue(all(isnan(State.Peaks.LocalSearchWindow)));
+            testCase.verifyEqual(State.Peaks.SymmetryThresholdPx,0.2);
+            testCase.verifyTrue(isempty(State.Calibration.Pairs));
+            testCase.verifyFalse(State.Calibration.Provisional.valid);
+            testCase.verifyFalse(State.Calibration.FinalModel.valid);
+            testCase.verifyEqual(State.Calibration.ReferenceResolutionNm,3);
+        end
+
+        function emptyStateDesignUiDefaults(testCase)
+            State = wc4sm_empty_state();
+            testCase.verifyTrue(isstruct(State.Design.SubsetBeamState));
+            testCase.verifyEqual(State.Design.WindowInfluenceDegree,3);
+            testCase.verifyTrue(isempty(State.Design.PaperPeakDifferenceExcludedIDs));
+            testCase.verifyEqual(State.UI.MainAxisMode,'Pixel');
+            testCase.verifyEqual(State.UI.SelectedRow,0);
+            testCase.verifyEqual(State.UI.SelectedPositionCrossRow,1);
+            testCase.verifyFalse(State.UI.PositionCrossBusy);
+            testCase.verifyTrue(isstruct(State.UI.Colors));
+            testCase.verifyEqual(State.UI.CurrentSessionPath,'');
+        end
     end
 end
