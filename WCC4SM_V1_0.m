@@ -14,6 +14,7 @@ function WCC4SM_V1_0
         end
     end
     addpath(fullfile(packageRoot,'src'));
+    rehash;   % refresh MATLAB's path cache so newly added src modules resolve in long-running sessions
 
     State = struct();
     State.Data = wc4sm_empty_state_data();
