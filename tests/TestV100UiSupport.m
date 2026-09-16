@@ -148,8 +148,8 @@ classdef TestV100UiSupport < matlab.unittest.TestCase
             testCase.verifySubstring(src,'''Text'',''Matrix metric''');
             testCase.verifySubstring(src,'''ColumnWidth'',{58,72,78,64}');
             testCase.verifySubstring(src,'''Row = calibration | Column = application.''');
-            testCase.verifySubstring(src,'positionCrossResult.CalibrationFitCount');
-            testCase.verifySubstring(src,'positionCrossResult.ElapsedSeconds');
+            testCase.verifySubstring(src,'State.Design.PositionCrossResult.CalibrationFitCount');
+            testCase.verifySubstring(src,'State.Design.PositionCrossResult.ElapsedSeconds');
             testCase.verifySubstring(src,'State.UI.PositionCrossBusy');
             testCase.verifySubstring(src,'''Calculating ...''');
             testCase.verifySubstring(src,'uiprogressdlg');
@@ -174,7 +174,7 @@ classdef TestV100UiSupport < matlab.unittest.TestCase
             testCase.verifySubstring(src,'''PositionCrossView'',positionCrossViewTabs.SelectedTab.Title');
             testCase.verifySubstring(src,'''Selected cell'',''Selected calibration row'',''Diagonal comparison''');
             testCase.verifySubstring(src,'positionCrossHeatmapAxes');
-            testCase.verifySubstring(src,'''PositionCrossValidation'',positionCrossResult');
+            testCase.verifySubstring(src,'''PositionCrossValidation'',State.Design.PositionCrossResult');
             testCase.verifySubstring(src,'sourceAxes=[positionCrossHeatmapAxes positionCrossResidualAxes positionCrossHistogramAxes]');
         end
         function sourceUsesLogarithmicModelOrderDiagnostics(testCase)
@@ -216,7 +216,7 @@ classdef TestV100UiSupport < matlab.unittest.TestCase
             testCase.verifySubstring(src,'wc4sm_partition_subset_windows');
             testCase.verifySubstring(src,'Full-set residual with window boundaries');
             testCase.verifySubstring(src,'Show cumulative curve');
-            testCase.verifySubstring(src,'WindowPartition'',subsetWindowPartition');
+            testCase.verifySubstring(src,'WindowPartition'',State.Design.SubsetWindowPartition');
             testCase.verifySubstring(src,'''_windows.csv''');
             testCase.verifySubstring(src,'sourceAxes=[windowResidualAxes windowInfluenceAxes]');
             testCase.verifySubstring(src,'dualYAxis=numel(source.YAxis)>1');

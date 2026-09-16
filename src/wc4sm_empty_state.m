@@ -33,25 +33,7 @@ function State = wc4sm_empty_state()
     Calibration.ReferenceResolutionNm = 3;                 % referenceResolutionNm
 
     % --- State.Design: optimization / influence / subset / cross-validation ---
-    Design = struct();
-    Design.OptimizationPath = struct();                    % optimizationPath
-    Design.OptimizationStability = struct();               % optimizationStability
-    Design.OptimizationOrder = struct([]);                 % optimizationOrder
-    Design.InfluenceResult = struct();                     % influenceResult
-    Design.InfluenceOrderStats = struct([]);               % influenceOrderStats
-    Design.SeedComboResult = struct();                     % seedComboResult
-    Design.PendingSeedModelItem = struct();                % pendingSeedModelItem
-    Design.SubsetDesignProfile = struct();                 % subsetDesignProfile
-    Design.SubsetBeamState = struct();                     % subsetBeamState
-    Design.SubsetDesignCandidates = struct([]);            % subsetDesignCandidates
-    Design.SubsetWindowPartition = struct();               % subsetWindowPartition
-    Design.WindowInfluenceDegree = 3;                      % windowInfluenceDegree
-    Design.WindowSelectedMask = [];                        % windowSelectedMask
-    Design.PositionCrossResult = struct();                 % positionCrossResult
-    Design.PaperPeakDifferenceExcludedIDs = {};            % paperPeakDifferenceExcludedIDs
-    Design.PaperPeakAllExcludedIDs = {};                   % paperPeakAllExcludedIDs
-    Design.PaperPeakDifferenceResult = struct();           % paperPeakDifferenceResult
-    Design.PaperPeakPairArchive = wc4sm_empty_calibration_pairs(); % paperPeakPairArchive
+    Design = wc4sm_empty_state_design();
 
     % --- State.UI: selections, view modes, colors, session bookkeeping ---
     UI = wc4sm_empty_state_ui();
