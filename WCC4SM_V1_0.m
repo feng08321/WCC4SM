@@ -18,8 +18,7 @@ function WCC4SM_V1_0
 
     State = struct();
     State.Data = wc4sm_empty_state_data();
-    peaks = wc4sm_empty_peaks();
-    peakDataset = wc4sm_empty_peak_dataset();
+    State.Peaks = wc4sm_empty_state_peaks();
     calPairs = wc4sm_empty_calibration_pairs();
     provisional = wc4sm_empty_initial_model();
     finalModel = wc4sm_empty_final_model();
@@ -44,10 +43,7 @@ function WCC4SM_V1_0
     subsetWindowPartition = struct();
     windowInfluenceDegree = 3;
     windowSelectedMask = [];
-    localCandidates = wc4sm_empty_local_candidates();
-    localSearchWindow = [NaN NaN];
     referenceResolutionNm = 3;
-    symmetryThresholdPx = 0.2;
     State.UI = wc4sm_empty_state_ui();
     C = State.UI.Colors;   % local read-only alias of the shared color palette (full migration deferred)
     State.UI.ReferenceDataDir = fullfile(distributionRoot,'reference_data');
@@ -411,7 +407,7 @@ function WCC4SM_V1_0
     peakCountLabel=uilabel(gl,'Text','No detected peaks','FontWeight','bold','FontColor',C.navy);
     symmetryTools=uigridlayout(gl,[1 2]);symmetryTools.ColumnWidth={190,'1x'};symmetryTools.Padding=[0 0 0 0];
     uilabel(symmetryTools,'Text','Symmetry |Centroid-Center| (px)');
-    symmetryThreshold=uieditfield(symmetryTools,'numeric','Value',symmetryThresholdPx,'Limits',[0 Inf],'ValueChangedFcn',@symmetryThresholdChanged);
+    symmetryThreshold=uieditfield(symmetryTools,'numeric','Value',State.Peaks.SymmetryThresholdPx,'Limits',[0 Inf],'ValueChangedFcn',@symmetryThresholdChanged);
     peakTable=uitable(gl,'ColumnName',{'ID','Pixel','Input X','Height','Prom.','Width','Symmetry'}, ...
         'ColumnWidth',{44,58,68,65,58,52,100},'RowName',[],'CellSelectionCallback',@selectPeak);
     nav=uigridlayout(gl,[1 2]); nav.ColumnWidth={'1x','1x'}; nav.Padding=[0 0 0 0];
@@ -829,11 +825,11 @@ function WCC4SM_V1_0
         cla(influenceDeletionErrorAxes,'reset');wc4sm_style_axes(influenceDeletionErrorAxes,C);title(influenceDeletionErrorAxes,'Full-set and point-deleted model errors');
         valid=find([calPairs.ReferenceIndex]>0 & isfinite([calPairs.ReferenceWavelength]));
         influenceTable.ColumnName={'Index','Peak','Pixel','Reference nm','Residual','Deleted Fit RMSE','Deleted LOO RMSE','Curve change','Influence','Match status','Class','Recommendation'};
-        dat=cell(numel(peaks),12);
-        for k=1:numel(peaks)
-            id=peaks(k).ID;q=find(strcmp({calPairs.PeakID},id) & [calPairs.ReferenceIndex]>0,1);
+        dat=cell(numel(State.Peaks.Raw),12);
+        for k=1:numel(State.Peaks.Raw)
+            id=State.Peaks.Raw(k).ID;q=find(strcmp({calPairs.PeakID},id) & [calPairs.ReferenceIndex]>0,1);
             if isempty(q)
-                dat(k,:)={k,id,peaks(k).Pixel,NaN,NaN,NaN,NaN,NaN,NaN,'Unmatched','Unclassified','Not available for calibration'};
+                dat(k,:)={k,id,State.Peaks.Raw(k).Pixel,NaN,NaN,NaN,NaN,NaN,NaN,'Unmatched','Unclassified','Not available for calibration'};
             else
                 xp=pairPeakPosition(calPairs(q),influencePositionMethod.Value);
                 if isfinite(xp)
@@ -1203,9 +1199,9 @@ function WCC4SM_V1_0
 
     function d=windowSampleSymmetryDistance(id)
         d=NaN;id=char(string(id));
-        k=find(strcmp({peakDataset.PeakID},id)&[peakDataset.Confirmed],1);
-        if isempty(k)||isempty(peakDataset(k).AnalysisResult),return;end
-        a=peakDataset(k).AnalysisResult;
+        k=find(strcmp({State.Peaks.Dataset.PeakID},id)&[State.Peaks.Dataset.Confirmed],1);
+        if isempty(k)||isempty(State.Peaks.Dataset(k).AnalysisResult),return;end
+        a=State.Peaks.Dataset(k).AnalysisResult;
         if isfield(a,'CenterX')&&isfield(a,'CentroidX')&&isfinite(a.CenterX)&&isfinite(a.CentroidX)
             d=abs(a.CenterX-a.CentroidX);
         end
@@ -1788,7 +1784,7 @@ function WCC4SM_V1_0
     end
 
     function state=captureSessionState
-        state=struct('Spectrum',State.Data.Spectrum,'Peaks',peaks,'PeakDataset',peakDataset, ...
+        state=struct('Spectrum',State.Data.Spectrum,'Peaks',State.Peaks.Raw,'PeakDataset',State.Peaks.Dataset, ...
             'ReferenceLines',State.Data.Library,'CalibrationPairs',calPairs, ...
             'InitialCalibration',provisional,'FinalCalibration',finalModel, ...
             'CalibrationModels',calibrationModels,'AppliedModel',appliedModel, ...
@@ -1825,7 +1821,7 @@ function WCC4SM_V1_0
             'PeakDifferenceDistributionXMin',peakDifferenceDistributionXMin.Value,'PeakDifferenceDistributionXMax',peakDifferenceDistributionXMax.Value, ...
             'PeakDifferenceHistBins',peakDifferenceHistBinCount.Value,'PeakDifferenceHistRangeMode',peakDifferenceHistRangeMode.Value, ...
             'PeakDifferenceHistXMin',peakDifferenceHistXMin.Value,'PeakDifferenceHistXMax',peakDifferenceHistXMax.Value, ...
-            'ReferenceResolutionNm',referenceResolutionNm,'SymmetryThresholdPx',symmetryThresholdPx, ...
+            'ReferenceResolutionNm',referenceResolutionNm,'SymmetryThresholdPx',State.Peaks.SymmetryThresholdPx, ...
             'OptimizationPositionMethod',optimizationPositionMethod.Value, ...
             'OptimizationDegree',optimizationDegree.Value,'OptimizationStop',optimizationStop.Value, ...
             'OptimizationMaxOrder',optimizationMaxOrder.Value, ...
@@ -1851,7 +1847,7 @@ function WCC4SM_V1_0
         end
         if ~isfield(State.Data.Spectrum,'PixelFirst')||isempty(State.Data.Spectrum.PixelFirst),State.Data.Spectrum.PixelFirst=wc4sm_min_or_nan(State.Data.Spectrum.pixel);end
         if ~isfield(State.Data.Spectrum,'PixelLast')||isempty(State.Data.Spectrum.PixelLast),State.Data.Spectrum.PixelLast=wc4sm_max_or_nan(State.Data.Spectrum.pixel);end
-        peaks=state.Peaks;peakDataset=state.PeakDataset;
+        State.Peaks.Raw=state.Peaks;State.Peaks.Dataset=state.PeakDataset;
         if isempty(fieldnames(state.ReferenceLines)),State.Data.Library=wc4sm_empty_line_library();else,State.Data.Library=state.ReferenceLines;end
         State.Data.LibraryExternal=State.Data.Library;calPairs=state.CalibrationPairs;
         if isempty(fieldnames(state.InitialCalibration)),provisional=wc4sm_empty_initial_model();else,provisional=state.InitialCalibration;end
@@ -1860,7 +1856,7 @@ function WCC4SM_V1_0
         if ~isempty(calibrationModels) && ~isfield(calibrationModels,'Visible'),[calibrationModels.Visible]=deal(true);end
         if isempty(fieldnames(state.AppliedModel)),appliedModel=wc4sm_empty_final_model();else,appliedModel=state.AppliedModel;end
         appliedModelName=char(string(state.AppliedModelName));
-        localCandidates=wc4sm_empty_local_candidates();State.UI.SelectedLocalCandidate=0;
+        State.Peaks.LocalCandidates=wc4sm_empty_local_candidates();State.UI.SelectedLocalCandidate=0;
         State.UI.SelectedRow=0;State.UI.SelectedDatasetRow=0;State.UI.SelectedRefRow=0;State.UI.SelectedPairRow=0;
         State.UI.SelectedValidationRow=0;State.UI.SelectedModelRow=0;State.UI.SelectedSeedRound=0;State.UI.SelectedPositionCrossRow=1;State.UI.SelectedPositionCrossColumn=1;pendingSeedModelItem=struct();addRecommendedSeedModelBtn.Enable='off';State.Data.Reference=wc4sm_empty_reference();
         influenceResult=struct();influenceOrderStats=struct([]);State.UI.InfluenceViewMode='Point influence';seedComboResult=struct();
@@ -1975,8 +1971,8 @@ function WCC4SM_V1_0
         restoreControl(peakDifferenceHistBinCount,s,'PeakDifferenceHistBins');restoreControl(peakDifferenceHistRangeMode,s,'PeakDifferenceHistRangeMode');
         restoreControl(peakDifferenceHistXMin,s,'PeakDifferenceHistXMin');restoreControl(peakDifferenceHistXMax,s,'PeakDifferenceHistXMax');
         if isfield(s,'ReferenceResolutionNm'),referenceResolutionNm=s.ReferenceResolutionNm;end
-        if isfield(s,'SymmetryThresholdPx')&&isfinite(s.SymmetryThresholdPx)&&s.SymmetryThresholdPx>=0,symmetryThresholdPx=s.SymmetryThresholdPx;end
-        symmetryThreshold.Value=symmetryThresholdPx;
+        if isfield(s,'SymmetryThresholdPx')&&isfinite(s.SymmetryThresholdPx)&&s.SymmetryThresholdPx>=0,State.Peaks.SymmetryThresholdPx=s.SymmetryThresholdPx;end
+        symmetryThreshold.Value=State.Peaks.SymmetryThresholdPx;
         if isfield(s,'MainAxisMode'),State.UI.MainAxisMode=char(string(s.MainAxisMode));else,State.UI.MainAxisMode='Pixel';end
         if isfield(s,'MatchingAxisMode'),State.UI.MatchingAxisMode=char(string(s.MatchingAxisMode));else,State.UI.MatchingAxisMode='Pixel';end
     end
@@ -2035,9 +2031,9 @@ function WCC4SM_V1_0
             State.Data.Spectrum.PixelCoordinateMode=pixelMode.Value;
             State.Data.Spectrum.PixelFirst=min(State.Data.Spectrum.pixel);State.Data.Spectrum.PixelLast=max(State.Data.Spectrum.pixel);
             y=State.Data.Spectrum.raw;
-            sourceLabel.Text=fn; State.UI.MainAxisMode='Pixel'; State.UI.MatchingAxisMode='Pixel'; axisButton.Text='X Axis: Pixel  <->'; State.UI.SelectedRow=0; peaks=wc4sm_empty_peaks(); peakDataset=wc4sm_empty_peak_dataset();
+            sourceLabel.Text=fn; State.UI.MainAxisMode='Pixel'; State.UI.MatchingAxisMode='Pixel'; axisButton.Text='X Axis: Pixel  <->'; State.UI.SelectedRow=0; State.Peaks.Raw=wc4sm_empty_peaks(); State.Peaks.Dataset=wc4sm_empty_peak_dataset();
             paperPeakDifferenceExcludedIDs={};paperPeakAllExcludedIDs={};State.UI.PaperPeakDifferenceSelectedID='';paperPeakDifferenceResult=struct();paperPeakPairArchive=wc4sm_empty_calibration_pairs();
-            localCandidates=wc4sm_empty_local_candidates();State.UI.SelectedLocalCandidate=0;
+            State.Peaks.LocalCandidates=wc4sm_empty_local_candidates();State.UI.SelectedLocalCandidate=0;
             baselineField.Enable='on';clearDarkBtn.Enable='off';darkStatus.Text='Dark: none (manual constant baseline is active)';
             pixelViewStart.Value=min(State.Data.Spectrum.pixel); pixelViewEnd.Value=max(State.Data.Spectrum.pixel);
             fullViewStart.Value=min(State.Data.Spectrum.pixel); fullViewEnd.Value=max(State.Data.Spectrum.pixel);
@@ -2087,8 +2083,8 @@ function WCC4SM_V1_0
     end
 
     function preprocessingReset(message)
-        preprocess();peaks=wc4sm_empty_peaks();localCandidates=wc4sm_empty_local_candidates();State.UI.SelectedLocalCandidate=0;
-        State.UI.SelectedRow=0;peakDataset=wc4sm_empty_peak_dataset();calPairs=wc4sm_empty_calibration_pairs();provisional=wc4sm_empty_initial_model();
+        preprocess();State.Peaks.Raw=wc4sm_empty_peaks();State.Peaks.LocalCandidates=wc4sm_empty_local_candidates();State.UI.SelectedLocalCandidate=0;
+        State.UI.SelectedRow=0;State.Peaks.Dataset=wc4sm_empty_peak_dataset();calPairs=wc4sm_empty_calibration_pairs();provisional=wc4sm_empty_initial_model();
         paperPeakDifferenceExcludedIDs={};paperPeakAllExcludedIDs={};State.UI.PaperPeakDifferenceSelectedID='';paperPeakDifferenceResult=struct();paperPeakPairArchive=wc4sm_empty_calibration_pairs();
         finalModel=wc4sm_empty_final_model();appliedModel=wc4sm_empty_final_model();appliedModelName='';
         State.Data.Spectrum.calibratedWavelength=[];State.UI.MainAxisMode='Pixel';State.UI.MatchingAxisMode='Pixel';axisButton.Text='X Axis: Pixel  <->';
@@ -2155,14 +2151,14 @@ function WCC4SM_V1_0
         matchedMask=[calPairs.ReferenceIndex]>0&isfinite([calPairs.ReferenceWavelength]);
         matchedIDs=string({calPairs(matchedMask).PeakID});
         useWavelength=strcmp(State.UI.MainAxisMode,'Wavelength')&&appliedModel.valid;
-        analyzedCount=0;displayCount=min(numel(peaks),64);
+        analyzedCount=0;displayCount=min(numel(State.Peaks.Raw),64);
         for galleryIndex=1:64
             ax=peakGalleryAxes(galleryIndex);cla(ax,'reset');ax.FontSize=7;ax.Box='on';
             ax.XGrid='off';ax.YGrid='off';ax.XTick=[];ax.YTick=[];ax.XTickLabel={};ax.YTickLabel={};
             if galleryIndex>displayCount
                 axis(ax,'off');continue;
             end
-            p=peaks(galleryIndex);isBenchmark=any(matchedIDs==string(p.ID));
+            p=State.Peaks.Raw(galleryIndex);isBenchmark=any(matchedIDs==string(p.ID));
             if isBenchmark,lineColor=C.blueStrong;else,lineColor=C.red;end
             if isempty(p.Result)||~isstruct(p.Result)||~isfield(p.Result,'WindowX')||isempty(p.Result.WindowX)
                 axis(ax,'on');ax.XTick=[];ax.YTick=[];title(ax,p.ID,'Color',lineColor,'FontSize',7,'FontWeight','bold','Interpreter','none');
@@ -2190,7 +2186,7 @@ function WCC4SM_V1_0
             analyzedCount=analyzedCount+1;
         end
         if useWavelength,coordinate='calibrated wavelength';else,coordinate='natural pixel';end
-        peakGalleryStatus.Text=sprintf('%d / %d detected peaks displayed with analyzed windows | X: %s',analyzedCount,numel(peaks),coordinate);
+        peakGalleryStatus.Text=sprintf('%d / %d detected peaks displayed with analyzed windows | X: %s',analyzedCount,numel(State.Peaks.Raw),coordinate);
         peakGalleryStatus.Tooltip=peakGalleryStatus.Text;
     end
     function toggleMainAxis(~,~)
@@ -2204,7 +2200,7 @@ function WCC4SM_V1_0
         % A previous zoom or guide line can leave XLimMode manual, so force a
         % fresh fit whenever the coordinate system changes.
         xlim(axFull,'auto');ylim(axFull,'auto');resetFullViewRange();
-        drawFull();if State.UI.SelectedRow>0&&State.UI.SelectedRow<=numel(peaks)&&~isempty(peaks(State.UI.SelectedRow).Result),drawPeak(peaks(State.UI.SelectedRow).Result);showParameters(peaks(State.UI.SelectedRow).Result);end
+        drawFull();if State.UI.SelectedRow>0&&State.UI.SelectedRow<=numel(State.Peaks.Raw)&&~isempty(State.Peaks.Raw(State.UI.SelectedRow).Result),drawPeak(State.Peaks.Raw(State.UI.SelectedRow).Result);showParameters(State.Peaks.Raw(State.UI.SelectedRow).Result);end
         if peakAnalysisTabs.SelectedTab==peakGalleryTab,refreshPeakGallery();end
         if tabs.SelectedTab==tabCal,showCalibrationView([],[]);end
     end
@@ -2224,13 +2220,13 @@ function WCC4SM_V1_0
     end
 
     function invalidateConfirmation(row)
-        if row<1 || row>numel(peaks),return;end
-        k=find(strcmp({peakDataset.PeakID},peaks(row).ID),1);
-        if ~isempty(k) && peakDataset(k).Confirmed
-            peakDataset(k).Confirmed=false;
-            peakDataset(k).Status='Modified - unconfirmed';
-            peaks(row).Status='Modified - unconfirmed';
-            topStatus.Text=[peaks(row).ID ' settings changed: reconfirm before calibration'];
+        if row<1 || row>numel(State.Peaks.Raw),return;end
+        k=find(strcmp({State.Peaks.Dataset.PeakID},State.Peaks.Raw(row).ID),1);
+        if ~isempty(k) && State.Peaks.Dataset(k).Confirmed
+            State.Peaks.Dataset(k).Confirmed=false;
+            State.Peaks.Dataset(k).Status='Modified - unconfirmed';
+            State.Peaks.Raw(row).Status='Modified - unconfirmed';
+            topStatus.Text=[State.Peaks.Raw(row).ID ' settings changed: reconfirm before calibration'];
             refreshDataset();refreshCalibration();
         end
     end
@@ -2250,15 +2246,15 @@ function WCC4SM_V1_0
             if minWidth.Value>0, args=[args {'MinPeakWidth',minWidth.Value}]; end %#ok<AGROW>
             if isfinite(maxWidth.Value), args=[args {'MaxPeakWidth',maxWidth.Value}]; end %#ok<AGROW>
             [pks,locs,widths,proms]=findpeaks(ys,args{:});
-            peaks=wc4sm_empty_peaks();
-            localCandidates=wc4sm_empty_local_candidates();State.UI.SelectedLocalCandidate=0;
+            State.Peaks.Raw=wc4sm_empty_peaks();
+            State.Peaks.LocalCandidates=wc4sm_empty_local_candidates();State.UI.SelectedLocalCandidate=0;
             for i=1:numel(locs)
-                peaks(i).ID=sprintf('P%03d',i); peaks(i).Index=locs(i); peaks(i).Pixel=State.Data.Spectrum.pixel(locs(i));
-                peaks(i).InputX=State.Data.Spectrum.inputX(locs(i)); peaks(i).Height=pks(i); peaks(i).Prominence=proms(i);
-                peaks(i).Width=widths(i); peaks(i).Status='Unreviewed'; peaks(i).Result=[];
+                State.Peaks.Raw(i).ID=sprintf('P%03d',i); State.Peaks.Raw(i).Index=locs(i); State.Peaks.Raw(i).Pixel=State.Data.Spectrum.pixel(locs(i));
+                State.Peaks.Raw(i).InputX=State.Data.Spectrum.inputX(locs(i)); State.Peaks.Raw(i).Height=pks(i); State.Peaks.Raw(i).Prominence=proms(i);
+                State.Peaks.Raw(i).Width=widths(i); State.Peaks.Raw(i).Status='Unreviewed'; State.Peaks.Raw(i).Result=[];
             end
             State.UI.SelectedRow=0; refreshPeakTable(); drawFull(); clearCurrent();
-            peakCountLabel.Text=sprintf('Detected peaks: %d',numel(peaks)); topStatus.Text=peakCountLabel.Text;
+            peakCountLabel.Text=sprintf('Detected peaks: %d',numel(State.Peaks.Raw)); topStatus.Text=peakCountLabel.Text;
             detectBtn.BackgroundColor=C.cyan;
             refreshCalibration();
         catch ME
@@ -2270,7 +2266,7 @@ function WCC4SM_V1_0
         if isempty(State.Data.Spectrum.raw)
             uialert(fig,'Load a spectrum first.','Subwindow search');return;
         end
-        if isempty(peaks)
+        if isempty(State.Peaks.Raw)
             uialert(fig,'Run full-spectrum detection first. Local detection supplements, rather than replaces, the full peak list.','Subwindow search');return;
         end
         limits=[min(State.Data.Spectrum.pixel) max(State.Data.Spectrum.pixel)];
@@ -2291,7 +2287,7 @@ function WCC4SM_V1_0
         note=uilabel(lg,'Text','Local search normalizes within this window, uses separate sensitive parameters, and produces candidates only.','FontColor',C.navy,'FontWeight','bold','WordWrap','on');note.Layout.Column=[1 2];
         uilabel(lg,'Text','Start pixel');lStart=uieditfield(lg,'numeric','Value',viewLimits(1));
         uilabel(lg,'Text','End pixel');lEnd=uieditfield(lg,'numeric','Value',viewLimits(2));
-        localSearchWindow=sort(viewLimits);drawFull();
+        State.Peaks.LocalSearchWindow=sort(viewLimits);drawFull();
         lStart.ValueChangedFcn=@(~,~)updateLocalSearchWindow(lStart,lEnd);
         lEnd.ValueChangedFcn=@(~,~)updateLocalSearchWindow(lStart,lEnd);
         ld.CloseRequestFcn=@(~,~)closeLocalSearchDialog(ld);
@@ -2316,12 +2312,12 @@ function WCC4SM_V1_0
         lo=max(min(State.Data.Spectrum.pixel),min(lStart.Value,lEnd.Value));
         hi=min(max(State.Data.Spectrum.pixel),max(lStart.Value,lEnd.Value));
         if hi<lo,lo=min(State.Data.Spectrum.pixel);hi=max(State.Data.Spectrum.pixel);end
-        lStart.Value=lo;lEnd.Value=hi;localSearchWindow=[lo hi];drawFull();
+        lStart.Value=lo;lEnd.Value=hi;State.Peaks.LocalSearchWindow=[lo hi];drawFull();
         topStatus.Text=sprintf('Subwindow preview: pixel %.6g to %.6g',lo,hi);
     end
 
     function closeLocalSearchDialog(dialogFigure)
-        localSearchWindow=[NaN NaN];drawFull();delete(dialogFigure);
+        State.Peaks.LocalSearchWindow=[NaN NaN];drawFull();delete(dialogFigure);
     end
 
     function detectLocalCandidates(lStart,lEnd,lNorm,lHeight,lProm,lDist,lWidth,candidateDrop,candidateInfo,addLocalBtn,clearLocalBtn)
@@ -2339,27 +2335,27 @@ function WCC4SM_V1_0
             [pksLocal,locsLocal,widthsLocal,promsLocal]=findpeaks(ys,args{:});
             indices=use(locsLocal);
             isNew=true(size(indices));
-            if ~isempty(peaks)
-                for jj=1:numel(indices),isNew(jj)=~any([peaks.Index]==indices(jj));end
+            if ~isempty(State.Peaks.Raw)
+                for jj=1:numel(indices),isNew(jj)=~any([State.Peaks.Raw.Index]==indices(jj));end
             end
             indices=indices(isNew);pksLocal=pksLocal(isNew);widthsLocal=widthsLocal(isNew);promsLocal=promsLocal(isNew);
-            localCandidates=wc4sm_empty_local_candidates();
+            State.Peaks.LocalCandidates=wc4sm_empty_local_candidates();
             for jj=1:numel(indices)
-                localCandidates(jj).Index=indices(jj);localCandidates(jj).Pixel=State.Data.Spectrum.pixel(indices(jj));
-                localCandidates(jj).InputX=State.Data.Spectrum.inputX(indices(jj));localCandidates(jj).Height=pksLocal(jj);
-                localCandidates(jj).Prominence=promsLocal(jj);localCandidates(jj).Width=widthsLocal(jj);
+                State.Peaks.LocalCandidates(jj).Index=indices(jj);State.Peaks.LocalCandidates(jj).Pixel=State.Data.Spectrum.pixel(indices(jj));
+                State.Peaks.LocalCandidates(jj).InputX=State.Data.Spectrum.inputX(indices(jj));State.Peaks.LocalCandidates(jj).Height=pksLocal(jj);
+                State.Peaks.LocalCandidates(jj).Prominence=promsLocal(jj);State.Peaks.LocalCandidates(jj).Width=widthsLocal(jj);
             end
-            State.UI.SelectedLocalCandidate=double(~isempty(localCandidates));
+            State.UI.SelectedLocalCandidate=double(~isempty(State.Peaks.LocalCandidates));
             updateLocalCandidateControls(candidateDrop,candidateInfo,addLocalBtn,clearLocalBtn);
             drawFull();plotTabs.SelectedTab=tabPlots;
-            topStatus.Text=sprintf('Subwindow search: %d new candidate(s), awaiting manual addition',numel(localCandidates));
+            topStatus.Text=sprintf('Subwindow search: %d new candidate(s), awaiting manual addition',numel(State.Peaks.LocalCandidates));
         catch ME
             uialert(fig,ME.message,'Subwindow detection failed');
         end
     end
 
     function selectLocalCandidate(candidateDrop,candidateInfo)
-        if isempty(localCandidates),return;end
+        if isempty(State.Peaks.LocalCandidates),return;end
         State.UI.SelectedLocalCandidate=find(strcmp(candidateDrop.Items,candidateDrop.Value),1);
         if isempty(State.UI.SelectedLocalCandidate),State.UI.SelectedLocalCandidate=1;end
         updateLocalCandidateControls(candidateDrop,candidateInfo,[],[]);
@@ -2367,55 +2363,55 @@ function WCC4SM_V1_0
     end
 
     function updateLocalCandidateControls(candidateDrop,candidateInfo,addLocalBtn,clearLocalBtn)
-        if isempty(localCandidates)
+        if isempty(State.Peaks.LocalCandidates)
             candidateDrop.Items={'(none)'};candidateDrop.Value='(none)';
             candidateInfo.Text='No new candidate outside the full-spectrum peak list.';
             if ~isempty(addLocalBtn),addLocalBtn.Enable='off';end
             if ~isempty(clearLocalBtn),clearLocalBtn.Enable='off';end
             return;
         end
-        items=cell(1,numel(localCandidates));
-        for jj=1:numel(localCandidates)
-            items{jj}=sprintf('C%02d | pixel %.6g | prom %.4g',jj,localCandidates(jj).Pixel,localCandidates(jj).Prominence);
+        items=cell(1,numel(State.Peaks.LocalCandidates));
+        for jj=1:numel(State.Peaks.LocalCandidates)
+            items{jj}=sprintf('C%02d | pixel %.6g | prom %.4g',jj,State.Peaks.LocalCandidates(jj).Pixel,State.Peaks.LocalCandidates(jj).Prominence);
         end
         State.UI.SelectedLocalCandidate=max(1,min(State.UI.SelectedLocalCandidate,numel(items)));
         candidateDrop.Items=items;candidateDrop.Value=items{State.UI.SelectedLocalCandidate};
-        q=localCandidates(State.UI.SelectedLocalCandidate);
+        q=State.Peaks.LocalCandidates(State.UI.SelectedLocalCandidate);
         candidateInfo.Text=sprintf('Candidate %d/%d | pixel %.6g | input X %.7g | height %.4g | prominence %.4g | width %.4g px', ...
-            State.UI.SelectedLocalCandidate,numel(localCandidates),q.Pixel,q.InputX,q.Height,q.Prominence,q.Width);
+            State.UI.SelectedLocalCandidate,numel(State.Peaks.LocalCandidates),q.Pixel,q.InputX,q.Height,q.Prominence,q.Width);
         if ~isempty(addLocalBtn),addLocalBtn.Enable='on';end
         if ~isempty(clearLocalBtn),clearLocalBtn.Enable='on';end
     end
 
     function addLocalCandidate(candidateDrop,candidateInfo,addLocalBtn,clearLocalBtn)
-        if isempty(localCandidates)||State.UI.SelectedLocalCandidate<1||State.UI.SelectedLocalCandidate>numel(localCandidates),return;end
-        q=localCandidates(State.UI.SelectedLocalCandidate);
-        if any([peaks.Index]==q.Index)
+        if isempty(State.Peaks.LocalCandidates)||State.UI.SelectedLocalCandidate<1||State.UI.SelectedLocalCandidate>numel(State.Peaks.LocalCandidates),return;end
+        q=State.Peaks.LocalCandidates(State.UI.SelectedLocalCandidate);
+        if any([State.Peaks.Raw.Index]==q.Index)
             uialert(fig,'This candidate is already present in the peak list.','Duplicate candidate');return;
         end
-        oldIDs={peaks.ID};oldIndices=[peaks.Index];
+        oldIDs={State.Peaks.Raw.ID};oldIndices=[State.Peaks.Raw.Index];
         item=struct('ID','','Index',q.Index,'Pixel',q.Pixel,'InputX',q.InputX,'Height',q.Height, ...
             'Prominence',q.Prominence,'Width',q.Width,'Status','Locally added - unreviewed','Result',[]);
-        peaks(end+1)=item;
-        [~,order]=sort([peaks.Index]);peaks=peaks(order);
-        for jj=1:numel(peaks),peaks(jj).ID=sprintf('P%03d',jj);end
+        State.Peaks.Raw(end+1)=item;
+        [~,order]=sort([State.Peaks.Raw.Index]);State.Peaks.Raw=State.Peaks.Raw(order);
+        for jj=1:numel(State.Peaks.Raw),State.Peaks.Raw(jj).ID=sprintf('P%03d',jj);end
         remapStoredPeakIDs(oldIDs,oldIndices);
-        State.UI.SelectedRow=find([peaks.Index]==q.Index,1);
-        localCandidates(State.UI.SelectedLocalCandidate)=[];
-        State.UI.SelectedLocalCandidate=min(State.UI.SelectedLocalCandidate,numel(localCandidates));
+        State.UI.SelectedRow=find([State.Peaks.Raw.Index]==q.Index,1);
+        State.Peaks.LocalCandidates(State.UI.SelectedLocalCandidate)=[];
+        State.UI.SelectedLocalCandidate=min(State.UI.SelectedLocalCandidate,numel(State.Peaks.LocalCandidates));
         updateLocalCandidateControls(candidateDrop,candidateInfo,addLocalBtn,clearLocalBtn);
         refreshPeakTable();refreshDataset();refreshCalibration();drawFull();showSelected();
-        topStatus.Text=sprintf('%s inserted from local search at pixel %.6g; manually analyze and confirm it',peaks(State.UI.SelectedRow).ID,q.Pixel);
+        topStatus.Text=sprintf('%s inserted from local search at pixel %.6g; manually analyze and confirm it',State.Peaks.Raw(State.UI.SelectedRow).ID,q.Pixel);
     end
 
     function remapStoredPeakIDs(oldIDs,oldIndices)
         newIDs=oldIDs;
         for jj=1:numel(oldIDs)
-            newRow=find([peaks.Index]==oldIndices(jj),1);
+            newRow=find([State.Peaks.Raw.Index]==oldIndices(jj),1);
             if isempty(newRow),continue;end
-            newIDs{jj}=peaks(newRow).ID;
-            k=find([peakDataset.PeakIndex]==oldIndices(jj));
-            for kk=k,peakDataset(kk).PeakID=newIDs{jj};end
+            newIDs{jj}=State.Peaks.Raw(newRow).ID;
+            k=find([State.Peaks.Dataset.PeakIndex]==oldIndices(jj));
+            for kk=k,State.Peaks.Dataset(kk).PeakID=newIDs{jj};end
             k=find([calPairs.PeakIndex]==oldIndices(jj));
             for kk=k,calPairs(kk).PeakID=newIDs{jj};end
         end
@@ -2436,7 +2432,7 @@ function WCC4SM_V1_0
     end
 
     function clearLocalCandidates(candidateDrop,candidateInfo,addLocalBtn,clearLocalBtn)
-        localCandidates=wc4sm_empty_local_candidates();State.UI.SelectedLocalCandidate=0;
+        State.Peaks.LocalCandidates=wc4sm_empty_local_candidates();State.UI.SelectedLocalCandidate=0;
         updateLocalCandidateControls(candidateDrop,candidateInfo,addLocalBtn,clearLocalBtn);
         drawFull();topStatus.Text='Local candidate markers cleared';
     end
@@ -2446,36 +2442,36 @@ function WCC4SM_V1_0
         State.UI.SelectedRow=event.Indices(1);plotTabs.SelectedTab=tabPlots;peakAnalysisTabs.SelectedTab=peakAnalysisCurrentTab;showSelected();leftTabs.SelectedTab=tabCurrent;
     end
     function previousPeak(~,~)
-        if isempty(peaks), return; end
+        if isempty(State.Peaks.Raw), return; end
         State.UI.SelectedRow=max(1,State.UI.SelectedRow-1); showSelected();
     end
     function nextPeak(~,~)
-        if isempty(peaks), return; end
-        State.UI.SelectedRow=min(numel(peaks),max(1,State.UI.SelectedRow+1)); showSelected();
+        if isempty(State.Peaks.Raw), return; end
+        State.UI.SelectedRow=min(numel(State.Peaks.Raw),max(1,State.UI.SelectedRow+1)); showSelected();
     end
 
     function showSelected
-        if State.UI.SelectedRow<1 || State.UI.SelectedRow>numel(peaks), return; end
-        p=peaks(State.UI.SelectedRow); currentLabel.Text=sprintf('%s | Pixel %g | Input X %.8g',p.ID,p.Pixel,p.InputX);
+        if State.UI.SelectedRow<1 || State.UI.SelectedRow>numel(State.Peaks.Raw), return; end
+        p=State.Peaks.Raw(State.UI.SelectedRow); currentLabel.Text=sprintf('%s | Pixel %g | Input X %.8g',p.ID,p.Pixel,p.InputX);
         analyzeBtn.Enable='on'; excludeBtn.Enable='on'; analyzeSelected(); highlightTableRow();
     end
 
     function analyzeSelected(~,~)
-        if State.UI.SelectedRow<1 || State.UI.SelectedRow>numel(peaks), return; end
+        if State.UI.SelectedRow<1 || State.UI.SelectedRow>numel(State.Peaks.Raw), return; end
         try
-            p=peaks(State.UI.SelectedRow); center=State.Data.Spectrum.pixel(p.Index);
+            p=State.Peaks.Raw(State.UI.SelectedRow); center=State.Data.Spectrum.pixel(p.Index);
             % Global manual baseline is already removed. The local engine uses
             % a linear endpoint baseline to isolate the selected peak.
             rr=wc4sm_analyze_peak(State.Data.Spectrum.pixel,State.Data.Spectrum.corrected,center,leftSpin.Value,rightSpin.Value,methodDrop.Value,factorSpin.Value,'linear');
             rr=classifyPeakWindow(rr,p.Index);
-            peaks(State.UI.SelectedRow).Result=rr;
-            if ~strcmp(peaks(State.UI.SelectedRow).Status,'Excluded')
-                k=find(strcmp({peakDataset.PeakID},p.ID),1);
-                if isempty(k) || ~peakDataset(k).Confirmed
+            State.Peaks.Raw(State.UI.SelectedRow).Result=rr;
+            if ~strcmp(State.Peaks.Raw(State.UI.SelectedRow).Status,'Excluded')
+                k=find(strcmp({State.Peaks.Dataset.PeakID},p.ID),1);
+                if isempty(k) || ~State.Peaks.Dataset(k).Confirmed
                     if strcmp(rr.CalibrationUsability,'PositionOnly')
-                        peaks(State.UI.SelectedRow).Status='Position only - unconfirmed';
+                        State.Peaks.Raw(State.UI.SelectedRow).Status='Position only - unconfirmed';
                     else
-                        peaks(State.UI.SelectedRow).Status='Analyzed - unconfirmed';
+                        State.Peaks.Raw(State.UI.SelectedRow).Status='Analyzed - unconfirmed';
                     end
                 end
             end
@@ -2488,10 +2484,10 @@ function WCC4SM_V1_0
     function rr=classifyPeakWindow(rr,currentPeakIndex)
         % The full-spectrum detector is the primary source for deciding
         % whether the selected subwindow contains more than one peak top.
-        detectedIndices=[peaks.Index];
+        detectedIndices=[State.Peaks.Raw.Index];
         inWindow=detectedIndices>=rr.WindowIndex(1) & detectedIndices<=rr.WindowIndex(2);
         memberIndices=detectedIndices(inWindow);
-        memberIDs={peaks(inWindow).ID};
+        memberIDs={State.Peaks.Raw(inWindow).ID};
 
         rr.DetectedPeakCount=numel(memberIndices);
         rr.DetectedPeakIDs=memberIDs;
@@ -2564,20 +2560,20 @@ function WCC4SM_V1_0
     end
 
     function confirmPeak(~,~)
-        if State.UI.SelectedRow<1 || isempty(peaks(State.UI.SelectedRow).Result), return; end
-        p=peaks(State.UI.SelectedRow); rr=p.Result; k=find(strcmp({peakDataset.PeakID},p.ID),1);
+        if State.UI.SelectedRow<1 || isempty(State.Peaks.Raw(State.UI.SelectedRow).Result), return; end
+        p=State.Peaks.Raw(State.UI.SelectedRow); rr=p.Result; k=find(strcmp({State.Peaks.Dataset.PeakID},p.ID),1);
         item=struct('PeakID',p.ID,'PeakIndex',p.Index,'Pixel',p.Pixel,'InputX',p.InputX,'ReferenceWavelength',NaN, ...
             'Source',State.Data.Spectrum.source,'WindowPixel',rr.WindowX,'WindowADCounts',State.Data.Spectrum.raw(rr.WindowIndex(1):rr.WindowIndex(2)), ...
             'WindowCorrected',rr.WindowY,'AnalysisResult',rr,'FindPeakHeight',p.Height,'FindPeakProminence',p.Prominence, ...
             'FindPeakWidth',p.Width,'Status','Confirmed','Confirmed',true,'ConfirmedAt',datetime('now'), ...
             'ConfirmedSettings',analysisSettings());
-        if isempty(k), peakDataset(end+1)=item; else, item.ReferenceWavelength=peakDataset(k).ReferenceWavelength; peakDataset(k)=item; end
+        if isempty(k), State.Peaks.Dataset(end+1)=item; else, item.ReferenceWavelength=State.Peaks.Dataset(k).ReferenceWavelength; State.Peaks.Dataset(k)=item; end
         if strcmp(rr.CalibrationUsability,'PositionOnly')
-            peakDataset(find(strcmp({peakDataset.PeakID},p.ID),1)).Status='Confirmed - PositionOnly';
-            peaks(State.UI.SelectedRow).Status='Confirmed - PositionOnly';
+            State.Peaks.Dataset(find(strcmp({State.Peaks.Dataset.PeakID},p.ID),1)).Status='Confirmed - PositionOnly';
+            State.Peaks.Raw(State.UI.SelectedRow).Status='Confirmed - PositionOnly';
             topStatus.Text=[p.ID ' confirmed: position-only calibration feature'];
         else
-            peaks(State.UI.SelectedRow).Status='Confirmed';
+            State.Peaks.Raw(State.UI.SelectedRow).Status='Confirmed';
             topStatus.Text=[p.ID ' peak parameters confirmed'];
         end
         refreshPeakTable(); refreshDataset();
@@ -2602,35 +2598,35 @@ function WCC4SM_V1_0
     end
 
     function q=findNextUnconfirmed(afterRow)
-        q=0;n=numel(peaks);
+        q=0;n=numel(State.Peaks.Raw);
         for step=1:n
             ii=mod(afterRow-1+step,n)+1;
-            if strcmp(peaks(ii).Status,'Excluded'),continue;end
-            k=find(strcmp({peakDataset.PeakID},peaks(ii).ID),1);
-            if isempty(k) || ~peakDataset(k).Confirmed,q=ii;return;end
+            if strcmp(State.Peaks.Raw(ii).Status,'Excluded'),continue;end
+            k=find(strcmp({State.Peaks.Dataset.PeakID},State.Peaks.Raw(ii).ID),1);
+            if isempty(k) || ~State.Peaks.Dataset(k).Confirmed,q=ii;return;end
         end
     end
 
     function analyzeAll(~,~)
-        if isempty(peaks),uialert(fig,'Detect peaks first.','No detected peaks');return;end
+        if isempty(State.Peaks.Raw),uialert(fig,'Detect peaks first.','No detected peaks');return;end
         dlg=uiprogressdlg(fig,'Title','Batch peak analysis','Message','Analyzing detected peaks...','Indeterminate','off');
         okCount=0;skipCount=0;failCount=0;
-        for ii=1:numel(peaks)
-            dlg.Value=ii/numel(peaks);dlg.Message=sprintf('Analyzing %s (%d/%d)',peaks(ii).ID,ii,numel(peaks));drawnow limitrate;
-            if strcmp(peaks(ii).Status,'Excluded'),skipCount=skipCount+1;continue;end
+        for ii=1:numel(State.Peaks.Raw)
+            dlg.Value=ii/numel(State.Peaks.Raw);dlg.Message=sprintf('Analyzing %s (%d/%d)',State.Peaks.Raw(ii).ID,ii,numel(State.Peaks.Raw));drawnow limitrate;
+            if strcmp(State.Peaks.Raw(ii).Status,'Excluded'),skipCount=skipCount+1;continue;end
             try
-                p=peaks(ii);center=State.Data.Spectrum.pixel(p.Index);
+                p=State.Peaks.Raw(ii);center=State.Data.Spectrum.pixel(p.Index);
                 rr=wc4sm_analyze_peak(State.Data.Spectrum.pixel,State.Data.Spectrum.corrected,center,leftSpin.Value,rightSpin.Value,methodDrop.Value,factorSpin.Value,'linear');
                 rr=classifyPeakWindow(rr,p.Index);
-                peaks(ii).Result=rr;
+                State.Peaks.Raw(ii).Result=rr;
                 if strcmp(rr.CalibrationUsability,'PositionOnly')
-                    peaks(ii).Status='Position only - unconfirmed';
+                    State.Peaks.Raw(ii).Status='Position only - unconfirmed';
                 else
-                    peaks(ii).Status='Analyzed - unconfirmed';
+                    State.Peaks.Raw(ii).Status='Analyzed - unconfirmed';
                 end
                 okCount=okCount+1;
             catch
-                peaks(ii).Status='Analysis failed';failCount=failCount+1;
+                State.Peaks.Raw(ii).Status='Analysis failed';failCount=failCount+1;
             end
         end
         close(dlg);refreshPeakTable();refreshDataset();refreshCalibration();drawFull();
@@ -2641,19 +2637,19 @@ function WCC4SM_V1_0
 
     function toggleExclude(~,~)
         if State.UI.SelectedRow<1, return; end
-        if strcmp(peaks(State.UI.SelectedRow).Status,'Excluded'), peaks(State.UI.SelectedRow).Status='Unreviewed';
+        if strcmp(State.Peaks.Raw(State.UI.SelectedRow).Status,'Excluded'), State.Peaks.Raw(State.UI.SelectedRow).Status='Unreviewed';
         else
             invalidateConfirmation(State.UI.SelectedRow);
-            peaks(State.UI.SelectedRow).Status='Excluded';
+            State.Peaks.Raw(State.UI.SelectedRow).Status='Excluded';
         end
         refreshPeakTable(); drawFull();
     end
 
     function removeDataset(~,~)
-        row=State.UI.SelectedDatasetRow; if row<1 || row>numel(peakDataset), return; end
-        id=peakDataset(row).PeakID; peakDataset(row)=[]; k=find(strcmp({peaks.ID},id),1);
+        row=State.UI.SelectedDatasetRow; if row<1 || row>numel(State.Peaks.Dataset), return; end
+        id=State.Peaks.Dataset(row).PeakID; State.Peaks.Dataset(row)=[]; k=find(strcmp({State.Peaks.Raw.ID},id),1);
         if ~isempty(k)
-            if isempty(peaks(k).Result),peaks(k).Status='Unreviewed';else,peaks(k).Status='Analyzed - unconfirmed';end
+            if isempty(State.Peaks.Raw(k).Result),State.Peaks.Raw(k).Status='Unreviewed';else,State.Peaks.Raw(k).Status='Analyzed - unconfirmed';end
         end
         State.UI.SelectedDatasetRow=0;
         refreshDataset(); refreshPeakTable(); refreshCalibration(); drawFull();
@@ -2666,17 +2662,17 @@ function WCC4SM_V1_0
     function editDatasetCell(~,event)
         if isempty(event.Indices), return; end
         row=event.Indices(1); col=event.Indices(2);
-        if col==3 && row>=1 && row<=numel(peakDataset)
-            peakDataset(row).ReferenceWavelength=wc4sm_number_or_nan(event.NewData);
+        if col==3 && row>=1 && row<=numel(State.Peaks.Dataset)
+            State.Peaks.Dataset(row).ReferenceWavelength=wc4sm_number_or_nan(event.NewData);
         end
     end
 
     function exportDataset(~,~)
-        if isempty(peakDataset), uialert(fig,'Peak Dataset is empty.','Nothing to export'); return; end
+        if isempty(State.Peaks.Dataset), uialert(fig,'Peak Dataset is empty.','Nothing to export'); return; end
         % Synchronize editable reference wavelengths from the table.
-        td=datasetTable.Data; for i=1:numel(peakDataset), peakDataset(i).ReferenceWavelength=wc4sm_number_or_nan(td{i,3}); end
+        td=datasetTable.Data; for i=1:numel(State.Peaks.Dataset), State.Peaks.Dataset(i).ReferenceWavelength=wc4sm_number_or_nan(td{i,3}); end
         [fn,pn]=uiputfile('WCC4SM_peak_dataset.mat','Export Peak Dataset'); if isequal(fn,0), return; end
-        PeakDataset=peakDataset; Spectrum=State.Data.Spectrum; save(fullfile(pn,fn),'PeakDataset','Spectrum'); %#ok<NASGU>
+        PeakDataset=State.Peaks.Dataset; Spectrum=State.Data.Spectrum; save(fullfile(pn,fn),'PeakDataset','Spectrum'); %#ok<NASGU>
         T=datasetSummaryTable(); [~,stem]=fileparts(fn); writetable(T,fullfile(pn,[stem '.csv'])); topStatus.Text='Peak Dataset exported';
     end
 
@@ -2808,8 +2804,8 @@ function WCC4SM_V1_0
 
     function ysel=selectedPeakSpectrum
         ysel=zeros(size(State.Data.Spectrum.corrected));
-        for ii=1:numel(peakDataset)
-            wp=peakDataset(ii).WindowPixel;
+        for ii=1:numel(State.Peaks.Dataset)
+            wp=State.Peaks.Dataset(ii).WindowPixel;
             if isempty(wp), continue; end
             use=State.Data.Spectrum.pixel>=min(wp)&State.Data.Spectrum.pixel<=max(wp);
             ysel(use)=State.Data.Spectrum.corrected(use);
@@ -2824,8 +2820,8 @@ function WCC4SM_V1_0
             title(axMatchMeasured,'Load a measured spectrum first'); return;
         end
         normalizeLocalWindows();
-        localPeakMask=[peaks.Pixel]>=pixelViewStart.Value & [peaks.Pixel]<=pixelViewEnd.Value & ~strcmp({peaks.Status},'Excluded');
-        localPeakItems={peaks(localPeakMask).ID};
+        localPeakMask=[State.Peaks.Raw.Pixel]>=pixelViewStart.Value & [State.Peaks.Raw.Pixel]<=pixelViewEnd.Value & ~strcmp({State.Peaks.Raw.Status},'Excluded');
+        localPeakItems={State.Peaks.Raw(localPeakMask).ID};
         if isempty(localPeakItems)
             calPeakDrop.Items={'(none)'};calPeakDrop.Value='(none)';
         else
@@ -2836,8 +2832,8 @@ function WCC4SM_V1_0
         plot(axMatchMeasured,State.Data.Spectrum.pixel,ym,'-','Color',C.blue,'LineWidth',1.1);hold(axMatchMeasured,'on');
         for jj=find(localPeakMask)
             if showMatchingCheck.Value
-                plot(axMatchMeasured,peaks(jj).Pixel,ym(peaks(jj).Index),'v','Color',C.green,'MarkerFaceColor',C.green,'MarkerSize',5);
-                text(axMatchMeasured,peaks(jj).Pixel,ym(peaks(jj).Index),peaks(jj).ID,'FontSize',10,'FontWeight','bold','Color',C.green,'VerticalAlignment','bottom');
+                plot(axMatchMeasured,State.Peaks.Raw(jj).Pixel,ym(State.Peaks.Raw(jj).Index),'v','Color',C.green,'MarkerFaceColor',C.green,'MarkerSize',5);
+                text(axMatchMeasured,State.Peaks.Raw(jj).Pixel,ym(State.Peaks.Raw(jj).Index),State.Peaks.Raw(jj).ID,'FontSize',10,'FontWeight','bold','Color',C.green,'VerticalAlignment','bottom');
             end
         end
         hold(axMatchMeasured,'off');grid(axMatchMeasured,'on');xlim(axMatchMeasured,[pixelViewStart.Value pixelViewEnd.Value]);
@@ -2950,14 +2946,14 @@ function WCC4SM_V1_0
     end
 
     function addManualPair(~,~)
-        confirmedMask=false(1,numel(peakDataset));
-        if ~isempty(peakDataset),confirmedMask=[peakDataset.Confirmed];end
+        confirmedMask=false(1,numel(State.Peaks.Dataset));
+        if ~isempty(State.Peaks.Dataset),confirmedMask=[State.Peaks.Dataset.Confirmed];end
         if ~any(confirmedMask), uialert(fig,'Confirm peak parameters before wavelength matching.','No confirmed peaks'); return; end
         if ~State.Data.Library.loaded || State.UI.SelectedRefRow<1, uialert(fig,'Select one row in the reference-line table.','No reference selected'); return; end
         if ~State.Data.Library.enabled(State.UI.SelectedRefRow),uialert(fig,'This reference line is disabled in the current selection mode. Enable it first.','Reference line disabled');return;end
-        id=calPeakDrop.Value; k=find(strcmp({peakDataset.PeakID},id) & confirmedMask,1);
+        id=calPeakDrop.Value; k=find(strcmp({State.Peaks.Dataset.PeakID},id) & confirmedMask,1);
         if ~isempty(k)
-            peakIndex=peakDataset(k).PeakIndex; peakPixel=peakDataset(k).Pixel;
+            peakIndex=State.Peaks.Dataset(k).PeakIndex; peakPixel=State.Peaks.Dataset(k).Pixel;
         else
             uialert(fig,'The selected peak is not confirmed. Reconfirm it before matching.','Unconfirmed peak'); return;
         end
@@ -3011,11 +3007,11 @@ function WCC4SM_V1_0
         % choices consuming a line needed by the next measured peak.
         if ~isempty(calPairs), calPairs=calPairs([calPairs.Locked]); end
         if strcmp(sourceDrop.Value,'All detected peaks')
-            ids={peaks.ID}; idx=[peaks.Index]; px=[peaks.Pixel]; ok=~strcmp({peaks.Status},'Excluded');
+            ids={State.Peaks.Raw.ID}; idx=[State.Peaks.Raw.Index]; px=[State.Peaks.Raw.Pixel]; ok=~strcmp({State.Peaks.Raw.Status},'Excluded');
             ids=ids(ok); idx=idx(ok); px=px(ok);
         else
-            ok=[peakDataset.Confirmed];
-            ids={peakDataset(ok).PeakID}; idx=[peakDataset(ok).PeakIndex]; px=[peakDataset(ok).Pixel];
+            ok=[State.Peaks.Dataset.Confirmed];
+            ids={State.Peaks.Dataset(ok).PeakID}; idx=[State.Peaks.Dataset(ok).PeakIndex]; px=[State.Peaks.Dataset(ok).Pixel];
         end
         usedRef=[calPairs.ReferenceIndex]; usedPeak={calPairs.PeakID}; tol=max(matchTolerance.Value,eps);
         keep=~ismember(ids,usedPeak);ids=ids(keep);idx=idx(keep);px=px(keep);
@@ -3058,7 +3054,7 @@ function WCC4SM_V1_0
     function exportCalibration(~,~)
         if isempty(calPairs), uialert(fig,'No calibration pairs to export.','Nothing to export'); return; end
         [fn,pn]=uiputfile('WCC4SM_initial_calibration.mat','Export initial calibration'); if isequal(fn,0),return;end
-        CalibrationPairs=calPairs; InitialCalibration=provisional; FinalCalibration=finalModel; CalibrationModels=calibrationModels;ReferenceLines=State.Data.Library; PeakDataset=peakDataset; Spectrum=State.Data.Spectrum; %#ok<NASGU>
+        CalibrationPairs=calPairs; InitialCalibration=provisional; FinalCalibration=finalModel; CalibrationModels=calibrationModels;ReferenceLines=State.Data.Library; PeakDataset=State.Peaks.Dataset; Spectrum=State.Data.Spectrum; %#ok<NASGU>
         save(fullfile(pn,fn),'CalibrationPairs','InitialCalibration','FinalCalibration','CalibrationModels','ReferenceLines','PeakDataset','Spectrum');
         T=calibrationPairTable(); [~,stem]=fileparts(fn); writetable(T,fullfile(pn,[stem '.csv'])); topStatus.Text='Initial calibration exported';
     end
@@ -3106,8 +3102,8 @@ function WCC4SM_V1_0
     end
 
     function xp=pairPeakPosition(pair,method)
-        xp=NaN; k=find(strcmp({peakDataset.PeakID},pair.PeakID) & [peakDataset.Confirmed],1);
-        rr=[]; if ~isempty(k),rr=peakDataset(k).AnalysisResult;end
+        xp=NaN; k=find(strcmp({State.Peaks.Dataset.PeakID},pair.PeakID) & [State.Peaks.Dataset.Confirmed],1);
+        rr=[]; if ~isempty(k),rr=State.Peaks.Dataset(k).AnalysisResult;end
         if isempty(rr),return;end
         positionOnly=~isempty(rr) && isfield(rr,'CalibrationUsability') && ...
             strcmp(rr.CalibrationUsability,'PositionOnly');
@@ -3126,8 +3122,8 @@ function WCC4SM_V1_0
     end
 
     function tf=isPeakConfirmed(id)
-        k=find(strcmp({peakDataset.PeakID},id),1);
-        tf=~isempty(k) && peakDataset(k).Confirmed;
+        k=find(strcmp({State.Peaks.Dataset.PeakID},id),1);
+        tf=~isempty(k) && State.Peaks.Dataset(k).Confirmed;
     end
 
     function xp=gaussianPeakPosition(rr)
@@ -3155,9 +3151,9 @@ function WCC4SM_V1_0
         dat=cell(n,10);
         for ii=1:n
             id=finalModel.PeakID{ii};fwhm=NaN;ratio=NaN;centroidShift=NaN;
-            k=find(strcmp({peaks.ID},id),1);
-            if ~isempty(k)&&~isempty(peaks(k).Result)
-                rr=peaks(k).Result;fwhm=rr.FWHM;if isfinite(rr.FWHM)&&rr.FWHM~=0,ratio=rr.ERW/rr.FWHM;end
+            k=find(strcmp({State.Peaks.Raw.ID},id),1);
+            if ~isempty(k)&&~isempty(State.Peaks.Raw(k).Result)
+                rr=State.Peaks.Raw(k).Result;fwhm=rr.FWHM;if isfinite(rr.FWHM)&&rr.FWHM~=0,ratio=rr.ERW/rr.FWHM;end
                 centroidShift=rr.CentroidX-rr.CenterX;
             end
             flags={};if abs(loo(ii))>looLimit,flags{end+1}='LOO outlier';end %#ok<AGROW>
@@ -3521,7 +3517,7 @@ function WCC4SM_V1_0
 
     function openValidationPeak(~,~)
         if State.UI.SelectedValidationRow<1||State.UI.SelectedValidationRow>numel(finalModel.PeakID),return;end
-        id=finalModel.PeakID{State.UI.SelectedValidationRow};k=find(strcmp({peaks.ID},id),1);if isempty(k),return;end
+        id=finalModel.PeakID{State.UI.SelectedValidationRow};k=find(strcmp({State.Peaks.Raw.ID},id),1);if isempty(k),return;end
         State.UI.SelectedRow=k;plotTabs.SelectedTab=tabPlots;leftTabs.SelectedTab=tabCurrent;tabs.SelectedTab=tabList;showSelected();
     end
 
@@ -3676,7 +3672,7 @@ function WCC4SM_V1_0
         appliedModel=m;appliedModelName=char(name);State.Data.Spectrum.calibratedWavelength=wl(:);State.UI.MainAxisMode='Wavelength';axisButton.Text='X Axis: Wavelength  <->';resetFullViewRange();
         [coordinateMode,coordinateDomain]=modelCoordinateLabels(m);
         appliedStatus.Text=sprintf('Applied: %s | %s | pixels %s | degree %d | %.4g to %.4g nm',appliedModelName,coordinateMode,coordinateDomain,m.Degree,min(wl),max(wl));
-        drawFull();if State.UI.SelectedRow>0&&State.UI.SelectedRow<=numel(peaks)&&~isempty(peaks(State.UI.SelectedRow).Result),drawPeak(peaks(State.UI.SelectedRow).Result);showParameters(peaks(State.UI.SelectedRow).Result);end
+        drawFull();if State.UI.SelectedRow>0&&State.UI.SelectedRow<=numel(State.Peaks.Raw)&&~isempty(State.Peaks.Raw(State.UI.SelectedRow).Result),drawPeak(State.Peaks.Raw(State.UI.SelectedRow).Result);showParameters(State.Peaks.Raw(State.UI.SelectedRow).Result);end
         if peakAnalysisTabs.SelectedTab==peakGalleryTab,refreshPeakGallery();end
         plotTabs.SelectedTab=tabPlots;topStatus.Text=sprintf('%s applied to spectrum wavelength axis',appliedModelName);
     end
@@ -3684,7 +3680,7 @@ function WCC4SM_V1_0
     function clearAppliedModel(~,~)
         appliedModel=wc4sm_empty_final_model();appliedModelName='';State.Data.Spectrum.calibratedWavelength=[];State.UI.MainAxisMode='Pixel';axisButton.Text='X Axis: Pixel  <->';resetFullViewRange();
         appliedStatus.Text='Applied model: none | spectrum axis remains Pixel';drawFull();
-        if State.UI.SelectedRow>0&&State.UI.SelectedRow<=numel(peaks)&&~isempty(peaks(State.UI.SelectedRow).Result),drawPeak(peaks(State.UI.SelectedRow).Result);showParameters(peaks(State.UI.SelectedRow).Result);end
+        if State.UI.SelectedRow>0&&State.UI.SelectedRow<=numel(State.Peaks.Raw)&&~isempty(State.Peaks.Raw(State.UI.SelectedRow).Result),drawPeak(State.Peaks.Raw(State.UI.SelectedRow).Result);showParameters(State.Peaks.Raw(State.UI.SelectedRow).Result);end
         if peakAnalysisTabs.SelectedTab==peakGalleryTab,refreshPeakGallery();end
         topStatus.Text='Applied calibration cleared; pixel coordinates restored';
     end
@@ -3897,8 +3893,8 @@ function WCC4SM_V1_0
     end
 
     function plotConfirmedPeakParameters(~,~)
-        confirmed=false(1,numel(peakDataset));
-        if ~isempty(peakDataset),confirmed=[peakDataset.Confirmed];end
+        confirmed=false(1,numel(State.Peaks.Dataset));
+        if ~isempty(State.Peaks.Dataset),confirmed=[State.Peaks.Dataset.Confirmed];end
         rows=find(confirmed);
         if isempty(rows)
             uialert(fig,'Confirm peak parameters before drawing the statistics.','No confirmed peaks');
@@ -3909,7 +3905,7 @@ function WCC4SM_V1_0
         peakOrder=nan(n,1);fwhm=nan(n,1);erw=nan(n,1);
         directDelta=nan(n,1);centroidDelta=nan(n,1);interpDelta=nan(n,1);
         for jj=1:n
-            dd=peakDataset(rows(jj));rr=dd.AnalysisResult;
+            dd=State.Peaks.Dataset(rows(jj));rr=dd.AnalysisResult;
             peakOrder(jj)=str2double(regexprep(dd.PeakID,'\D',''));
             fwhm(jj)=rr.FWHM;erw(jj)=rr.ERW;
             if isfinite(rr.CenterX)
@@ -4009,8 +4005,8 @@ function WCC4SM_V1_0
     function drawPeakPositionDifferenceMap
         cla(axPeakDifferenceMap,'reset');wc4sm_style_axes(axPeakDifferenceMap,C);
         clearPeakDifferenceAuxiliary('Refresh confirmed peak statistics to calculate diagnostics.');
-        confirmed=false(1,numel(peakDataset));
-        if ~isempty(peakDataset),confirmed=[peakDataset.Confirmed];end
+        confirmed=false(1,numel(State.Peaks.Dataset));
+        if ~isempty(State.Peaks.Dataset),confirmed=[State.Peaks.Dataset.Confirmed];end
         rows=find(confirmed);
         if isempty(rows)
             showNoStatistics(axPeakDifferenceMap,'Confirm peak parameters before drawing the difference map');
@@ -4023,7 +4019,7 @@ function WCC4SM_V1_0
         directPx=nan(n,1);centroidPx=nan(n,1);interpPx=nan(n,1);centerNm=nan(n,1);
         directNm=nan(n,1);centroidNm=nan(n,1);interpNm=nan(n,1);
         for jj=1:n
-            dd=peakDataset(rows(jj));rr=dd.AnalysisResult;peakID{jj}=dd.PeakID;
+            dd=State.Peaks.Dataset(rows(jj));rr=dd.AnalysisResult;peakID{jj}=dd.PeakID;
             if isempty(rr),continue;end
             centerPx(jj)=rr.CenterX;directPx(jj)=rr.DirectPeakX;centroidPx(jj)=rr.CentroidX;interpPx(jj)=rr.InterpolatedPeakX;
             if appliedModel.valid
@@ -4227,9 +4223,9 @@ function WCC4SM_V1_0
 
     function drawPaperAllPeakDifferences
         cla(axPaperAllPeakDifferences,'reset');wc4sm_style_axes(axPaperAllPeakDifferences,C);hold(axPaperAllPeakDifferences,'on');
-        n=numel(peaks);ids=cell(n,1);wavelength=nan(n,1);delta=nan(n,3);
+        n=numel(State.Peaks.Raw);ids=cell(n,1);wavelength=nan(n,1);delta=nan(n,3);
         for kk=1:n
-            ids{kk}=peaks(kk).ID;rr=peaks(kk).Result;
+            ids{kk}=State.Peaks.Raw(kk).ID;rr=State.Peaks.Raw(kk).Result;
             if isempty(rr)||~isstruct(rr)||~isfield(rr,'CenterX')||~isfinite(rr.CenterX),continue;end
             wavelength(kk)=wc4sm_evaluate_wavelength_model(finalModel,rr.CenterX);
             if isfield(rr,'DirectPeakX'),delta(kk,1)=rr.DirectPeakX-rr.CenterX;end
@@ -4400,9 +4396,9 @@ function WCC4SM_V1_0
     end
 
     function [ids,wavelength,delta]=paperAllPeakArrays
-        n=numel(peaks);ids=cell(n,1);wavelength=nan(n,1);delta=nan(n,3);
+        n=numel(State.Peaks.Raw);ids=cell(n,1);wavelength=nan(n,1);delta=nan(n,3);
         for kk=1:n
-            ids{kk}=peaks(kk).ID;rr=peaks(kk).Result;
+            ids{kk}=State.Peaks.Raw(kk).ID;rr=State.Peaks.Raw(kk).Result;
             if isempty(rr)||~isstruct(rr)||~isfield(rr,'CenterX')||~isfinite(rr.CenterX),continue;end
             wavelength(kk)=wc4sm_evaluate_wavelength_model(finalModel,rr.CenterX);
             q=find(strcmp({calPairs.PeakID},ids{kk})&[calPairs.ReferenceIndex]>0,1);
@@ -4491,7 +4487,7 @@ function WCC4SM_V1_0
             if sum([calPairs.ReferenceIndex]>0)>=2,buildInitialCalibration([],[]);else,refreshCalibration();end
             drawPaperAllPeakDifferences();drawPaperBenchmarkDifference();
         end
-        if ~isempty(notAvailable),uialert(fig,['No archived reference pairing is available for: ' strjoin(cellstr(notAvailable),', ') '. Pair these peaks in Wavelength Matching first.'],'Cannot add unmatched peaks');end
+        if ~isempty(notAvailable),uialert(fig,['No archived reference pairing is available for: ' strjoin(cellstr(notAvailable),', ') '. Pair these State.Peaks.Raw in Wavelength Matching first.'],'Cannot add unmatched peaks');end
         topStatus.Text=sprintf('Peak-difference dataset: %d archived peak(s) added to the calibration set.',added);
     end
 
@@ -4577,8 +4573,8 @@ function WCC4SM_V1_0
             uialert(fig,'Fit a final calibration model before drawing wavelength-domain performance.','No final calibration model');
             return;
         end
-        confirmed=false(1,numel(peakDataset));
-        if ~isempty(peakDataset),confirmed=[peakDataset.Confirmed];end
+        confirmed=false(1,numel(State.Peaks.Dataset));
+        if ~isempty(State.Peaks.Dataset),confirmed=[State.Peaks.Dataset.Confirmed];end
         rows=find(confirmed);
         if isempty(rows)
             uialert(fig,'No confirmed peak snapshots are available.','No confirmed peaks');
@@ -4587,7 +4583,7 @@ function WCC4SM_V1_0
 
         n=numel(rows);confirmedResults=cell(n,1);
         for jj=1:n
-            confirmedResults{jj}=peakDataset(rows(jj)).AnalysisResult;
+            confirmedResults{jj}=State.Peaks.Dataset(rows(jj)).AnalysisResult;
         end
         calibratedPerformance=wc4sm_calculate_calibrated_performance( ...
             finalModel,confirmedResults,State.Data.Spectrum.pixel(:));
@@ -4897,39 +4893,39 @@ function WCC4SM_V1_0
     %% DRAW AND TABLE HELPERS
     function refreshAll, refreshPeakTable(); refreshDataset(); refreshCalibration(); drawFull(); clearCurrent(); end
     function symmetryThresholdChanged(~,~)
-        symmetryThresholdPx=symmetryThreshold.Value;
+        State.Peaks.SymmetryThresholdPx=symmetryThreshold.Value;
         refreshPeakTable();
-        if State.UI.SelectedRow>0 && State.UI.SelectedRow<=numel(peaks) && ~isempty(peaks(State.UI.SelectedRow).Result),showSelected();end
+        if State.UI.SelectedRow>0 && State.UI.SelectedRow<=numel(State.Peaks.Raw) && ~isempty(State.Peaks.Raw(State.UI.SelectedRow).Result),showSelected();end
     end
     function tf=isSymmetryRecommended(id)
-        tf=false;k=find(strcmp({peakDataset.PeakID},char(id)) & [peakDataset.Confirmed],1);
+        tf=false;k=find(strcmp({State.Peaks.Dataset.PeakID},char(id)) & [State.Peaks.Dataset.Confirmed],1);
         if isempty(k),return;end
-        rr=peakDataset(k).AnalysisResult;tf=isfield(rr,'CentroidX')&&isfield(rr,'CenterX')&&isfinite(rr.CentroidX)&&isfinite(rr.CenterX)&&abs(rr.CentroidX-rr.CenterX)<=symmetryThresholdPx;
+        rr=State.Peaks.Dataset(k).AnalysisResult;tf=isfield(rr,'CentroidX')&&isfield(rr,'CenterX')&&isfinite(rr.CentroidX)&&isfinite(rr.CenterX)&&abs(rr.CentroidX-rr.CenterX)<=State.Peaks.SymmetryThresholdPx;
     end
     function [label,delta]=symmetryRecommendation(rr)
         delta=NaN;label='Unavailable';
         if isfield(rr,'CentroidX')&&isfield(rr,'CenterX')&&isfinite(rr.CentroidX)&&isfinite(rr.CenterX)
-            delta=abs(rr.CentroidX-rr.CenterX);if delta<=symmetryThresholdPx,label=sprintf('Recommended (%.3g)',delta);else,label=sprintf('Review (%.3g)',delta);end
+            delta=abs(rr.CentroidX-rr.CenterX);if delta<=State.Peaks.SymmetryThresholdPx,label=sprintf('Recommended (%.3g)',delta);else,label=sprintf('Review (%.3g)',delta);end
         end
     end
     function refreshPeakTable
-        dat=cell(numel(peaks),7);
-        for i=1:numel(peaks),rec='Unavailable';if ~isempty(peaks(i).Result),[rec,~]=symmetryRecommendation(peaks(i).Result);end;dat(i,:)={peaks(i).ID,peaks(i).Pixel,peaks(i).InputX,peaks(i).Height,peaks(i).Prominence,peaks(i).Width,rec};end
-        nConfirmed=0;if ~isempty(peakDataset),nConfirmed=sum([peakDataset.Confirmed]);end
-        peakTable.Data=dat; detectInfo.Text=sprintf('Detected: %d | Confirmed: %d',numel(peaks),nConfirmed);
+        dat=cell(numel(State.Peaks.Raw),7);
+        for i=1:numel(State.Peaks.Raw),rec='Unavailable';if ~isempty(State.Peaks.Raw(i).Result),[rec,~]=symmetryRecommendation(State.Peaks.Raw(i).Result);end;dat(i,:)={State.Peaks.Raw(i).ID,State.Peaks.Raw(i).Pixel,State.Peaks.Raw(i).InputX,State.Peaks.Raw(i).Height,State.Peaks.Raw(i).Prominence,State.Peaks.Raw(i).Width,rec};end
+        nConfirmed=0;if ~isempty(State.Peaks.Dataset),nConfirmed=sum([State.Peaks.Dataset.Confirmed]);end
+        peakTable.Data=dat; detectInfo.Text=sprintf('Detected: %d | Confirmed: %d',numel(State.Peaks.Raw),nConfirmed);
     end
     function refreshDataset
-        dat=cell(numel(peakDataset),6);
-        for i=1:numel(peakDataset), rr=peakDataset(i).AnalysisResult; dat(i,:)={peakDataset(i).PeakID,peakDataset(i).Pixel,peakDataset(i).ReferenceWavelength,rr.FWHM,rr.ERW,peakDataset(i).Status}; end
+        dat=cell(numel(State.Peaks.Dataset),6);
+        for i=1:numel(State.Peaks.Dataset), rr=State.Peaks.Dataset(i).AnalysisResult; dat(i,:)={State.Peaks.Dataset(i).PeakID,State.Peaks.Dataset(i).Pixel,State.Peaks.Dataset(i).ReferenceWavelength,rr.FWHM,rr.ERW,State.Peaks.Dataset(i).Status}; end
         nConfirmed=0;nPositionOnly=0;
-        if ~isempty(peakDataset)
-            nConfirmed=sum([peakDataset.Confirmed]);
-            nPositionOnly=sum([peakDataset.Confirmed] & strcmp({peakDataset.Status},'Confirmed - PositionOnly'));
+        if ~isempty(State.Peaks.Dataset)
+            nConfirmed=sum([State.Peaks.Dataset.Confirmed]);
+            nPositionOnly=sum([State.Peaks.Dataset.Confirmed] & strcmp({State.Peaks.Dataset.Status},'Confirmed - PositionOnly'));
         end
-        nUnconfirmed=numel(peaks)-nConfirmed;
+        nUnconfirmed=numel(State.Peaks.Raw)-nConfirmed;
         datasetTable.Data=dat;
-        datasetLabel.Text=sprintf('Confirmed %d / %d | PositionOnly %d | Unconfirmed %d',nConfirmed,numel(peaks),nPositionOnly,nUnconfirmed);
-        detectInfo.Text=sprintf('Detected: %d | Confirmed: %d',numel(peaks),nConfirmed);
+        datasetLabel.Text=sprintf('Confirmed %d / %d | PositionOnly %d | Unconfirmed %d',nConfirmed,numel(State.Peaks.Raw),nPositionOnly,nUnconfirmed);
+        detectInfo.Text=sprintf('Detected: %d | Confirmed: %d',numel(State.Peaks.Raw),nConfirmed);
     end
     function refreshCalibration
         if State.Data.Library.loaded
@@ -4945,9 +4941,9 @@ function WCC4SM_V1_0
             refTable.Data=zeros(0,4); lineInfo.Text='No reference-line file';
             activeRefTable.Data=cell(0,4);
         end
-        confirmedMask=false(1,numel(peakDataset));
-        if ~isempty(peakDataset),confirmedMask=[peakDataset.Confirmed];end
-        confirmedIDs={peakDataset(confirmedMask).PeakID};
+        confirmedMask=false(1,numel(State.Peaks.Dataset));
+        if ~isempty(State.Peaks.Dataset),confirmedMask=[State.Peaks.Dataset.Confirmed];end
+        confirmedIDs={State.Peaks.Dataset(confirmedMask).PeakID};
         if isempty(confirmedIDs)
             calPeakDrop.Items={'(none)'}; calPeakDrop.Value='(none)';
         else
@@ -4996,25 +4992,25 @@ function WCC4SM_V1_0
         [x,xlab]=displayX(); [y,ylab]=displayY();
         if strcmp(scaleDrop.Value,'Log'), yplot=y; yplot(yplot<=0)=NaN; axFull.YScale='log'; else, yplot=y; axFull.YScale='linear'; end
         plot(axFull,x,yplot,'-','Color',C.blue,'LineWidth',1.05,'HitTest','off'); hold(axFull,'on');
-        if ~isempty(peaks) && refCheck.Value
-            for i=1:numel(peaks)
-                px=x(peaks(i).Index); py=yplot(peaks(i).Index); col=C.orange;
-                if contains(peaks(i).Status,'Locally added'),col=C.green;elseif strcmp(peaks(i).Status,'Excluded'),col=C.gray;end
+        if ~isempty(State.Peaks.Raw) && refCheck.Value
+            for i=1:numel(State.Peaks.Raw)
+                px=x(State.Peaks.Raw(i).Index); py=yplot(State.Peaks.Raw(i).Index); col=C.orange;
+                if contains(State.Peaks.Raw(i).Status,'Locally added'),col=C.green;elseif strcmp(State.Peaks.Raw(i).Status,'Excluded'),col=C.gray;end
                 plot(axFull,px,py,'v','Color',col,'MarkerFaceColor',col,'MarkerSize',7,'HitTest','off');
-                text(axFull,px,py,peaks(i).ID,'FontSize',10,'FontWeight','bold','Color',col,'VerticalAlignment','bottom','HorizontalAlignment','center','HitTest','off');
+                text(axFull,px,py,State.Peaks.Raw(i).ID,'FontSize',10,'FontWeight','bold','Color',col,'VerticalAlignment','bottom','HorizontalAlignment','center','HitTest','off');
             end
         end
-        if ~isempty(localCandidates)
-            for jj=1:numel(localCandidates)
-                k=localCandidates(jj).Index;col=C.purple;ms=8;
+        if ~isempty(State.Peaks.LocalCandidates)
+            for jj=1:numel(State.Peaks.LocalCandidates)
+                k=State.Peaks.LocalCandidates(jj).Index;col=C.purple;ms=8;
                 if jj==State.UI.SelectedLocalCandidate,col=C.red;ms=10;end
                 plot(axFull,x(k),yplot(k),'^','Color',col,'MarkerFaceColor','white','LineWidth',1.6,'MarkerSize',ms,'HitTest','off');
                 text(axFull,x(k),yplot(k),sprintf(' C%02d',jj),'FontSize',10,'FontWeight','bold','Color',col, ...
                     'VerticalAlignment','top','HorizontalAlignment','left','HitTest','off');
             end
         end
-        if all(isfinite(localSearchWindow))
-            markerX=localSearchWindow;
+        if all(isfinite(State.Peaks.LocalSearchWindow))
+            markerX=State.Peaks.LocalSearchWindow;
             if strcmp(State.UI.MainAxisMode,'Wavelength')&&appliedModel.valid
                 markerX=wc4sm_evaluate_wavelength_model(appliedModel,markerX);
             end
@@ -5023,8 +5019,8 @@ function WCC4SM_V1_0
             xline(axFull,markerX(2),'--','Subwindow end','Color',C.orange,'LineWidth',1.5, ...
                 'LabelVerticalAlignment','bottom','HandleVisibility','off','Tag','WCC4SMSubwindowGuide');
         end
-        if State.UI.SelectedRow>0 && State.UI.SelectedRow<=numel(peaks)
-            k=peaks(State.UI.SelectedRow).Index; plot(axFull,x(k),yplot(k),'o','Color',C.red,'LineWidth',1.8,'MarkerSize',9,'HitTest','off');
+        if State.UI.SelectedRow>0 && State.UI.SelectedRow<=numel(State.Peaks.Raw)
+            k=State.Peaks.Raw(State.UI.SelectedRow).Index; plot(axFull,x(k),yplot(k),'o','Color',C.red,'LineWidth',1.8,'MarkerSize',9,'HitTest','off');
         end
         hold(axFull,'off'); grid(axFull,'on'); xlabel(axFull,xlab); ylabel(axFull,ylab);
         ttl=['Full spectrum | ' wc4sm_short_name(State.Data.Spectrum.source)];
@@ -5220,12 +5216,12 @@ function WCC4SM_V1_0
         end
     end
     function T=datasetSummaryTable
-        n=numel(peakDataset); ID=strings(n,1); Pixel=zeros(n,1); InputX=zeros(n,1); RefNm=nan(n,1); Direct=zeros(n,1); Interpolated=zeros(n,1); Center=zeros(n,1); Centroid=zeros(n,1); FWHM=zeros(n,1); ERW=zeros(n,1); Confirmed=false(n,1); Status=strings(n,1); ConfirmedAt=NaT(n,1);
+        n=numel(State.Peaks.Dataset); ID=strings(n,1); Pixel=zeros(n,1); InputX=zeros(n,1); RefNm=nan(n,1); Direct=zeros(n,1); Interpolated=zeros(n,1); Center=zeros(n,1); Centroid=zeros(n,1); FWHM=zeros(n,1); ERW=zeros(n,1); Confirmed=false(n,1); Status=strings(n,1); ConfirmedAt=NaT(n,1);
         for i=1:n
-            rr=peakDataset(i).AnalysisResult;ID(i)=peakDataset(i).PeakID;Pixel(i)=peakDataset(i).Pixel;InputX(i)=peakDataset(i).InputX;
-            RefNm(i)=peakDataset(i).ReferenceWavelength;Direct(i)=rr.DirectPeakX;Interpolated(i)=rr.InterpolatedPeakX;Center(i)=rr.CenterX;
-            Centroid(i)=rr.CentroidX;FWHM(i)=rr.FWHM;ERW(i)=rr.ERW;Confirmed(i)=peakDataset(i).Confirmed;
-            Status(i)=peakDataset(i).Status;ConfirmedAt(i)=peakDataset(i).ConfirmedAt;
+            rr=State.Peaks.Dataset(i).AnalysisResult;ID(i)=State.Peaks.Dataset(i).PeakID;Pixel(i)=State.Peaks.Dataset(i).Pixel;InputX(i)=State.Peaks.Dataset(i).InputX;
+            RefNm(i)=State.Peaks.Dataset(i).ReferenceWavelength;Direct(i)=rr.DirectPeakX;Interpolated(i)=rr.InterpolatedPeakX;Center(i)=rr.CenterX;
+            Centroid(i)=rr.CentroidX;FWHM(i)=rr.FWHM;ERW(i)=rr.ERW;Confirmed(i)=State.Peaks.Dataset(i).Confirmed;
+            Status(i)=State.Peaks.Dataset(i).Status;ConfirmedAt(i)=State.Peaks.Dataset(i).ConfirmedAt;
         end
         T=table(ID,Pixel,InputX,RefNm,Direct,Interpolated,Center,Centroid,FWHM,ERW,Confirmed,Status,ConfirmedAt);
     end

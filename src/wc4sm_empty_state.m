@@ -20,12 +20,7 @@ function State = wc4sm_empty_state()
     Data = wc4sm_empty_state_data();
 
     % --- State.Peaks: detected peaks and local peak search ---
-    Peaks = struct();
-    Peaks.Raw = wc4sm_empty_peaks();                       % peaks
-    Peaks.Dataset = wc4sm_empty_peak_dataset();            % peakDataset
-    Peaks.LocalCandidates = wc4sm_empty_local_candidates(); % localCandidates
-    Peaks.LocalSearchWindow = [NaN NaN];                   % localSearchWindow
-    Peaks.SymmetryThresholdPx = 0.2;                       % symmetryThresholdPx
+    Peaks = wc4sm_empty_state_peaks();
 
     % --- State.Calibration: calibration pairs and wavelength models ---
     Calibration = struct();
