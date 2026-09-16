@@ -1,0 +1,36 @@
+name: MATLAB CI
+
+# Computation regression for WCC4SM. GUI smoke tests (tagged 'GUI') are
+# excluded — uifigure cannot run reliably in headless CI; they are run
+# manually in an interactive MATLAB session before release (run_gui_smoke.m).
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  regression:
+    runs-on: windows-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      # Pin to the same MATLAB release used for local validation so numerical
+      # behavior matches the reference environment.
+      - name: Set up MATLAB
+        uses: matlab-actions/setup-matlab@v2
+        with:
+          release: R2022a
+
+      # run_regression.m self-locates the package root and runs every test
+      # except those tagged 'GUI'; it errors (failing this step) on any
+      # failed or incomplete test.
+      - name: Run computation regression
+        uses: matlab-actions/run-command@v2
+        with:
+          command: |
+            addpath('tools','src');
+            run_regression();
