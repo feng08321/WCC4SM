@@ -1,5 +1,9 @@
 # WCC4SM
 
+[![MATLAB CI](https://github.com/feng08321/WCC4SM/actions/workflows/matlab-ci.yml/badge.svg?branch=main)](https://github.com/feng08321/WCC4SM/actions/workflows/matlab-ci.yml)
+[![MATLAB R2022a](https://img.shields.io/badge/MATLAB-R2022a-blue)](https://www.mathworks.com/)
+[![Platform](https://img.shields.io/badge/platform-Windows-lightgrey)]()
+
 Wavelength Characterization and Calibration for Spectrometer (WCC4SM) is a
 MATLAB application for spectrum preprocessing, peak characterization,
 reference-line matching, wavelength calibration, model validation, calibrated
