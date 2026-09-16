@@ -66,32 +66,7 @@ function State = wc4sm_empty_state()
     Design.PaperPeakPairArchive = wc4sm_empty_calibration_pairs(); % paperPeakPairArchive
 
     % --- State.UI: selections, view modes, colors, session bookkeeping ---
-    UI = struct();
-    UI.MatchingAxisMode = 'Pixel';                         % matchingAxisMode
-    UI.MainAxisMode = 'Pixel';                             % mainAxisMode
-    UI.InfluenceViewMode = 'Point influence';              % influenceViewMode
-    UI.OptimizationViewMode = '';                          % optimizationViewMode
-    UI.SelectedResidualContext = struct('X',[],'Residual',[],'Label','','XAxisLabel',''); % selectedResidualContext
-    UI.SelectedRow = 0;                                    % selectedRow
-    UI.SelectedDatasetRow = 0;                             % selectedDatasetRow
-    UI.SelectedRefRow = 0;                                 % selectedRefRow
-    UI.SelectedPairRow = 0;                                % selectedPairRow
-    UI.SelectedValidationRow = 0;                          % selectedValidationRow
-    UI.SelectedPositionCrossRow = 1;                       % selectedPositionCrossRow
-    UI.SelectedPositionCrossColumn = 1;                    % selectedPositionCrossColumn
-    UI.PositionCrossBusy = false;                          % positionCrossBusy
-    UI.PaperPeakDifferenceSelectedID = '';                 % paperPeakDifferenceSelectedID
-    UI.PaperPeakAllSelectedRows = [];                      % paperPeakAllSelectedRows
-    UI.PaperPeakCalibrationSelectedRows = [];              % paperPeakCalibrationSelectedRows
-    UI.SelectedModelRow = 0;                               % selectedModelRow
-    UI.SelectedSeedRound = 0;                              % selectedSeedRound
-    UI.SelectedSubsetCandidate = 0;                        % selectedSubsetCandidate
-    UI.SelectedLocalCandidate = 0;                         % selectedLocalCandidate
-    UI.Colors = wc4sm_colors();                            % C
-    UI.SessionMetadata = struct();                         % sessionMetadata
-    UI.CurrentSessionPath = '';                            % currentSessionPath
-    UI.ReferenceDataDir = '';   % assigned at startup (was referenceDataDir)
-    UI.DocumentationDir = '';   % assigned at startup (was documentationDir)
+    UI = wc4sm_empty_state_ui();
 
     State = struct('Data',Data,'Peaks',Peaks,'Calibration',Calibration, ...
         'Design',Design,'UI',UI);

@@ -1,4 +1,4 @@
-﻿classdef TestV100UiSupport < matlab.unittest.TestCase
+classdef TestV100UiSupport < matlab.unittest.TestCase
     methods (Test)
         function sourceUsesV100EntryPointAndKeepsV093Available(testCase)
             src = fileread(fullfile(fileparts(fileparts(mfilename('fullpath'))),'WCC4SM_V1_0.m'));
@@ -23,7 +23,7 @@
             testCase.verifySubstring(src,'ax.XTick=[];ax.YTick=[]');
             testCase.verifySubstring(src,'''MarkerFaceColor'',C.yellow');
             testCase.verifySubstring(src,'matchedIDs==string(p.ID)');
-            testCase.verifySubstring(src,'useWavelength=strcmp(mainAxisMode,''Wavelength'')&&appliedModel.valid');
+            testCase.verifySubstring(src,'useWavelength=strcmp(State.UI.MainAxisMode,''Wavelength'')&&appliedModel.valid');
             testCase.verifySubstring(src,'function openPeakGalleryFigure');
         end
         function sourceProvidesMatchingAnnotationToggle(testCase)
@@ -150,7 +150,7 @@
             testCase.verifySubstring(src,'''Row = calibration | Column = application.''');
             testCase.verifySubstring(src,'positionCrossResult.CalibrationFitCount');
             testCase.verifySubstring(src,'positionCrossResult.ElapsedSeconds');
-            testCase.verifySubstring(src,'positionCrossBusy');
+            testCase.verifySubstring(src,'State.UI.PositionCrossBusy');
             testCase.verifySubstring(src,'''Calculating ...''');
             testCase.verifySubstring(src,'uiprogressdlg');
             testCase.verifySubstring(src,'finishPositionCrossRun');
