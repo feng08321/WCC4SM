@@ -17,14 +17,7 @@ function State = wc4sm_empty_state()
 %     State.UI          - selections, view modes, colors, session bookkeeping
 
     % --- State.Data: spectrum, reference, and line libraries ---
-    Data = struct();
-    Data.Spectrum = wc4sm_empty_data();                    % D
-    Data.Reference = wc4sm_empty_reference();              % R
-    Data.LibraryBasic = wc4sm_load_builtin_library("basic");   % Lbasic
-    Data.LibraryPaper = wc4sm_load_builtin_library("paper24"); % Lpaper
-    Data.LibraryNim = wc4sm_load_builtin_library("nim");       % Lnim
-    Data.LibraryExternal = wc4sm_empty_line_library();     % Lexternal
-    Data.Library = Data.LibraryBasic;                      % L (active library)
+    Data = wc4sm_empty_state_data();
 
     % --- State.Peaks: detected peaks and local peak search ---
     Peaks = struct();
