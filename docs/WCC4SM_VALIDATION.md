@@ -8,14 +8,19 @@
 ## 1. 测试体系与运行方式
 
 - 框架：MATLAB `matlab.unittest`（classdef 测试类），`tests/` 目录动态发现；
-- 运行：`run_all_tests.m`（项目根）或
-  `results = runtests('tests','IncludeSubfolders',true)`；
-- 发布门禁：全部已发现测试通过，无 failed / incomplete；最新全量回归
-  **2026-09-15，21 个套件 / 145 个用例全部通过**；
+- **分两步运行（D1 起）**——计算回归与 GUI 冒烟必须分属两个独立 MATLAB
+  进程，因为 uifigure 窗口与计算测试混跑会导致 batch 进程堆损坏：
+  1. 计算回归：`tools/run_regression.m`（自动排除带 `GUI` 标签的测试）；
+  2. GUI 冒烟：`tools/run_gui_smoke.m`（仅跑带 `GUI` 标签的测试）。
+     **须在交互式 MATLAB 会话（有显示）中运行**——uifigure 在无头
+     batch/-nodesktop 会话中于本兆芯机不稳定（偶发堆损坏），GUI 验收
+     本就在有显示的离线开发机上进行；计算回归不受影响，可在任意环境跑。
+- 发布门禁：两步都通过，无 failed / incomplete；最新全量回归
+  **2026-09-15，145 计算用例全部通过 + 3 个 GUI 冒烟用例全部通过**；
 - 详细程序见 `docs/TESTING.md`，GUI 人工验收见
   `docs/WCC4SM_V0.9.3_测试验证与验收说明_V1.0.md`。
 
-## 2. 套件清单（21 套件 / 145 用例）
+## 2. 套件清单（22 套件 / 148 用例；计算 145 + GUI 冒烟 3）
 
 | 套件 | 用例数 | 验证内容 |
 |---|---:|---|
@@ -24,6 +29,7 @@
 | TestCalibratedPerformanceModule | 6 | 定标后波长域性能（FWHM/ERW 换算） |
 | TestCalibrationModules | 6 | 定标拟合、LOO、阶次扫描、方程格式化 |
 | TestEmptyStateFactories | 12 | 12 个状态工厂字段一致性（数据字典的代码锚点） |
+| TestGuiSmoke（GUI 标签，独立进程） | 3 | 真实启动 V1.0 界面：窗口创建、核心控件（坐标轴/表格/按钮）、干净关闭 |
 | TestGuiUtilityModules | 11 | GUI 展示工具（配色/格式化/稳健上限/cleanMatrix 等） |
 | TestInfluenceOrders | 4 | 跨阶影响统计与 Generalization Gap |
 | TestInitialMappingModules | 8 | 序列匹配单调性、初始模型构建、模型求值 |
@@ -64,10 +70,11 @@ TestBuiltinLibraries / TestWcc4smDataAssets 的校验对象，也是 MATLAB 与
 
 ## 4. 覆盖缺口与已知限制
 
-1. **GUI 交互层无自动化测试**：TestV093UiSupport / TestV100UiSupport
-   基于源码模式匹配（检查控件、回调、关键调用存在性），不启动真实界面；
-   界面行为依赖人工验收（发布门禁的一部分）。计划补充 GUI 冒烟测试
-   （启动/关闭验证）与少量 `matlab.uitest` 用例。
+1. **GUI 启动层已自动化，交互层仍依赖人工**：D1 起 TestGuiSmoke（GUI 标签，
+   独立进程）自动验证窗口创建、核心控件存在与干净关闭；TestV093UiSupport /
+   TestV100UiSupport 基于源码模式匹配（控件、回调、关键调用存在性）。
+   真实点击/录入/绘图交互仍依赖人工验收（发布门禁的一部分），后续可补
+   少量 `matlab.uitest` 用例。
 2. **嵌套外部验证未实现**：子集 LOO 只评估训练点逐一留出，不产生
    "训练子集 LOO 后再对外部全池汇总"的指标（见 METHOD_SPECIFICATION §12）。
 3. **STD 双定义并存**：定标拟合用样本 STD（分母 N−1），交叉定义验证用
