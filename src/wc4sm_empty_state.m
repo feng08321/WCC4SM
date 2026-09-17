@@ -23,14 +23,7 @@ function State = wc4sm_empty_state()
     Peaks = wc4sm_empty_state_peaks();
 
     % --- State.Calibration: calibration pairs and wavelength models ---
-    Calibration = struct();
-    Calibration.Pairs = wc4sm_empty_calibration_pairs();   % calPairs
-    Calibration.Provisional = wc4sm_empty_initial_model(); % provisional
-    Calibration.FinalModel = wc4sm_empty_final_model();    % finalModel
-    Calibration.AppliedModel = wc4sm_empty_final_model();  % appliedModel
-    Calibration.AppliedModelName = '';                     % appliedModelName
-    Calibration.Models = wc4sm_empty_calibration_models(); % calibrationModels
-    Calibration.ReferenceResolutionNm = 3;                 % referenceResolutionNm
+    Calibration = wc4sm_empty_state_calibration();
 
     % --- State.Design: optimization / influence / subset / cross-validation ---
     Design = wc4sm_empty_state_design();

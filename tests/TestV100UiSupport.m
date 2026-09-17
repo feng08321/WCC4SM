@@ -12,6 +12,7 @@ classdef TestV100UiSupport < matlab.unittest.TestCase
             testCase.verifySubstring(src,'State.Data = wc4sm_empty_state_data();');
             testCase.verifySubstring(src,'State.Peaks = wc4sm_empty_state_peaks();');
             testCase.verifySubstring(src,'State.Design = wc4sm_empty_state_design();');
+            testCase.verifySubstring(src,'State.Calibration = wc4sm_empty_state_calibration();');
             testCase.verifySubstring(src,'State.UI = wc4sm_empty_state_ui();');
         end
         function sourceProvidesFullSpectrumRangeControls(testCase)
@@ -30,7 +31,7 @@ classdef TestV100UiSupport < matlab.unittest.TestCase
             testCase.verifySubstring(src,'ax.XTick=[];ax.YTick=[]');
             testCase.verifySubstring(src,'''MarkerFaceColor'',C.yellow');
             testCase.verifySubstring(src,'matchedIDs==string(p.ID)');
-            testCase.verifySubstring(src,'useWavelength=strcmp(State.UI.MainAxisMode,''Wavelength'')&&appliedModel.valid');
+            testCase.verifySubstring(src,'useWavelength=strcmp(State.UI.MainAxisMode,''Wavelength'')&&State.Calibration.AppliedModel.valid');
             testCase.verifySubstring(src,'function openPeakGalleryFigure');
         end
         function sourceProvidesMatchingAnnotationToggle(testCase)

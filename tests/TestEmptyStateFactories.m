@@ -149,6 +149,19 @@ classdef TestEmptyStateFactories < matlab.unittest.TestCase
             testCase.verifyEqual(State.Calibration.ReferenceResolutionNm,3);
         end
 
+        function emptyStateCalibrationDomain(testCase)
+            State = wc4sm_empty_state();
+            Cb = State.Calibration;
+            testCase.verifyEqual(fieldnames(Cb),{'Pairs';'Provisional'; ...
+                'FinalModel';'AppliedModel';'AppliedModelName';'Models'; ...
+                'ReferenceResolutionNm'});
+            testCase.verifyTrue(isempty(Cb.Pairs));
+            testCase.verifyFalse(Cb.AppliedModel.valid);
+            testCase.verifyEqual(Cb.AppliedModelName,'');
+            testCase.verifyTrue(isempty(Cb.Models));
+            testCase.verifyEqual(Cb.ReferenceResolutionNm,3);
+        end
+
         function emptyStateDesignUiDefaults(testCase)
             State = wc4sm_empty_state();
             testCase.verifyTrue(isstruct(State.Design.SubsetBeamState));
