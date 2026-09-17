@@ -4,8 +4,12 @@ classdef TestV100UiSupport < matlab.unittest.TestCase
             src = fileread(fullfile(fileparts(fileparts(mfilename('fullpath'))),'WCC4SM_V1_0.m'));
             wrapper = fileread(fullfile(fileparts(fileparts(mfilename('fullpath'))),'WCC4SM_V0_9_3.m'));
             testCase.verifySubstring(src,'function WCC4SM_V1_0');
-            testCase.verifySubstring(src,'WCC4SM V1.0');
+            testCase.verifySubstring(src,'wc4sm_version()');
             testCase.verifySubstring(wrapper,'function WCC4SM_V0_9_3');
+        end
+        function versionStringFollowsReleasePattern(testCase)
+            testCase.verifyMatches(wc4sm_version(),'^V\d+\.\d+$', ...
+                'wc4sm_version() must return a display version like ''V1.1''.');
         end
         function sourceInitializesAllStateDomains(testCase)
             src = fileread(fullfile(fileparts(fileparts(mfilename('fullpath'))),'WCC4SM_V1_0.m'));

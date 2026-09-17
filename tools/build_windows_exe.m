@@ -9,12 +9,13 @@ function outputFolder = build_windows_exe
     projectRoot = fileparts(fileparts(mfilename('fullpath')));
     sourceFolder = fullfile(projectRoot,'src');
     entryFile = fullfile(projectRoot,'WCC4SM_V1_0.m');
-    outputFolder = fullfile(projectRoot,'build','WCC4SM_V1.0_Windows_x64');
-    if isfolder(outputFolder), rmdir(outputFolder,'s'); end
-    mkdir(outputFolder);
 
     addpath(sourceFolder);
     cleanup = onCleanup(@() rmpath(sourceFolder)); %#ok<NASGU>
+    outputFolder = fullfile(projectRoot,'build',['WCC4SM_' wc4sm_version() '_Windows_x64']);
+    if isfolder(outputFolder), rmdir(outputFolder,'s'); end
+    mkdir(outputFolder);
+
     mcc('-e','-v','-d',outputFolder,entryFile);
 
     copyfile(fullfile(projectRoot,'docs'),fullfile(outputFolder,'docs'));

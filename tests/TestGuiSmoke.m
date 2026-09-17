@@ -34,7 +34,7 @@ classdef TestGuiSmoke < matlab.unittest.TestCase
         function mainWindowLaunches(testCase)
             fig = launchGui(testCase);
             testCase.verifyTrue(isvalid(fig));
-            testCase.verifyEqual(fig.Name,'WCC4SM V1.0 | Peak Analysis');
+            testCase.verifyEqual(fig.Name,['WCC4SM ' wc4sm_version() ' | Peak Analysis']);
         end
 
         function mainWindowHasCoreComponents(testCase)
@@ -58,7 +58,7 @@ classdef TestGuiSmoke < matlab.unittest.TestCase
             drawnow;
             testCase.verifyFalse(isvalid(fig));
             testCase.verifyEmpty(findall(groot,'Type','figure', ...
-                'Name','WCC4SM V1.0 | Peak Analysis'));
+                'Name',['WCC4SM ' wc4sm_version() ' | Peak Analysis']));
         end
     end
 

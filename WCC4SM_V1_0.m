@@ -28,14 +28,14 @@ function WCC4SM_V1_0
     State.UI.DocumentationDir = fullfile(distributionRoot,'docs');
     if ~isfolder(State.UI.DocumentationDir), State.UI.DocumentationDir = fullfile(packageRoot,'docs'); end
 
-    fig=uifigure('Name','WCC4SM V1.0 | Peak Analysis','Position',[25 30 1580 900],'Color',C.bg);
+    fig=uifigure('Name',['WCC4SM ' wc4sm_version() ' | Peak Analysis'],'Position',[25 30 1580 900],'Color',C.bg);
     root=uigridlayout(fig,[2 3]); root.RowHeight={50,'1x'}; root.ColumnWidth={330,'1x',400};
     root.ColumnWidth={'1x',330,400};
     root.Padding=[10 9 10 10]; root.RowSpacing=8; root.ColumnSpacing=8;
 
     head=uipanel(root,'BackgroundColor',C.bg,'BorderType','none'); head.Layout.Row=1; head.Layout.Column=[1 3];
     hg=uigridlayout(head,[1 2]); hg.ColumnWidth={'1x',760}; hg.Padding=[14 5 14 5]; hg.BackgroundColor=C.bg;
-    uilabel(hg,'Text','WCC4SM (Wavelength Characterization and Calibration for Spectrometer) V1.0', ...
+    uilabel(hg,'Text',['WCC4SM (Wavelength Characterization and Calibration for Spectrometer) ' wc4sm_version()], ...
         'FontSize',16,'FontWeight','bold','FontColor',C.blue,'HorizontalAlignment','left');
     headerTools=uigridlayout(hg,[1 6]);headerTools.ColumnWidth={175,85,110,110,75,'1x'};headerTools.Padding=[0 0 0 0];headerTools.ColumnSpacing=5;headerTools.BackgroundColor=C.bg;
     openFigDrop=uidropdown(headerTools,'Items',{'Peak Analysis','Peak Parameter Statistics','Wavelength Matching', ...
@@ -2259,7 +2259,7 @@ function WCC4SM_V1_0
         catch
         end
         if diff(viewLimits)<1,viewLimits=limits;end
-        ld=uifigure('Name','WCC4SM V1.0 | Weak-peak subwindow search','Position',[180 160 520 520],'Color',C.bg);
+        ld=uifigure('Name',['WCC4SM ' wc4sm_version() ' | Weak-peak subwindow search'],'Position',[180 160 520 520],'Color',C.bg);
         lg=uigridlayout(ld,[13 2]);lg.ColumnWidth={180,'1x'};lg.RowHeight={32,30,30,30,30,30,30,30,34,34,30,34,'1x'};lg.Padding=[12 12 12 12];
         note=uilabel(lg,'Text','Local search normalizes within this window, uses separate sensitive parameters, and produces candidates only.','FontColor',C.navy,'FontWeight','bold','WordWrap','on');note.Layout.Column=[1 2];
         uilabel(lg,'Text','Start pixel');lStart=uieditfield(lg,'numeric','Value',viewLimits(1));
@@ -3781,7 +3781,7 @@ function WCC4SM_V1_0
 
     function openResidualAnalysis(~,~)
         if ~State.Calibration.FinalModel.valid,uialert(fig,'Fit a final calibration model first.','No final model');return;end
-        rf=uifigure('Name','WCC4SM V1.0 | Calibration Fit & Residual Analysis','Position',[120 90 1160 760],'Color',C.bg);
+        rf=uifigure('Name',['WCC4SM ' wc4sm_version() ' | Calibration Fit & Residual Analysis'],'Position',[120 90 1160 760],'Color',C.bg);
         rg=uigridlayout(rf,[2 2]); rg.RowHeight={'1.05x','1x'}; rg.ColumnWidth={'1.25x','1x'}; rg.Padding=[12 10 12 12];
         a1=uiaxes(rg); a1.Layout.Column=[1 2]; wc4sm_style_axes(a1,C); hold(a1,'on');
         xx=linspace(min(State.Calibration.FinalModel.Pixel),max(State.Calibration.FinalModel.Pixel),800); yy=polyval(State.Calibration.FinalModel.Coefficients,xx,[],State.Calibration.FinalModel.Mu);
@@ -4690,7 +4690,7 @@ function WCC4SM_V1_0
     end
 
     function popOutSpectrumPlots(~,~)
-        pf=figure('Name','WCC4SM V1.0 | Current spectrum plots','Color','white','Position',[100 80 1100 760]);
+        pf=figure('Name',['WCC4SM ' wc4sm_version() ' | Current spectrum plots'],'Color','white','Position',[100 80 1100 760]);
         t=tiledlayout(pf,2,1,'Padding','compact','TileSpacing','compact');
         if plotTabs.SelectedTab==tabMatchingPlots,s1=axMatchMeasured;s2=axMatchReference;else,s1=axFull;s2=axPeak;end
         a1=nexttile(t);copyAxesState(s1,a1);a2=nexttile(t);copyAxesState(s2,a2);
@@ -4784,7 +4784,7 @@ function WCC4SM_V1_0
         for kk=1:numel(sourceAxes)
             plotTitle=axesTitleText(sourceAxes(kk),sprintf('Subplot %d',kk));
             left=80+32*mod(kk-1,5);bottom=80+28*mod(kk-1,5);
-            pf=figure('Name',sprintf('WCC4SM V1.0 | %s | %s',tabName,plotTitle), ...
+            pf=figure('Name',sprintf('WCC4SM %s | %s | %s',wc4sm_version(),tabName,plotTitle), ...
                 'NumberTitle','off','Color','white','Position',[left bottom 900 620]);
             targetAxes=axes('Parent',pf,'Position',[.10 .12 .85 .80]);
             copyAxesState(sourceAxes(kk),targetAxes);
@@ -4793,7 +4793,7 @@ function WCC4SM_V1_0
     end
 
     function openPositionCrossAxesGrid(sourceAxes,rowCount,columnCount,figureTitle,showColorbars)
-        pf=figure('Name',sprintf('WCC4SM V1.0 | Model Validation | %s',figureTitle), ...
+        pf=figure('Name',sprintf('WCC4SM %s | Model Validation | %s',wc4sm_version(),figureTitle), ...
             'NumberTitle','off','Color','white','Position',[35 45 1500 850]);
         layout=tiledlayout(pf,rowCount,columnCount,'Padding','compact','TileSpacing','compact');
         for axesIndex=1:numel(sourceAxes)
@@ -4805,7 +4805,7 @@ function WCC4SM_V1_0
     end
 
     function openPeakGalleryFigure
-        pf=figure('Name','WCC4SM V1.0 | Peak Analysis | 8x8 peak-shape gallery', ...
+        pf=figure('Name',['WCC4SM ' wc4sm_version() ' | Peak Analysis | 8x8 peak-shape gallery'], ...
             'NumberTitle','off','Color','white','Position',[20 35 1840 980]);
         layout=tiledlayout(pf,8,8,'Padding','compact','TileSpacing','compact');
         for axesIndex=1:64
@@ -5291,14 +5291,14 @@ function WCC4SM_V1_0
     end
     function showAboutDialog(source,~)
         helpFig=ancestor(source,'figure');
-        message=sprintf(['WCC4SM V1.0\n' ...
+        message=sprintf(['WCC4SM %s\n' ...
             'Wavelength Characterization and Calibration for Spectrometer\n\n' ...
             'Developed by Zheng Feng\n' ...
             'Copyright (c) 2026 Zheng Feng\n' ...
             'NewOptic - unregistered personal project label\n\n' ...
             'Contact: feng1214@126.com\n' ...
             'License: Apache License 2.0\n' ...
-            'Repository: github.com/feng08321/WCC4SM']);
+            'Repository: github.com/feng08321/WCC4SM'],wc4sm_version());
         uialert(helpFig,message,'About WCC4SM','Icon','info');
     end
 end
