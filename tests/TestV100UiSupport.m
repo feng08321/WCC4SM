@@ -7,6 +7,13 @@ classdef TestV100UiSupport < matlab.unittest.TestCase
             testCase.verifySubstring(src,'WCC4SM V1.0');
             testCase.verifySubstring(wrapper,'function WCC4SM_V0_9_3');
         end
+        function sourceInitializesAllStateDomains(testCase)
+            src = fileread(fullfile(fileparts(fileparts(mfilename('fullpath'))),'WCC4SM_V1_0.m'));
+            testCase.verifySubstring(src,'State.Data = wc4sm_empty_state_data();');
+            testCase.verifySubstring(src,'State.Peaks = wc4sm_empty_state_peaks();');
+            testCase.verifySubstring(src,'State.Design = wc4sm_empty_state_design();');
+            testCase.verifySubstring(src,'State.UI = wc4sm_empty_state_ui();');
+        end
         function sourceProvidesFullSpectrumRangeControls(testCase)
             src = fileread(fullfile(fileparts(fileparts(mfilename('fullpath'))),'WCC4SM_V1_0.m'));
             testCase.verifySubstring(src,'fullViewStart');

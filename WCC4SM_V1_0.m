@@ -19,6 +19,7 @@ function WCC4SM_V1_0
     State = struct();
     State.Data = wc4sm_empty_state_data();
     State.Peaks = wc4sm_empty_state_peaks();
+    State.Design = wc4sm_empty_state_design();
     calPairs = wc4sm_empty_calibration_pairs();
     provisional = wc4sm_empty_initial_model();
     finalModel = wc4sm_empty_final_model();
