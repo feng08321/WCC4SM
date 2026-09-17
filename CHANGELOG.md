@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-## V1.1 — 2026-09-15
+## V1.1 — 2026-09-17
 
 - Refactoring (tech-debt batch D1-E): moved the fourteen file-level utility functions from the bottom of `WCC4SM_V1_0.m` into shared `src/` modules: `wc4sm_colors` (plot palette), `wc4sm_style_axes`, `wc4sm_section_label`, `wc4sm_format_value`, `wc4sm_short_name`, `wc4sm_number_or_nan`, `wc4sm_logical_text`, `wc4sm_clean_matrix`, `wc4sm_poly_normalized_to_natural`, `wc4sm_format_calibration_equation`, `wc4sm_robust_upper_limit`, `wc4sm_min_or_nan`, `wc4sm_max_or_nan`, and `wc4sm_remove_calibration_pair`. The GUI file now contains only the main function and its nested callbacks; behavior is pinned by the new `TestGuiUtilityModules` suite (11 cases). No behavior change.
 - Refactoring (tech-debt batch D1-D): extracted the initial-mapping pipeline from the `WCC4SM_V1_0` GUI file into `src/`: `wc4sm_match_ordered_sequence` (dynamic-programming monotonic peak-to-reference alignment), `wc4sm_build_initial_model` (anchor-based provisional polynomial), and `wc4sm_evaluate_wavelength_model` (normalized-polynomial evaluation used at 33 GUI call sites). Covered by the new `TestInitialMappingModules` suite (8 cases). No behavior change.
