@@ -1992,7 +1992,7 @@ function WCC4SM_V1_0
         if strcmp(State.UI.MainAxisMode,'Wavelength')&&isempty(State.Data.Spectrum.calibratedWavelength),State.UI.MainAxisMode='Pixel';end
         axisButton.Text=['X Axis: ' State.UI.MainAxisMode '  <->'];
         refreshAll();refreshModelComparison();drawModelComparison([],[]);refreshValidationView([],[]);
-        if finalModel.valid,drawEmbeddedResults();end
+        if State.Calibration.FinalModel.valid,drawEmbeddedResults();end
     end
 
     %% CALLBACKS
@@ -4464,7 +4464,7 @@ function WCC4SM_V1_0
             if sum([State.Calibration.Pairs.ReferenceIndex]>0)>=2,buildInitialCalibration([],[]);else,refreshCalibration();end
             drawPaperAllPeakDifferences();drawPaperBenchmarkDifference();
         end
-        if ~isempty(notAvailable),uialert(fig,['No archived reference pairing is available for: ' strjoin(cellstr(notAvailable),', ') '. Pair these State.Peaks.Raw in Wavelength Matching first.'],'Cannot add unmatched peaks');end
+        if ~isempty(notAvailable),uialert(fig,['No archived reference pairing is available for: ' strjoin(cellstr(notAvailable),', ') '. Pair these peaks in Wavelength Matching first.'],'Cannot add unmatched peaks');end
         topStatus.Text=sprintf('Peak-difference dataset: %d archived peak(s) added to the calibration set.',added);
     end
 
