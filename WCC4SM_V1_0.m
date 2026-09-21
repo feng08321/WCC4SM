@@ -1825,6 +1825,12 @@ function WCC4SM_V1_0
         if ~isfield(State.Data.Spectrum,'PixelFirst')||isempty(State.Data.Spectrum.PixelFirst),State.Data.Spectrum.PixelFirst=wc4sm_min_or_nan(State.Data.Spectrum.pixel);end
         if ~isfield(State.Data.Spectrum,'PixelLast')||isempty(State.Data.Spectrum.PixelLast),State.Data.Spectrum.PixelLast=wc4sm_max_or_nan(State.Data.Spectrum.pixel);end
         State.Peaks.Raw=state.Peaks;State.Peaks.Dataset=state.PeakDataset;
+        % Sessions saved before the AnalysisParams cache field existed load
+        % without it; backfill so appending new peaks (dissimilar-struct
+        % assignment) and cache lookups stay valid.
+        if ~isempty(State.Peaks.Raw) && ~isfield(State.Peaks.Raw,'AnalysisParams')
+            [State.Peaks.Raw.AnalysisParams]=deal([]);
+        end
         if isempty(fieldnames(state.ReferenceLines)),State.Data.Library=wc4sm_empty_line_library();else,State.Data.Library=state.ReferenceLines;end
         State.Data.LibraryExternal=State.Data.Library;State.Calibration.Pairs=state.CalibrationPairs;
         if isempty(fieldnames(state.InitialCalibration)),State.Calibration.Provisional=wc4sm_empty_initial_model();else,State.Calibration.Provisional=state.InitialCalibration;end
@@ -2368,7 +2374,7 @@ function WCC4SM_V1_0
         end
         oldIDs={State.Peaks.Raw.ID};oldIndices=[State.Peaks.Raw.Index];
         item=struct('ID','','Index',q.Index,'Pixel',q.Pixel,'InputX',q.InputX,'Height',q.Height, ...
-            'Prominence',q.Prominence,'Width',q.Width,'Status','Locally added - unreviewed','Result',[]);
+            'Prominence',q.Prominence,'Width',q.Width,'Status','Locally added - unreviewed','Result',[],'AnalysisParams',[]);
         State.Peaks.Raw(end+1)=item;
         [~,order]=sort([State.Peaks.Raw.Index]);State.Peaks.Raw=State.Peaks.Raw(order);
         for jj=1:numel(State.Peaks.Raw),State.Peaks.Raw(jj).ID=sprintf('P%03d',jj);end
