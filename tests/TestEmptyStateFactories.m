@@ -34,7 +34,7 @@ classdef TestEmptyStateFactories < matlab.unittest.TestCase
         function emptyPeaksIsEmptyStructArray(testCase)
             p = wc4sm_empty_peaks();
             testCase.verifyEqual(fieldnames(p),{'ID';'Index';'Pixel'; ...
-                'InputX';'Height';'Prominence';'Width';'Status';'Result'});
+                'InputX';'Height';'Prominence';'Width';'Status';'Result';'AnalysisParams'});
             testCase.verifyTrue(isempty(p));
             testCase.verifyEqual(size(p),[0 0]);
         end

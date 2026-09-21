@@ -2436,12 +2436,28 @@ function WCC4SM_V1_0
     function analyzeSelected(~,~)
         if State.UI.SelectedRow<1 || State.UI.SelectedRow>numel(State.Peaks.Raw), return; end
         try
-            p=State.Peaks.Raw(State.UI.SelectedRow); center=State.Data.Spectrum.pixel(p.Index);
-            % Global manual baseline is already removed. The local engine uses
-            % a linear endpoint baseline to isolate the selected peak.
-            rr=wc4sm_analyze_peak(State.Data.Spectrum.pixel,State.Data.Spectrum.corrected,center,leftSpin.Value,rightSpin.Value,methodDrop.Value,factorSpin.Value,'linear');
+            p=State.Peaks.Raw(State.UI.SelectedRow);
+            settings=analysisSettings();
+            % Reuse the cached analysis when the four analysis parameters are
+            % unchanged; re-running the fit on every selection is the main
+            % per-click cost. classifyPeakWindow always re-runs (cheap, and
+            % sensitive to the current neighbour set).
+            cached=isfield(p,'AnalysisParams') && ~isempty(p.AnalysisParams) && ~isempty(p.Result) && ...
+                p.AnalysisParams.LeftPixels==settings.LeftPixels && ...
+                p.AnalysisParams.RightPixels==settings.RightPixels && ...
+                strcmp(p.AnalysisParams.InterpolationMethod,settings.InterpolationMethod) && ...
+                p.AnalysisParams.InterpolationFactor==settings.InterpolationFactor;
+            if cached
+                rr=p.Result;
+            else
+                center=State.Data.Spectrum.pixel(p.Index);
+                % Global manual baseline is already removed. The local engine uses
+                % a linear endpoint baseline to isolate the selected peak.
+                rr=wc4sm_analyze_peak(State.Data.Spectrum.pixel,State.Data.Spectrum.corrected,center,settings.LeftPixels,settings.RightPixels,settings.InterpolationMethod,settings.InterpolationFactor,'linear');
+            end
             rr=classifyPeakWindow(rr,p.Index);
             State.Peaks.Raw(State.UI.SelectedRow).Result=rr;
+            State.Peaks.Raw(State.UI.SelectedRow).AnalysisParams=settings;
             if ~strcmp(State.Peaks.Raw(State.UI.SelectedRow).Status,'Excluded')
                 k=find(strcmp({State.Peaks.Dataset.PeakID},p.ID),1);
                 if isempty(k) || ~State.Peaks.Dataset(k).Confirmed
@@ -2588,14 +2604,16 @@ function WCC4SM_V1_0
         if isempty(State.Peaks.Raw),uialert(fig,'Detect peaks first.','No detected peaks');return;end
         dlg=uiprogressdlg(fig,'Title','Batch peak analysis','Message','Analyzing detected peaks...','Indeterminate','off');
         okCount=0;skipCount=0;failCount=0;
+        batchSettings=analysisSettings();
         for ii=1:numel(State.Peaks.Raw)
             dlg.Value=ii/numel(State.Peaks.Raw);dlg.Message=sprintf('Analyzing %s (%d/%d)',State.Peaks.Raw(ii).ID,ii,numel(State.Peaks.Raw));drawnow limitrate;
             if strcmp(State.Peaks.Raw(ii).Status,'Excluded'),skipCount=skipCount+1;continue;end
             try
                 p=State.Peaks.Raw(ii);center=State.Data.Spectrum.pixel(p.Index);
-                rr=wc4sm_analyze_peak(State.Data.Spectrum.pixel,State.Data.Spectrum.corrected,center,leftSpin.Value,rightSpin.Value,methodDrop.Value,factorSpin.Value,'linear');
+                rr=wc4sm_analyze_peak(State.Data.Spectrum.pixel,State.Data.Spectrum.corrected,center,batchSettings.LeftPixels,batchSettings.RightPixels,batchSettings.InterpolationMethod,batchSettings.InterpolationFactor,'linear');
                 rr=classifyPeakWindow(rr,p.Index);
                 State.Peaks.Raw(ii).Result=rr;
+                State.Peaks.Raw(ii).AnalysisParams=batchSettings;
                 if strcmp(rr.CalibrationUsability,'PositionOnly')
                     State.Peaks.Raw(ii).Status='Position only - unconfirmed';
                 else
