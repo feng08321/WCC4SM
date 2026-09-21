@@ -2428,9 +2428,27 @@ function WCC4SM_V1_0
     end
 
     function showSelected
+        % Debounce: while an analysis is in flight, further selection changes
+        % (rapid clicks / Previous / Next) only update State.UI.SelectedRow and
+        % set the pending flag; the newest selection runs once the current one
+        % finishes, instead of queueing one full re-analysis per click.
+        if State.UI.PeakSelectBusy
+            State.UI.PeakSelectPending=true;
+            return;
+        end
+        State.UI.PeakSelectBusy=true;
+        cleanup=onCleanup(@()peakSelectReleased()); %#ok<NASGU> % releases the guard on return/error
         if State.UI.SelectedRow<1 || State.UI.SelectedRow>numel(State.Peaks.Raw), return; end
         p=State.Peaks.Raw(State.UI.SelectedRow); currentLabel.Text=sprintf('%s | Pixel %g | Input X %.8g',p.ID,p.Pixel,p.InputX);
         analyzeBtn.Enable='on'; excludeBtn.Enable='on'; analyzeSelected(); highlightTableRow();
+    end
+
+    function peakSelectReleased
+        State.UI.PeakSelectBusy=false;
+        if State.UI.PeakSelectPending
+            State.UI.PeakSelectPending=false;
+            showSelected();
+        end
     end
 
     function analyzeSelected(~,~)
