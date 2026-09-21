@@ -6,5 +6,5 @@ function version = wc4sm_version()
 %   (WCC4SM_V1_0.m) and the Session format identifier stay unchanged across
 %   releases.
 
-    version = 'V1.1';
+    version = 'V1.2';
 end
