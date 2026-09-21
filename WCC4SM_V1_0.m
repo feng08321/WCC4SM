@@ -1673,7 +1673,6 @@ function WCC4SM_V1_0
             if ~editSessionMetadata(),return;end
             sessionState=captureSessionState();
             WCC4SMSession=wc4sm_create_session(sessionState,State.UI.SessionMetadata);
-            WCC4SMSession.SoftwareVersion='0.9';
             defaultName='WCC4SM_session.mat';
             if ~isempty(State.UI.CurrentSessionPath),[~,n,e]=fileparts(State.UI.CurrentSessionPath);defaultName=[n e];end
             [fn,pn]=uiputfile('*.mat','Save complete WCC4SM session',defaultName);
