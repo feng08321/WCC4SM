@@ -1,6 +1,6 @@
 # Changelog
 
-## V1.2 — 2026-09-21
+## V1.1.1 — 2026-09-21
 
 - Documentation: new current user manual `docs/WCC4SM_V1.1_软件使用说明书_V1.0.md` covering the V1.0/V1.1 additions — five peak-position definitions (and why the paper compares four), the 8x8 peak-shape gallery, peak-position cross-validation overviews with training-set selection, the reversible Show exclusion in the all-peak difference table, the Calibrated Performance subview, and V1.1 interaction-performance notes (per-peak result cache, click debouncing). The V0.9 manual is retained with a superseded notice; `docs/README.md` gains a "current user documentation" section.
 
