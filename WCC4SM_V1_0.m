@@ -414,7 +414,7 @@ function WCC4SM_V1_0
     uibutton(modeTools,'Text','Disable selected line','ButtonPushedFcn',@disableSelectedReference);
     uibutton(modeTools,'Text','Import selection mode','ButtonPushedFcn',@importReferenceMode);
     uibutton(modeTools,'Text','Export selection mode','ButtonPushedFcn',@exportReferenceMode);
-    refHelp=uilabel(rgRef,'Text','The master library is the traceable source. Basic/Paper/NIM entries are reusable selection modes. Disabled lines remain in the master and are only excluded from the active mode.', ...
+    refHelp=uilabel(rgRef,'Text','All reference wavelengths are queried from the NIST Atomic Spectra Database (https://physics.nist.gov/PhysRefData/ASD/lines_form.html) and uniformly rounded to 4 decimal places.', ...
         'WordWrap','on','FontColor',C.muted);
 
     gd=uigridlayout(tabData,[6 1]); gd.RowHeight={28,'1x',36,36,34,34}; gd.Padding=[7 7 7 7];

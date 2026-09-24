@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Reference library panel note now cites the data provenance: all reference wavelengths are queried from the NIST Atomic Spectra Database (https://physics.nist.gov/PhysRefData/ASD/lines_form.html) and uniformly rounded to 4 decimal places (replaces the previous master-library explainer text).
 - Gallery behavior change: switching to the Peak-shape gallery tab no longer auto-draws at the default 8x8. The gallery now renders only on an explicit Refresh gallery click, so Rows/Cols can be set first without a wasted redraw. The status line guides the first use.
 - Gallery fix: resizing the peak-shape gallery (Rows/Cols) no longer leaves stale rendered fragments of the previous grid on screen. The rebuild now destroys the whole grid container (with all child axes) and recreates it, with a display flush before and after — deleting/re-adding many axes inside the same uigridlayout left residue in the uifigure (CEF) canvas, visible as overlapping/misaligned tiles (the OPEN FIG export was unaffected because it builds a fresh classic figure).
 - FWHM distribution histogram (Calibrated Performance) now offers the same four range modes as every other histogram in the app — Auto full / Symmetric / +/-3 STD / Manual — sharing the same range-computation pattern. Old sessions restore cleanly (their saved values remain valid items).
