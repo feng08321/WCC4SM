@@ -124,17 +124,21 @@ function WCC4SM_V1_0
     plotHost=uigridlayout(tabPlots,[1 1]);plotHost.Padding=[0 0 0 0];
     peakAnalysisTabs=uitabgroup(plotHost,'SelectionChangedFcn',@peakAnalysisTabChanged);
     peakAnalysisCurrentTab=uitab(peakAnalysisTabs,'Title','Current spectrum and selected peak');
-    peakGalleryTab=uitab(peakAnalysisTabs,'Title','8x8 peak-shape gallery');
+    peakGalleryTab=uitab(peakAnalysisTabs,'Title','Peak-shape gallery');
     currentPeakHost=uigridlayout(peakAnalysisCurrentTab,[1 1]);currentPeakHost.Padding=[0 0 0 0];
     middle=uipanel(currentPeakHost,'Title','Measured spectrum / Selected peak','FontWeight','bold','BackgroundColor','white');
     mg=uigridlayout(middle,[2 1]); mg.RowHeight={'1.2x','1x'}; mg.Padding=[7 4 7 7];
     axFull=uiaxes(mg); wc4sm_style_axes(axFull,C); title(axFull,'Full spectrum');
     axPeak=uiaxes(mg); wc4sm_style_axes(axPeak,C); title(axPeak,'Select a peak from the list');
     peakGalleryHost=uigridlayout(peakGalleryTab,[2 1]);peakGalleryHost.RowHeight={32,'1x'};peakGalleryHost.Padding=[5 5 5 5];peakGalleryHost.RowSpacing=3;
-    peakGalleryTools=uigridlayout(peakGalleryHost,[1 3]);peakGalleryTools.ColumnWidth={100,'1x',220};peakGalleryTools.Padding=[0 0 0 0];peakGalleryTools.ColumnSpacing=6;
+    peakGalleryTools=uigridlayout(peakGalleryHost,[1 7]);peakGalleryTools.ColumnWidth={110,42,54,42,54,'1x',220};peakGalleryTools.Padding=[0 0 0 0];peakGalleryTools.ColumnSpacing=6;
     peakGalleryRefresh=uibutton(peakGalleryTools,'Text','Refresh gallery','FontWeight','bold','BackgroundColor',C.greenLight,'ButtonPushedFcn',@refreshPeakGallery);peakGalleryRefresh.Layout.Column=1;
-    peakGalleryStatus=uilabel(peakGalleryTools,'Text','Run batch pre-analysis to populate all detected-peak windows.','FontColor',C.navy);peakGalleryStatus.Layout.Column=2;
-    peakGalleryLegend=uilabel(peakGalleryTools,'Text','Blue: matched benchmark   Red: not selected','HorizontalAlignment','right','FontColor',C.muted);peakGalleryLegend.Layout.Column=3;
+    peakGalleryRowsLabel=uilabel(peakGalleryTools,'Text','Rows','HorizontalAlignment','right','FontColor',C.muted);peakGalleryRowsLabel.Layout.Column=2;
+    peakGalleryRowsField=uieditfield(peakGalleryTools,'numeric','Value',8,'Limits',[1 16],'RoundFractionalNumbers',true,'Tooltip','Gallery rows (peaks per column), applied on Refresh gallery');peakGalleryRowsField.Layout.Column=3;
+    peakGalleryColsLabel=uilabel(peakGalleryTools,'Text','Cols','HorizontalAlignment','right','FontColor',C.muted);peakGalleryColsLabel.Layout.Column=4;
+    peakGalleryColsField=uieditfield(peakGalleryTools,'numeric','Value',8,'Limits',[1 16],'RoundFractionalNumbers',true,'Tooltip','Gallery columns, applied on Refresh gallery');peakGalleryColsField.Layout.Column=5;
+    peakGalleryStatus=uilabel(peakGalleryTools,'Text','Run batch pre-analysis to populate all detected-peak windows.','FontColor',C.navy);peakGalleryStatus.Layout.Column=6;
+    peakGalleryLegend=uilabel(peakGalleryTools,'Text','Blue: matched benchmark   Red: not selected','HorizontalAlignment','right','FontColor',C.muted);peakGalleryLegend.Layout.Column=7;
     peakGalleryGrid=uigridlayout(peakGalleryHost,[8 8]);peakGalleryGrid.Layout.Row=2;peakGalleryGrid.RowHeight=repmat({'1x'},1,8);peakGalleryGrid.ColumnWidth=repmat({'1x'},1,8);peakGalleryGrid.Padding=[2 2 2 2];peakGalleryGrid.RowSpacing=2;peakGalleryGrid.ColumnSpacing=2;
     peakGalleryAxes=gobjects(0);
 
@@ -2118,14 +2122,22 @@ function WCC4SM_V1_0
         if event.NewValue==peakGalleryTab,refreshPeakGallery();end
     end
     function ensurePeakGalleryAxes
-        if numel(peakGalleryAxes)==64&&all(isgraphics(peakGalleryAxes)),return;end
-        peakGalleryStatus.Text='Creating the 8x8 gallery for first use...';drawnow;
-        peakGalleryAxes=gobjects(64,1);
-        for galleryIndex=1:64
-            peakGalleryAxes(galleryIndex)=uiaxes(peakGalleryGrid);peakGalleryAxes(galleryIndex).Layout.Row=ceil(galleryIndex/8);peakGalleryAxes(galleryIndex).Layout.Column=mod(galleryIndex-1,8)+1;
+        galleryRows=max(1,min(16,round(peakGalleryRowsField.Value)));
+        galleryCols=max(1,min(16,round(peakGalleryColsField.Value)));
+        targetCount=galleryRows*galleryCols;
+        if numel(peakGalleryAxes)==targetCount&&all(isgraphics(peakGalleryAxes)),return;end
+        peakGalleryStatus.Text=sprintf('Creating the %dx%d gallery...',galleryRows,galleryCols);drawnow;
+        delete(peakGalleryAxes(isgraphics(peakGalleryAxes)));
+        peakGalleryGrid.RowHeight=repmat({'1x'},1,galleryRows);
+        peakGalleryGrid.ColumnWidth=repmat({'1x'},1,galleryCols);
+        peakGalleryAxes=gobjects(targetCount,1);
+        for galleryIndex=1:targetCount
+            peakGalleryAxes(galleryIndex)=uiaxes(peakGalleryGrid);peakGalleryAxes(galleryIndex).Layout.Row=ceil(galleryIndex/galleryCols);peakGalleryAxes(galleryIndex).Layout.Column=mod(galleryIndex-1,galleryCols)+1;
             peakGalleryAxes(galleryIndex).FontSize=7;peakGalleryAxes(galleryIndex).Box='on';peakGalleryAxes(galleryIndex).XGrid='off';peakGalleryAxes(galleryIndex).YGrid='off';
             peakGalleryAxes(galleryIndex).XTick=[];peakGalleryAxes(galleryIndex).YTick=[];
-            if mod(galleryIndex,8)==0,peakGalleryStatus.Text=sprintf('Creating gallery axes: %d / 64',galleryIndex);drawnow limitrate;end
+            disableDefaultInteractivity(peakGalleryAxes(galleryIndex));
+            peakGalleryAxes(galleryIndex).Toolbar.Visible='off';
+            if mod(galleryIndex,galleryCols)==0,peakGalleryStatus.Text=sprintf('Creating gallery axes: %d / %d',galleryIndex,targetCount);drawnow limitrate;end
         end
     end
     function refreshPeakGallery(~,~)
@@ -2133,8 +2145,8 @@ function WCC4SM_V1_0
         matchedMask=[State.Calibration.Pairs.ReferenceIndex]>0&isfinite([State.Calibration.Pairs.ReferenceWavelength]);
         matchedIDs=string({State.Calibration.Pairs(matchedMask).PeakID});
         useWavelength=strcmp(State.UI.MainAxisMode,'Wavelength')&&State.Calibration.AppliedModel.valid;
-        analyzedCount=0;displayCount=min(numel(State.Peaks.Raw),64);
-        for galleryIndex=1:64
+        analyzedCount=0;displayCount=min(numel(State.Peaks.Raw),numel(peakGalleryAxes));
+        for galleryIndex=1:numel(peakGalleryAxes)
             ax=peakGalleryAxes(galleryIndex);cla(ax,'reset');ax.FontSize=7;ax.Box='on';
             ax.XGrid='off';ax.YGrid='off';ax.XTick=[];ax.YTick=[];ax.XTickLabel={};ax.YTickLabel={};
             if galleryIndex>displayCount
@@ -4846,17 +4858,19 @@ function WCC4SM_V1_0
     end
 
     function openPeakGalleryFigure
-        pf=figure('Name',['WCC4SM ' wc4sm_version() ' | Peak Analysis | 8x8 peak-shape gallery'], ...
+        galleryRows=max(1,min(16,round(peakGalleryRowsField.Value)));
+        galleryCols=max(1,min(16,round(peakGalleryColsField.Value)));
+        pf=figure('Name',['WCC4SM ' wc4sm_version() ' | Peak Analysis | peak-shape gallery'], ...
             'NumberTitle','off','Color','white','Position',[20 35 1840 980]);
-        layout=tiledlayout(pf,8,8,'Padding','compact','TileSpacing','compact');
-        for axesIndex=1:64
+        layout=tiledlayout(pf,galleryRows,galleryCols,'Padding','compact','TileSpacing','compact');
+        for axesIndex=1:numel(peakGalleryAxes)
             targetAxes=nexttile(layout);copyAxesState(peakGalleryAxes(axesIndex),targetAxes);
             targetAxes.FontSize=6;targetAxes.XTick=[];targetAxes.YTick=[];targetAxes.XTickLabel={};targetAxes.YTickLabel={};
         end
         coordinate='natural pixel';if strcmp(State.UI.MainAxisMode,'Wavelength')&&State.Calibration.AppliedModel.valid,coordinate='calibrated wavelength';end
         try,sgtitle(layout,sprintf('Detected-peak subwindows | X: %s | blue: matched benchmark | red: not selected',coordinate), ...
                 'Interpreter','none','FontWeight','bold');catch,end
-        topStatus.Text='Peak Analysis: opened the 8x8 peak-shape gallery as one editable figure.';
+        topStatus.Text='Peak Analysis: opened the peak-shape gallery as one editable figure.';
     end
 
     function txt=axesTitleText(source,fallback)

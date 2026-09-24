@@ -25,12 +25,14 @@ classdef TestV100UiSupport < matlab.unittest.TestCase
             testCase.verifySubstring(src,'fullViewEnd');
             testCase.verifySubstring(src,'resetFullViewRange');
         end
-        function sourceProvidesEightByEightPeakShapeGallery(testCase)
+        function sourceProvidesPeakShapeGallery(testCase)
             src = fileread(fullfile(fileparts(fileparts(mfilename('fullpath'))),'WCC4SM_V1_0.m'));
-            testCase.verifySubstring(src,'''Title'',''8x8 peak-shape gallery''');
+            testCase.verifySubstring(src,'''Title'',''Peak-shape gallery''');
             testCase.verifySubstring(src,'peakGalleryAxes=gobjects(0)');
             testCase.verifySubstring(src,'function ensurePeakGalleryAxes');
             testCase.verifySubstring(src,'function refreshPeakGallery');
+            testCase.verifySubstring(src,'peakGalleryRowsField=uieditfield');
+            testCase.verifySubstring(src,'peakGalleryColsField=uieditfield');
             testCase.verifySubstring(src,'galleryTitle=sprintf(''%s | %.3f nm''');
             testCase.verifySubstring(src,'ax.XTick=[];ax.YTick=[]');
             testCase.verifySubstring(src,'''MarkerFaceColor'',C.yellow');
