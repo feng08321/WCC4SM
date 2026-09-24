@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## V1.1.2 — 2026-09-24
 
 - Reference library panel note now cites the data provenance: all reference wavelengths are queried from the NIST Atomic Spectra Database (https://physics.nist.gov/PhysRefData/ASD/lines_form.html) and uniformly rounded to 4 decimal places (replaces the previous master-library explainer text).
 - Gallery behavior change: switching to the Peak-shape gallery tab no longer auto-draws at the default 8x8. The gallery now renders only on an explicit Refresh gallery click, so Rows/Cols can be set first without a wasted redraw. The status line guides the first use.
