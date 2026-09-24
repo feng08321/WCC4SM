@@ -2127,9 +2127,16 @@ function WCC4SM_V1_0
         targetCount=galleryRows*galleryCols;
         if numel(peakGalleryAxes)==targetCount&&all(isgraphics(peakGalleryAxes)),return;end
         peakGalleryStatus.Text=sprintf('Creating the %dx%d gallery...',galleryRows,galleryCols);drawnow;
-        delete(peakGalleryAxes(isgraphics(peakGalleryAxes)));
+        % Destroy the whole grid (with all child axes) and rebuild it from
+        % scratch: deleting/re-adding many axes inside the same uigridlayout
+        % leaves stale rendered fragments in the uifigure (CEF) canvas.
+        delete(peakGalleryGrid);
+        drawnow;
+        peakGalleryGrid=uigridlayout(peakGalleryHost,[galleryRows galleryCols]);
+        peakGalleryGrid.Layout.Row=2;
         peakGalleryGrid.RowHeight=repmat({'1x'},1,galleryRows);
         peakGalleryGrid.ColumnWidth=repmat({'1x'},1,galleryCols);
+        peakGalleryGrid.Padding=[2 2 2 2];peakGalleryGrid.RowSpacing=2;peakGalleryGrid.ColumnSpacing=2;
         peakGalleryAxes=gobjects(targetCount,1);
         for galleryIndex=1:targetCount
             peakGalleryAxes(galleryIndex)=uiaxes(peakGalleryGrid);peakGalleryAxes(galleryIndex).Layout.Row=ceil(galleryIndex/galleryCols);peakGalleryAxes(galleryIndex).Layout.Column=mod(galleryIndex-1,galleryCols)+1;
@@ -2139,6 +2146,7 @@ function WCC4SM_V1_0
             peakGalleryAxes(galleryIndex).Toolbar.Visible='off';
             if mod(galleryIndex,galleryCols)==0,peakGalleryStatus.Text=sprintf('Creating gallery axes: %d / %d',galleryIndex,targetCount);drawnow limitrate;end
         end
+        drawnow;
     end
     function refreshPeakGallery(~,~)
         ensurePeakGalleryAxes();
