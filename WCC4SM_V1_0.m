@@ -134,9 +134,9 @@ function WCC4SM_V1_0
     peakGalleryTools=uigridlayout(peakGalleryHost,[1 7]);peakGalleryTools.ColumnWidth={110,42,54,42,54,'1x',220};peakGalleryTools.Padding=[0 0 0 0];peakGalleryTools.ColumnSpacing=6;
     peakGalleryRefresh=uibutton(peakGalleryTools,'Text','Refresh gallery','FontWeight','bold','BackgroundColor',C.greenLight,'ButtonPushedFcn',@refreshPeakGallery);peakGalleryRefresh.Layout.Column=1;
     peakGalleryRowsLabel=uilabel(peakGalleryTools,'Text','Rows','HorizontalAlignment','right','FontColor',C.muted);peakGalleryRowsLabel.Layout.Column=2;
-    peakGalleryRowsField=uieditfield(peakGalleryTools,'numeric','Value',8,'Limits',[1 16],'RoundFractionalNumbers',true,'Tooltip','Gallery rows (peaks per column), applied on Refresh gallery');peakGalleryRowsField.Layout.Column=3;
+    peakGalleryRowsField=uieditfield(peakGalleryTools,'numeric','Value',8,'Limits',[1 16],'Tooltip','Gallery rows (peaks per column), applied on Refresh gallery');peakGalleryRowsField.Layout.Column=3;
     peakGalleryColsLabel=uilabel(peakGalleryTools,'Text','Cols','HorizontalAlignment','right','FontColor',C.muted);peakGalleryColsLabel.Layout.Column=4;
-    peakGalleryColsField=uieditfield(peakGalleryTools,'numeric','Value',8,'Limits',[1 16],'RoundFractionalNumbers',true,'Tooltip','Gallery columns, applied on Refresh gallery');peakGalleryColsField.Layout.Column=5;
+    peakGalleryColsField=uieditfield(peakGalleryTools,'numeric','Value',8,'Limits',[1 16],'Tooltip','Gallery columns, applied on Refresh gallery');peakGalleryColsField.Layout.Column=5;
     peakGalleryStatus=uilabel(peakGalleryTools,'Text','Run batch pre-analysis to populate all detected-peak windows.','FontColor',C.navy);peakGalleryStatus.Layout.Column=6;
     peakGalleryLegend=uilabel(peakGalleryTools,'Text','Blue: matched benchmark   Red: not selected','HorizontalAlignment','right','FontColor',C.muted);peakGalleryLegend.Layout.Column=7;
     peakGalleryGrid=uigridlayout(peakGalleryHost,[8 8]);peakGalleryGrid.Layout.Row=2;peakGalleryGrid.RowHeight=repmat({'1x'},1,8);peakGalleryGrid.ColumnWidth=repmat({'1x'},1,8);peakGalleryGrid.Padding=[2 2 2 2];peakGalleryGrid.RowSpacing=2;peakGalleryGrid.ColumnSpacing=2;
