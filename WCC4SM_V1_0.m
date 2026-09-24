@@ -403,7 +403,7 @@ function WCC4SM_V1_0
     addBtn=uibutton(gc,'Text','CONFIRM PEAK PARAMETERS','FontWeight','bold','BackgroundColor',C.greenLight,'ButtonPushedFcn',@confirmPeak,'Enable','off');
     confirmNextBtn=uibutton(gc,'Text','CONFIRM & NEXT','FontWeight','bold','BackgroundColor',C.cyan,'ButtonPushedFcn',@confirmAndNext,'Enable','off');
 
-    rgRef=uigridlayout(tabReference,[6 1]);rgRef.RowHeight={32,28,22,'1x',64,46};rgRef.Padding=[7 7 7 7];
+    rgRef=uigridlayout(tabReference,[6 1]);rgRef.RowHeight={32,28,22,'1x',64,66};rgRef.Padding=[7 7 7 7];
     loadLinesBtn=uibutton(rgRef,'Text','Load reference master file (.lit/.txt/.csv)','ButtonPushedFcn',@loadLineLibrary);
     referenceSetDrop=uidropdown(rgRef,'Items',{'Basic 21','Paper 24','NIM Certificate 34','External / User'},'Value','Basic 21','ValueChangedFcn',@referenceSetChanged);
     lineInfo=uilabel(rgRef,'Text','21 lines | Built-in Hg-Ar Basic 21','FontColor',C.muted);
