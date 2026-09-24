@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- FWHM distribution histogram (Calibrated Performance) now offers the same four range modes as every other histogram in the app — Auto full / Symmetric / +/-3 STD / Manual — sharing the same range-computation pattern. Old sessions restore cleanly (their saved values remain valid items).
 - Peak-shape gallery is now configurable: Rows/Cols inputs (1-16 each, default 8x8) plus the existing Refresh button rebuild the gallery grid at any N x M, so runs with more than 64 detected peaks (e.g. ~100 after weak-peak subwindow additions) can be viewed in full. The OPEN FIG export follows the same N x M layout. Tab renamed from "8x8 peak-shape gallery" to "Peak-shape gallery".
 - Disabled built-in mouse interactivity (scroll-zoom / pan / datatips / hover toolbar) on all app axes via `wc4sm_style_axes` and the gallery axes factory. Stray mouse zooms could leave an axis stuck in manual limits with no obvious way back; zooming is already covered by explicit controls (view-range fields, Zoom +/- buttons, RESET RANGE). ButtonDownFcn pick callbacks (heatmap cells, paper-analysis points) are unaffected.
 - Session provenance: `SoftwareVersion` in saved Session files now records the actual application version via `wc4sm_version()` (previously hard-coded `'0.9'`). `FormatVersion` stays `'1.0'` — load compatibility is keyed on FormatVersion only, and the loader ignores the SoftwareVersion value, so old sessions load unchanged.

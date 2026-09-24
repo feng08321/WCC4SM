@@ -203,7 +203,7 @@ function WCC4SM_V1_0
     fwhmHistXMin=uieditfield(fwhmHistControls,'numeric','Value',0.7,'ValueChangedFcn',@fwhmHistogramControlsChanged);
     uilabel(fwhmHistControls,'Text','X max');
     fwhmHistXMax=uieditfield(fwhmHistControls,'numeric','Value',1.5,'ValueChangedFcn',@fwhmHistogramControlsChanged);
-    fwhmHistRangeMode=uidropdown(fwhmHistControls,'Items',{'Auto full','Manual'},'Value','Auto full','ValueChangedFcn',@fwhmHistogramControlsChanged);
+    fwhmHistRangeMode=uidropdown(fwhmHistControls,'Items',{'Auto full','Symmetric','+/-3 STD','Manual'},'Value','Auto full','ValueChangedFcn',@fwhmHistogramControlsChanged);
     uibutton(fwhmHistControls,'Text','Refresh','ButtonPushedFcn',@fwhmHistogramControlsChanged);
     axPixelInterval=uiaxes(calibratedStatsHost);axPixelInterval.Layout.Row=2;axPixelInterval.Layout.Column=2;
     wc4sm_style_axes(axPixelInterval,C);title(axPixelInterval,'Pixel wavelength interval');
@@ -4717,21 +4717,24 @@ function WCC4SM_V1_0
 
     function [lo,hi,nb]=fwhmHistogramSettings(values)
         nb=max(1,min(100,round(fwhmHistBinCount.Value)));
-        if strcmp(fwhmHistRangeMode.Value,'Manual')
-            lo=fwhmHistXMin.Value;
-            hi=fwhmHistXMax.Value;
-            if ~isfinite(lo)||~isfinite(hi)||hi<=lo
+        mode=fwhmHistRangeMode.Value;
+        switch mode
+            case 'Manual'
+                lo=fwhmHistXMin.Value;
+                hi=fwhmHistXMax.Value;
+            case 'Symmetric'
+                span=max(abs(values));if span<=0,span=0.05;end
+                lo=-span;hi=span;
+            case '+/-3 STD'
+                center=mean(values);span=3*std(values);if span<=0,span=max(0.05,abs(center)*0.05);end
+                lo=center-span;hi=center+span;
+            otherwise
                 lo=min(values);hi=max(values);
-            end
-        else
-            lo=min(values);hi=max(values);
-            if hi<=lo
-                pad=max(0.01,abs(lo)*0.05);
-                lo=lo-pad;hi=hi+pad;
-            else
-                pad=0.02*(hi-lo);
-                lo=lo-pad;hi=hi+pad;
-            end
+        end
+        if ~isfinite(lo)||~isfinite(hi)||hi<=lo
+            center=mean(values);span=max(0.05,max(abs(values-center)));lo=center-span;hi=center+span;
+        end
+        if ~strcmp(mode,'Manual')
             fwhmHistXMin.Value=lo;
             fwhmHistXMax.Value=hi;
         end
