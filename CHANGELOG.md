@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Gallery behavior change: switching to the Peak-shape gallery tab no longer auto-draws at the default 8x8. The gallery now renders only on an explicit Refresh gallery click, so Rows/Cols can be set first without a wasted redraw. The status line guides the first use.
 - Gallery fix: resizing the peak-shape gallery (Rows/Cols) no longer leaves stale rendered fragments of the previous grid on screen. The rebuild now destroys the whole grid container (with all child axes) and recreates it, with a display flush before and after — deleting/re-adding many axes inside the same uigridlayout left residue in the uifigure (CEF) canvas, visible as overlapping/misaligned tiles (the OPEN FIG export was unaffected because it builds a fresh classic figure).
 - FWHM distribution histogram (Calibrated Performance) now offers the same four range modes as every other histogram in the app — Auto full / Symmetric / +/-3 STD / Manual — sharing the same range-computation pattern. Old sessions restore cleanly (their saved values remain valid items).
 - Peak-shape gallery is now configurable: Rows/Cols inputs (1-16 each, default 8x8) plus the existing Refresh button rebuild the gallery grid at any N x M, so runs with more than 64 detected peaks (e.g. ~100 after weak-peak subwindow additions) can be viewed in full. The OPEN FIG export follows the same N x M layout. Tab renamed from "8x8 peak-shape gallery" to "Peak-shape gallery".

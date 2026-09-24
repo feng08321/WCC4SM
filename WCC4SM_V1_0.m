@@ -122,7 +122,7 @@ function WCC4SM_V1_0
     plotTabs=uitabgroup(root);plotTabs.Layout.Row=2;plotTabs.Layout.Column=1;
     tabPlots=uitab(plotTabs,'Title','Peak Analysis');tabPeakStatistics=uitab(plotTabs,'Title','Peak Parameter Statistics');tabMatchingPlots=uitab(plotTabs,'Title','Wavelength Matching');tabResults=uitab(plotTabs,'Title','Calibration Fit & Residuals');tabValidation=uitab(plotTabs,'Title','Model Validation');tabModelCompare=uitab(plotTabs,'Title','Model Comparison');tabSelectedResidual=uitab(plotTabs,'Title','Selected Residuals');tabCalibratedStatistics=uitab(plotTabs,'Title','Calibrated Performance');tabOptimization=uitab(plotTabs,'Title','Calibration Optimization');tabInfluence=uitab(plotTabs,'Title','Point Influence');tabSetDesign=uitab(plotTabs,'Title','Set Design');
     plotHost=uigridlayout(tabPlots,[1 1]);plotHost.Padding=[0 0 0 0];
-    peakAnalysisTabs=uitabgroup(plotHost,'SelectionChangedFcn',@peakAnalysisTabChanged);
+    peakAnalysisTabs=uitabgroup(plotHost);
     peakAnalysisCurrentTab=uitab(peakAnalysisTabs,'Title','Current spectrum and selected peak');
     peakGalleryTab=uitab(peakAnalysisTabs,'Title','Peak-shape gallery');
     currentPeakHost=uigridlayout(peakAnalysisCurrentTab,[1 1]);currentPeakHost.Padding=[0 0 0 0];
@@ -137,7 +137,7 @@ function WCC4SM_V1_0
     peakGalleryRowsField=uieditfield(peakGalleryTools,'numeric','Value',8,'Limits',[1 16],'Tooltip','Gallery rows (peaks per column), applied on Refresh gallery');peakGalleryRowsField.Layout.Column=3;
     peakGalleryColsLabel=uilabel(peakGalleryTools,'Text','Cols','HorizontalAlignment','right','FontColor',C.muted);peakGalleryColsLabel.Layout.Column=4;
     peakGalleryColsField=uieditfield(peakGalleryTools,'numeric','Value',8,'Limits',[1 16],'Tooltip','Gallery columns, applied on Refresh gallery');peakGalleryColsField.Layout.Column=5;
-    peakGalleryStatus=uilabel(peakGalleryTools,'Text','Run batch pre-analysis to populate all detected-peak windows.','FontColor',C.navy);peakGalleryStatus.Layout.Column=6;
+    peakGalleryStatus=uilabel(peakGalleryTools,'Text','Set Rows/Cols, then click Refresh gallery to draw.','FontColor',C.navy);peakGalleryStatus.Layout.Column=6;
     peakGalleryLegend=uilabel(peakGalleryTools,'Text','Blue: matched benchmark   Red: not selected','HorizontalAlignment','right','FontColor',C.muted);peakGalleryLegend.Layout.Column=7;
     peakGalleryGrid=uigridlayout(peakGalleryHost,[8 8]);peakGalleryGrid.Layout.Row=2;peakGalleryGrid.RowHeight=repmat({'1x'},1,8);peakGalleryGrid.ColumnWidth=repmat({'1x'},1,8);peakGalleryGrid.Padding=[2 2 2 2];peakGalleryGrid.RowSpacing=2;peakGalleryGrid.ColumnSpacing=2;
     peakGalleryAxes=gobjects(0);
@@ -2117,9 +2117,6 @@ function WCC4SM_V1_0
     end
     function rightTabChanged(~,~)
         if tabs.SelectedTab==tabCal,showCalibrationView([],[]);end
-    end
-    function peakAnalysisTabChanged(~,event)
-        if event.NewValue==peakGalleryTab,refreshPeakGallery();end
     end
     function ensurePeakGalleryAxes
         galleryRows=max(1,min(16,round(peakGalleryRowsField.Value)));
